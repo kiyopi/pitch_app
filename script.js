@@ -113,6 +113,9 @@ class PitchTrainingApp {
     
     async startTraining() {
         try {
+            // iOS Safari対応: 明示的にユーザーインタラクションを確認
+            await this.ensureUserInteraction();
+            
             await this.initAudio();
             this.showTrainingScreen();
             
@@ -131,8 +134,31 @@ class PitchTrainingApp {
             
         } catch (error) {
             console.error('音声初期化エラー:', error);
-            alert('マイクへのアクセスが必要です。ブラウザの設定を確認してください。');
+            let errorMessage = 'マイクへのアクセスが必要です。';
+            
+            if (error.message.includes('AudioContext')) {
+                errorMessage = 'オーディオシステムを初期化できません。画面をタップしてから再試行してください。';
+            } else if (error.message.includes('マイク')) {
+                errorMessage = error.message;
+            }
+            
+            alert(errorMessage);
         }
+    }
+    
+    async ensureUserInteraction() {
+        // iOS Safari対応: AudioContextを事前に初期化
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // AudioContextが中断されている場合、ユーザーインタラクションで再開
+        if (this.audioContext.state === 'suspended') {
+            console.log('ユーザーインタラクションでAudioContextを再開します');
+            await this.audioContext.resume();
+        }
+        
+        console.log('AudioContext状態:', this.audioContext.state);
     }
     
     async showCountdown() {
@@ -159,14 +185,23 @@ class PitchTrainingApp {
     async initAudio() {
         console.log('オーディオ初期化開始...');
         
-        // AudioContextの状態をチェック
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // iOS Safari対応: ユーザーインタラクションが必要
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
         console.log('AudioContext作成:', this.audioContext.state);
         
-        // AudioContextが中断されている場合は再開
+        // AudioContextが中断されている場合は再開（iOS Safari対応）
         if (this.audioContext.state === 'suspended') {
             console.log('AudioContextを再開中...');
-            await this.audioContext.resume();
+            try {
+                await this.audioContext.resume();
+                console.log('AudioContext再開成功:', this.audioContext.state);
+            } catch (error) {
+                console.error('AudioContext再開失敗:', error);
+                throw new Error('AudioContextの再開に失敗しました。画面をタップしてから再試行してください。');
+            }
         }
         
         // マイクデバイスの確認
@@ -175,14 +210,24 @@ class PitchTrainingApp {
         }
         
         console.log('マイクアクセス要求中...');
-        return navigator.mediaDevices.getUserMedia({ 
+        
+        // iOS Safari向け最適化されたマイク設定
+        const audioConstraints = {
             audio: {
                 echoCancellation: false,
                 noiseSuppression: false,
                 autoGainControl: false,
-                sampleRate: 44100
+                // iOS Safari対応: sampleRateを省略して自動設定
+                channelCount: 1,
+                // iOS Safari対応: 追加設定
+                mozNoiseSuppression: false,
+                mozAutoGainControl: false
             }
-        })
+        };
+        
+        console.log('マイク設定:', audioConstraints);
+        
+        return navigator.mediaDevices.getUserMedia(audioConstraints)
             .then(stream => {
                 console.log('マイクストリーム取得成功');
                 console.log('ストリーム情報:', stream);
@@ -197,12 +242,22 @@ class PitchTrainingApp {
                 console.log('オーディオトラック状態:', audioTracks[0].readyState);
                 console.log('オーディオトラック設定:', audioTracks[0].getSettings());
                 
+                // iOS Safari対応: トラックが有効か確認
+                if (audioTracks[0].readyState !== 'live') {
+                    console.warn('オーディオトラックが非アクティブです');
+                    throw new Error('マイクが使用できません。他のアプリでマイクが使用中でないか確認してください。');
+                }
+                
                 this.microphone = this.audioContext.createMediaStreamSource(stream);
                 this.analyzer = this.audioContext.createAnalyser();
                 
-                this.analyzer.fftSize = 4096;
-                this.analyzer.smoothingTimeConstant = 0.8;
+                // iOS Safari対応: より小さなFFTサイズで軽量化
+                this.analyzer.fftSize = 2048;
+                this.analyzer.smoothingTimeConstant = 0.3;
                 this.dataArray = new Float32Array(this.analyzer.frequencyBinCount);
+                
+                console.log('FFTサイズ:', this.analyzer.fftSize);
+                console.log('バッファサイズ:', this.analyzer.frequencyBinCount);
                 
                 console.log('アナライザー設定完了');
                 this.microphone.connect(this.analyzer);
@@ -218,12 +273,34 @@ class PitchTrainingApp {
                 console.error('マイクアクセスエラー詳細:', error);
                 console.error('エラー名:', error.name);
                 console.error('エラーメッセージ:', error.message);
+                console.error('エラーコード:', error.code);
+                
+                // iOS Safari固有の問題をチェック
+                console.log('ブラウザ情報:');
+                console.log('  UserAgent:', navigator.userAgent);
+                console.log('  Platform:', navigator.platform);
+                console.log('  iOS Safari:', /iPad|iPhone|iPod/.test(navigator.userAgent));
+                console.log('  AudioContext対応:', !!(window.AudioContext || window.webkitAudioContext));
+                console.log('  MediaDevices対応:', !!navigator.mediaDevices);
                 
                 let userMessage = 'マイクへのアクセスに失敗しました。';
                 if (error.name === 'NotAllowedError') {
-                    userMessage = 'マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してください。';
+                    userMessage = 'マイクへのアクセスが拒否されました。設定でマイクを許可してください。';
                 } else if (error.name === 'NotFoundError') {
-                    userMessage = 'マイクが見つかりません。マイクが接続されていることを確認してください。';
+                    userMessage = 'マイクが見つかりません。デバイスにマイクが接続されているか確認してください。';
+                } else if (error.name === 'NotSupportedError') {
+                    userMessage = 'このブラウザまたはデバイスではマイクアクセスがサポートされていません。';
+                } else if (error.name === 'NotReadableError') {
+                    userMessage = 'マイクが他のアプリで使用中です。他のアプリを終了してから再試行してください。';
+                } else if (error.name === 'AbortError') {
+                    userMessage = 'マイクアクセスが中断されました。';
+                } else if (error.name === 'SecurityError') {
+                    userMessage = 'セキュリティエラー: HTTPSサイトでのみマイクアクセスが可能です。';
+                }
+                
+                // iOS Safari特有のアドバイスを追加
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    userMessage += '\n\niOS Safari使用時の注意:\n• サイレントモードを解除してください\n• 他のアプリでマイクが使用中でないか確認してください\n• Safariの設定でマイクアクセスを許可してください';
                 }
                 
                 alert(userMessage);
