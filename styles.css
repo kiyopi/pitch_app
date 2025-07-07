@@ -1,0 +1,532 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+main {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.mode-selection {
+    text-align: center;
+}
+
+.mode-group {
+    margin-bottom: 30px;
+}
+
+.mode-group h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.mode-btn {
+    background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+    border: 2px solid transparent;
+    border-radius: 15px;
+    padding: 15px 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.mode-btn.selected {
+    background: linear-gradient(145deg, #667eea, #764ba2);
+    color: white;
+    border-color: #667eea;
+}
+
+.mode-btn strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.mode-btn span {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.start-btn {
+    background: linear-gradient(145deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+.start-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.training-screen {
+    text-align: center;
+}
+
+.training-info {
+    margin-bottom: 30px;
+}
+
+.current-note {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 20px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.countdown-number {
+    font-size: 4rem !important;
+    color: #f44336 !important;
+    animation: countdown-pulse 1s ease-in-out;
+}
+
+.countdown-start {
+    font-size: 3.5rem !important;
+    color: #4CAF50 !important;
+    animation: start-bounce 0.5s ease-out;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    color: #666;
+    font-weight: 500;
+}
+
+.audio-visual {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.canvas-container {
+    position: relative;
+    display: inline-block;
+    margin: 30px auto 20px auto;
+}
+
+#pitch-canvas {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: #f8f9fa;
+    display: block;
+    margin: 0 auto;
+}
+
+.canvas-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #667eea;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.pitch-info {
+    display: flex;
+    justify-content: space-around;
+    font-size: 1.2rem;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.target-pitch, .user-pitch {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.target-pitch {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.user-pitch {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.controls {
+    margin-top: 20px;
+}
+
+.stop-btn {
+    background: linear-gradient(145deg, #f44336, #d32f2f);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stop-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+.results-screen {
+    text-align: center;
+}
+
+.results-screen h2 {
+    font-size: 2rem;
+    color: #667eea;
+    margin-bottom: 30px;
+}
+
+.score-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.total-score, .accuracy-rate {
+    background: linear-gradient(145deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    min-width: 150px;
+}
+
+.total-score {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.accuracy-rate {
+    font-size: 1.5rem;
+}
+
+.detailed-results {
+    margin-bottom: 30px;
+}
+
+#results-chart {
+    margin-bottom: 20px;
+    border-radius: 10px;
+}
+
+.note-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.note-result {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.note-result.accurate {
+    border-left-color: #4CAF50;
+    background: #e8f5e8;
+}
+
+.note-result.inaccurate {
+    border-left-color: #f44336;
+    background: #ffeaea;
+}
+
+.note-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.note-accuracy {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.result-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.share-btn, .retry-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.share-btn {
+    background: linear-gradient(145deg, #1DA1F2, #0d8bd9);
+    color: white;
+}
+
+.retry-btn {
+    background: linear-gradient(145deg, #667eea, #764ba2);
+    color: white;
+}
+
+.share-btn:hover, .retry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    main {
+        padding: 25px 20px;
+    }
+    
+    .current-note {
+        font-size: 2.5rem;
+    }
+    
+    .countdown-number {
+        font-size: 3.5rem !important;
+    }
+    
+    .countdown-start {
+        font-size: 3rem !important;
+    }
+    
+    .button-group {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .mode-btn {
+        width: 100%;
+        max-width: 300px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .start-btn, .stop-btn, .share-btn, .retry-btn {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        min-height: 48px;
+    }
+    
+    .score-summary {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .note-results {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .canvas-container {
+        margin: 20px auto 15px auto;
+    }
+    
+    #pitch-canvas {
+        width: 100%;
+        height: auto;
+        max-width: 350px;
+    }
+    
+    .canvas-label {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+        top: -20px;
+    }
+    
+    .pitch-info {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .target-pitch, .user-pitch {
+        margin: 0 auto;
+        max-width: 280px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .current-note {
+        font-size: 2rem;
+        min-height: 60px;
+    }
+    
+    .countdown-number {
+        font-size: 3rem !important;
+    }
+    
+    .countdown-start {
+        font-size: 2.5rem !important;
+    }
+    
+    .canvas-container {
+        margin: 15px auto 10px auto;
+    }
+    
+    #pitch-canvas {
+        max-width: 300px;
+    }
+    
+    .canvas-label {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        top: -18px;
+    }
+    
+    .pitch-info {
+        margin-top: 10px;
+    }
+    
+    .target-pitch, .user-pitch {
+        font-size: 0.9rem;
+        padding: 8px 15px;
+    }
+    
+    .note-results {
+        grid-template-columns: 1fr;
+    }
+    
+    .total-score {
+        font-size: 2rem;
+    }
+    
+    .accuracy-rate {
+        font-size: 1.2rem;
+    }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes countdown-pulse {
+    0% { 
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes start-bounce {
+    0% { 
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.pulse {
+    animation: pulse 1s infinite;
+}
