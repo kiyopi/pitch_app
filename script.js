@@ -61,10 +61,14 @@ class PitchTrainingApp {
             max-width: 300px;
         `;
         
+        const isIOSDevice = /iPad|iPhone|iPod|iOS/i.test(navigator.userAgent) || 
+                           /iPhone OS/i.test(navigator.userAgent) ||
+                           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        
         const info = {
             'User Agent': navigator.userAgent,
             'Platform': navigator.platform,
-            'iOS Safari': /iPad|iPhone|iPod/.test(navigator.userAgent),
+            'iOS Safari': isIOSDevice,
             'HTTPS': location.protocol === 'https:',
             'AudioContext': !!(window.AudioContext || window.webkitAudioContext),
             'MediaDevices': !!navigator.mediaDevices,
@@ -354,7 +358,9 @@ class PitchTrainingApp {
         console.log('マイクアクセス要求中...');
         
         // iOS Safari向け最適化されたマイク設定
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod|iOS/i.test(navigator.userAgent) || 
+                      /iPhone OS/i.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const audioConstraints = {
             audio: isIOS ? {
                 // iOS Safari向け最小限の設定
@@ -438,6 +444,24 @@ class PitchTrainingApp {
                     this.analyzer.connect(dummyGain);
                     dummyGain.connect(this.audioContext.destination);
                     console.log('ダミー出力接続完了');
+                    
+                    // iOS Safari対応: ストリーム停止を監視
+                    stream.getAudioTracks().forEach(track => {
+                        track.addEventListener('ended', () => {
+                            console.warn('マイクトラックが終了しました:', track.readyState);
+                            if (this.debugMode) {
+                                alert('マイクアクセスが中断されました。他のアプリがマイクを使用している可能性があります。');
+                            }
+                        });
+                        
+                        track.addEventListener('mute', () => {
+                            console.warn('マイクがミュートされました');
+                        });
+                        
+                        track.addEventListener('unmute', () => {
+                            console.log('マイクのミュートが解除されました');
+                        });
+                    });
                     
                 } catch (error) {
                     console.error('オーディオノード接続エラー:', error);
