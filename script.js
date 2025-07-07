@@ -361,22 +361,12 @@ class PitchTrainingApp {
         const isIOS = /iPad|iPhone|iPod|iOS/i.test(navigator.userAgent) || 
                       /iPhone OS/i.test(navigator.userAgent) ||
                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        // Safari対応: より寛容なオーディオ制約
         const audioConstraints = {
-            audio: isIOS ? {
-                // iOS Safari向け最小限の設定
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGainControl: false
-            } : {
-                // デスクトップ向け詳細設定
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGainControl: false,
-                channelCount: 1,
-                mozNoiseSuppression: false,
-                mozAutoGainControl: false
-            }
+            audio: true  // 最もシンプルな設定でまず試行
         };
+        
+        console.log('初回マイク設定:', audioConstraints);
         
         console.log('マイク設定:', audioConstraints);
         console.log('iOS Safari:', isIOS);
@@ -415,35 +405,40 @@ class PitchTrainingApp {
                     throw new Error('マイクが使用できません。他のアプリでマイクが使用中でないか確認してください。');
                 }
                 
-                // iOS Safari対応: アナライザーの設定を先に行う
+                // Safari対応: より確実なアナライザー設定
                 this.analyzer = this.audioContext.createAnalyser();
                 this.analyzer.fftSize = 2048;
-                this.analyzer.smoothingTimeConstant = 0.3;
-                this.analyzer.minDecibels = -90;
+                this.analyzer.smoothingTimeConstant = 0.1;  // 反応を良くする
+                this.analyzer.minDecibels = -100;           // 感度を上げる
                 this.analyzer.maxDecibels = -10;
                 
                 console.log('アナライザー設定完了');
                 
-                // マイクソースの作成と接続
+                // マイクソースの作成
                 this.microphone = this.audioContext.createMediaStreamSource(stream);
+                console.log('マイクソース作成完了');
+                
+                // データ配列の初期化
                 this.dataArray = new Float32Array(this.analyzer.frequencyBinCount);
                 
-                console.log('マイクソース作成完了');
+                // Safari対応: 強制的にマイクを有効化
+                const gainNode = this.audioContext.createGain();
+                gainNode.gain.value = 1.0;  // マイクの音量を確保
+                
+                this.microphone.connect(gainNode);
+                gainNode.connect(this.analyzer);
+                console.log('ゲインノード経由でマイク接続完了');
                 
                 console.log('FFTサイズ:', this.analyzer.fftSize);
                 console.log('バッファサイズ:', this.analyzer.frequencyBinCount);
                 
-                // iOS Safari対応: 確実な接続を行う
+                // Safari対応: 出力先接続（データフローを確実にするため）
                 try {
-                    this.microphone.connect(this.analyzer);
-                    console.log('マイクをアナライザーに接続完了');
-                    
-                    // iOS Safari対応: ダミーの出力先も接続（データ取得を確実にするため）
-                    const dummyGain = this.audioContext.createGain();
-                    dummyGain.gain.value = 0; // 音は出さない
-                    this.analyzer.connect(dummyGain);
-                    dummyGain.connect(this.audioContext.destination);
-                    console.log('ダミー出力接続完了');
+                    const outputGain = this.audioContext.createGain();
+                    outputGain.gain.value = 0; // 音は出さない
+                    this.analyzer.connect(outputGain);
+                    outputGain.connect(this.audioContext.destination);
+                    console.log('出力先接続完了');
                     
                     // iOS Safari対応: ストリーム停止を監視
                     stream.getAudioTracks().forEach(track => {
@@ -484,10 +479,23 @@ class PitchTrainingApp {
                     smoothingTimeConstant: this.analyzer.smoothingTimeConstant
                 });
                 
-                // iOS Safari対応: データ取得テスト
+                // Safari対応: データ取得テスト（遅延実行）
                 setTimeout(() => {
                     this.performMicrophoneTest();
-                }, 500);
+                }, 1000);  // 1秒待ってからテスト
+                
+                // Safari対応: 定期的なデータ確認
+                this.dataCheckInterval = setInterval(() => {
+                    if (this.analyzer) {
+                        const testData = new Uint8Array(this.analyzer.fftSize);
+                        this.analyzer.getByteTimeDomainData(testData);
+                        const hasData = testData.some(v => v !== 128);
+                        if (hasData && this.debugMode) {
+                            console.log('マイクデータ検出: OK');
+                            clearInterval(this.dataCheckInterval);
+                        }
+                    }
+                }, 2000);
                 
                 // ストリームを保存（停止時に使用）
                 this.mediaStream = stream;
