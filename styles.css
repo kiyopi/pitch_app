@@ -41,6 +41,35 @@ main {
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
+footer {
+    text-align: center;
+    margin-top: 20px;
+    color: white;
+    opacity: 0.8;
+}
+
+.version-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.version-info span {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(10px);
+}
+
+@media (max-width: 600px) {
+    .version-info {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
 .mode-selection {
     text-align: center;
 }
