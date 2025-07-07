@@ -21,6 +21,9 @@ class PitchTrainingApp {
             female: [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50] // C5-C6
         };
         
+        // デバッグモード（URLパラメータで有効化）
+        this.debugMode = new URLSearchParams(window.location.search).has('debug');
+        
         this.init();
     }
     
@@ -33,6 +36,46 @@ class PitchTrainingApp {
             this.canvasContext = this.canvas.getContext('2d');
             this.drawInitialCanvas();
         }
+        
+        // デバッグモード時の情報表示
+        if (this.debugMode) {
+            this.showDebugInfo();
+        }
+    }
+    
+    showDebugInfo() {
+        const debugInfo = document.createElement('div');
+        debugInfo.id = 'debug-info';
+        debugInfo.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 300px;
+        `;
+        
+        const info = {
+            'User Agent': navigator.userAgent,
+            'Platform': navigator.platform,
+            'iOS Safari': /iPad|iPhone|iPod/.test(navigator.userAgent),
+            'HTTPS': location.protocol === 'https:',
+            'AudioContext': !!(window.AudioContext || window.webkitAudioContext),
+            'MediaDevices': !!navigator.mediaDevices,
+            'getUserMedia': !!navigator.mediaDevices?.getUserMedia
+        };
+        
+        debugInfo.innerHTML = Object.entries(info)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('<br>');
+        
+        document.body.appendChild(debugInfo);
+        console.log('デバッグ情報:', info);
     }
     
     drawInitialCanvas() {
@@ -152,13 +195,31 @@ class PitchTrainingApp {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         
+        console.log('AudioContext初期状態:', this.audioContext.state);
+        
         // AudioContextが中断されている場合、ユーザーインタラクションで再開
         if (this.audioContext.state === 'suspended') {
             console.log('ユーザーインタラクションでAudioContextを再開します');
-            await this.audioContext.resume();
+            
+            // iOS Safari対応: 明示的にユーザーインタラクションを待つ
+            try {
+                await this.audioContext.resume();
+                console.log('AudioContext再開成功:', this.audioContext.state);
+            } catch (error) {
+                console.error('AudioContext再開エラー:', error);
+                // 再試行のための短い待機
+                await this.wait(100);
+                await this.audioContext.resume();
+            }
         }
         
-        console.log('AudioContext状態:', this.audioContext.state);
+        // iOS Safari対応: AudioContextの状態を確認
+        if (this.audioContext.state !== 'running') {
+            console.warn('AudioContextが実行中ではありません:', this.audioContext.state);
+            throw new Error('AudioContextが正常に開始されませんでした。再度お試しください。');
+        }
+        
+        console.log('AudioContext最終状態:', this.audioContext.state);
     }
     
     async showCountdown() {
@@ -185,6 +246,11 @@ class PitchTrainingApp {
     async initAudio() {
         console.log('オーディオ初期化開始...');
         
+        // iOS Safari対応: HTTPS確認
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            throw new Error('マイクアクセスにはHTTPS接続が必要です。');
+        }
+        
         // iOS Safari対応: ユーザーインタラクションが必要
         if (!this.audioContext) {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -204,6 +270,16 @@ class PitchTrainingApp {
             }
         }
         
+        // iOS Safari対応: AudioContextの状態を再確認
+        if (this.audioContext.state !== 'running') {
+            console.warn('AudioContextが実行中ではありません. 状態:', this.audioContext.state);
+            // 少し待ってから再確認
+            await this.wait(100);
+            if (this.audioContext.state !== 'running') {
+                throw new Error('AudioContextが正常に開始されませんでした。デバイスを再起動してから再試行してください。');
+            }
+        }
+        
         // マイクデバイスの確認
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             throw new Error('このブラウザはマイクアクセスをサポートしていません');
@@ -212,20 +288,39 @@ class PitchTrainingApp {
         console.log('マイクアクセス要求中...');
         
         // iOS Safari向け最適化されたマイク設定
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const audioConstraints = {
-            audio: {
+            audio: isIOS ? {
+                // iOS Safari向け最小限の設定
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+            } : {
+                // デスクトップ向け詳細設定
                 echoCancellation: false,
                 noiseSuppression: false,
                 autoGainControl: false,
-                // iOS Safari対応: sampleRateを省略して自動設定
                 channelCount: 1,
-                // iOS Safari対応: 追加設定
                 mozNoiseSuppression: false,
                 mozAutoGainControl: false
             }
         };
         
         console.log('マイク設定:', audioConstraints);
+        console.log('iOS Safari:', isIOS);
+        
+        // iOS Safari対応: 権限チェック
+        if (isIOS && navigator.permissions) {
+            try {
+                const permission = await navigator.permissions.query({ name: 'microphone' });
+                console.log('マイク権限状態:', permission.state);
+                if (permission.state === 'denied') {
+                    throw new Error('マイクアクセスが拒否されています。設定から許可してください。');
+                }
+            } catch (error) {
+                console.log('権限チェックエラー:', error);
+            }
+        }
         
         return navigator.mediaDevices.getUserMedia(audioConstraints)
             .then(stream => {
