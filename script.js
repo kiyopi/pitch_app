@@ -343,20 +343,61 @@ class PitchTrainingApp {
                     throw new Error('マイクが使用できません。他のアプリでマイクが使用中でないか確認してください。');
                 }
                 
-                this.microphone = this.audioContext.createMediaStreamSource(stream);
+                // iOS Safari対応: アナライザーの設定を先に行う
                 this.analyzer = this.audioContext.createAnalyser();
-                
-                // iOS Safari対応: より小さなFFTサイズで軽量化
                 this.analyzer.fftSize = 2048;
                 this.analyzer.smoothingTimeConstant = 0.3;
+                this.analyzer.minDecibels = -90;
+                this.analyzer.maxDecibels = -10;
+                
+                console.log('アナライザー設定完了');
+                
+                // マイクソースの作成と接続
+                this.microphone = this.audioContext.createMediaStreamSource(stream);
                 this.dataArray = new Float32Array(this.analyzer.frequencyBinCount);
+                
+                console.log('マイクソース作成完了');
                 
                 console.log('FFTサイズ:', this.analyzer.fftSize);
                 console.log('バッファサイズ:', this.analyzer.frequencyBinCount);
                 
-                console.log('アナライザー設定完了');
-                this.microphone.connect(this.analyzer);
-                console.log('マイクをアナライザーに接続完了');
+                // iOS Safari対応: 確実な接続を行う
+                try {
+                    this.microphone.connect(this.analyzer);
+                    console.log('マイクをアナライザーに接続完了');
+                    
+                    // iOS Safari対応: ダミーの出力先も接続（データ取得を確実にするため）
+                    const dummyGain = this.audioContext.createGain();
+                    dummyGain.gain.value = 0; // 音は出さない
+                    this.analyzer.connect(dummyGain);
+                    dummyGain.connect(this.audioContext.destination);
+                    console.log('ダミー出力接続完了');
+                    
+                } catch (error) {
+                    console.error('オーディオノード接続エラー:', error);
+                    throw new Error('オーディオ処理の初期化に失敗しました。');
+                }
+                
+                // iOS Safari対応: 接続状態の詳細確認
+                console.log('マイクノード情報:', {
+                    numberOfInputs: this.microphone.numberOfInputs,
+                    numberOfOutputs: this.microphone.numberOfOutputs,
+                    channelCount: this.microphone.channelCount,
+                    channelCountMode: this.microphone.channelCountMode
+                });
+                
+                console.log('アナライザー情報:', {
+                    fftSize: this.analyzer.fftSize,
+                    frequencyBinCount: this.analyzer.frequencyBinCount,
+                    minDecibels: this.analyzer.minDecibels,
+                    maxDecibels: this.analyzer.maxDecibels,
+                    smoothingTimeConstant: this.analyzer.smoothingTimeConstant
+                });
+                
+                // iOS Safari対応: データ取得テスト
+                setTimeout(() => {
+                    this.performMicrophoneTest();
+                }, 500);
                 
                 // ストリームを保存（停止時に使用）
                 this.mediaStream = stream;
@@ -451,6 +492,46 @@ class PitchTrainingApp {
         detectPitch();
     }
     
+    performMicrophoneTest() {
+        console.log('=== マイクテスト開始 ===');
+        
+        if (!this.analyzer) {
+            console.error('アナライザーが存在しません');
+            return;
+        }
+        
+        // 周波数データテスト
+        const freqData = new Float32Array(this.analyzer.frequencyBinCount);
+        this.analyzer.getFloatFrequencyData(freqData);
+        const nonInfinityFreq = freqData.filter(v => v > -Infinity && v < 0).length;
+        console.log('周波数データ:', {
+            total: freqData.length,
+            nonInfinity: nonInfinityFreq,
+            sample: freqData.slice(0, 10)
+        });
+        
+        // 時間データテスト
+        const timeData = new Uint8Array(this.analyzer.fftSize);
+        this.analyzer.getByteTimeDomainData(timeData);
+        const nonMidpoint = timeData.filter(v => v !== 128).length;
+        console.log('時間データ:', {
+            total: timeData.length,
+            nonMidpoint: nonMidpoint,
+            sample: timeData.slice(0, 10),
+            min: Math.min(...timeData),
+            max: Math.max(...timeData)
+        });
+        
+        // AudioContextの状態確認
+        console.log('AudioContext状態:', {
+            state: this.audioContext.state,
+            sampleRate: this.audioContext.sampleRate,
+            currentTime: this.audioContext.currentTime
+        });
+        
+        console.log('=== マイクテスト終了 ===');
+    }
+    
     getPitchFromFFT(dataArray) {
         let maxIndex = 0;
         let maxValue = -Infinity;
@@ -502,7 +583,10 @@ class PitchTrainingApp {
     }
     
     drawWaveform() {
-        if (!this.canvasContext || !this.analyzer) return;
+        if (!this.canvasContext || !this.analyzer) {
+            console.warn('Canvas context or analyzer not available');
+            return;
+        }
         
         const width = this.canvas.width;
         const height = this.canvas.height;
@@ -516,49 +600,69 @@ class PitchTrainingApp {
         this.canvasContext.lineWidth = 1;
         this.canvasContext.beginPath();
         this.canvasContext.moveTo(0, height / 2);
-        this.canvasContext.lineTo(width - 50, height / 2); // 音量バーのスペースを空ける
+        this.canvasContext.lineTo(width - 50, height / 2);
         this.canvasContext.stroke();
         
-        // 時間領域の波形データを取得（iOS Safari対応でバッファサイズを調整）
-        const bufferLength = this.analyzer.fftSize;
-        const timeDataArray = new Uint8Array(bufferLength);
-        this.analyzer.getByteTimeDomainData(timeDataArray);
-        
-        // デバッグ: 波形データの確認
-        if (this.debugMode) {
-            const nonZeroCount = timeDataArray.filter(v => v !== 128).length;
-            if (nonZeroCount > 0) {
-                console.log('波形データ取得成功:', nonZeroCount, '/', timeDataArray.length);
-            }
-        }
-        
-        // 波形を描画（右側に音量バーのスペースを空ける）
-        this.canvasContext.lineWidth = 2;
-        this.canvasContext.strokeStyle = '#667eea';
-        this.canvasContext.beginPath();
-        
-        const waveformWidth = width - 60; // 音量バー用にスペースを確保
-        const sliceWidth = waveformWidth / bufferLength;
-        let x = 0;
-        
-        for (let i = 0; i < bufferLength; i++) {
-            // iOS Safari対応: 波形データの正規化を改善
-            const v = (timeDataArray[i] - 128) / 128.0; // -1 to 1の範囲に正規化
-            const y = (height / 2) + (v * height / 4); // 中央を基準に振幅を制限
+        try {
+            // 時間領域の波形データを取得
+            const bufferLength = this.analyzer.fftSize;
+            const timeDataArray = new Uint8Array(bufferLength);
+            this.analyzer.getByteTimeDomainData(timeDataArray);
             
-            if (i === 0) {
-                this.canvasContext.moveTo(x, y);
+            // データの検証
+            const nonMidpoint = timeDataArray.filter(v => v !== 128).length;
+            const dataRange = { min: Math.min(...timeDataArray), max: Math.max(...timeDataArray) };
+            
+            if (this.debugMode && nonMidpoint > 0) {
+                console.log('波形データ取得:', { 
+                    nonMidpoint, 
+                    total: bufferLength, 
+                    range: dataRange,
+                    sample: timeDataArray.slice(0, 5)
+                });
+            }
+            
+            // 波形描画（データがある場合のみ）
+            if (nonMidpoint > 0) {
+                this.canvasContext.lineWidth = 2;
+                this.canvasContext.strokeStyle = '#667eea';
+                this.canvasContext.beginPath();
+                
+                const waveformWidth = width - 60;
+                const sliceWidth = waveformWidth / bufferLength;
+                
+                for (let i = 0; i < bufferLength; i += 4) { // サンプリング間隔を広げて軽量化
+                    const v = (timeDataArray[i] - 128) / 128.0;
+                    const x = (i / bufferLength) * waveformWidth;
+                    const y = (height / 2) + (v * height / 3); // 振幅を少し大きく
+                    
+                    if (i === 0) {
+                        this.canvasContext.moveTo(x, y);
+                    } else {
+                        this.canvasContext.lineTo(x, y);
+                    }
+                }
+                
+                this.canvasContext.stroke();
             } else {
-                this.canvasContext.lineTo(x, y);
+                // データがない場合の表示
+                this.canvasContext.fillStyle = '#999';
+                this.canvasContext.font = '14px Arial';
+                this.canvasContext.textAlign = 'center';
+                this.canvasContext.fillText('マイクデータ待機中...', width / 2, height / 2 + 20);
             }
             
-            x += sliceWidth;
+            // 音量レベルインジケーター
+            this.drawVolumeIndicator(timeDataArray);
+            
+        } catch (error) {
+            console.error('波形描画エラー:', error);
+            // エラー時の表示
+            this.canvasContext.fillStyle = '#f44336';
+            this.canvasContext.font = '14px Arial';
+            this.canvasContext.textAlign = 'center';
+            this.canvasContext.fillText('波形取得エラー', width / 2, height / 2);
         }
-        
-        this.canvasContext.stroke();
-        
-        // 音量レベルインジケーターを追加
-        this.drawVolumeIndicator(timeDataArray);
     }
     
     drawVolumeIndicator(timeDataArray) {
