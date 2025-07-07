@@ -89,11 +89,19 @@ class PitchTrainingApp {
         if (debugPanel) {
             debugPanel.style.display = 'block';
             console.log('デバッグパネルを表示しました');
+            
+            // 初期値を設定
+            this.updateDebugPanel({
+                frequency: 0,
+                volume: 0,
+                waveformActive: false,
+                frameCount: 0
+            });
         }
     }
     
     updateDebugPanel(data) {
-        if (!this.debugMode) return;
+        console.log('🔧 デバッグパネル更新:', data);
         
         try {
             const elements = {
@@ -105,6 +113,8 @@ class PitchTrainingApp {
                 frames: document.getElementById('debug-frames')
             };
             
+            console.log('🔧 デバッグ要素:', elements);
+            
             // 周波数情報
             if (elements.frequency) {
                 if (data.frequency && data.frequency > 0) {
@@ -114,6 +124,7 @@ class PitchTrainingApp {
                     elements.frequency.textContent = '検出なし';
                     elements.frequency.className = 'debug-value';
                 }
+                console.log('🔧 周波数更新:', elements.frequency.textContent);
             }
             
             // 音量レベル
@@ -121,6 +132,7 @@ class PitchTrainingApp {
                 const volumeValue = Math.round(data.volume || 0);
                 elements.volume.textContent = `${volumeValue}%`;
                 elements.volume.className = volumeValue > 1 ? 'debug-value active' : 'debug-value';
+                console.log('🔧 音量更新:', elements.volume.textContent);
             }
             
             // 波形データ状態
@@ -128,6 +140,7 @@ class PitchTrainingApp {
                 const status = data.waveformActive ? '取得中' : '待機中';
                 elements.waveform.textContent = status;
                 elements.waveform.className = data.waveformActive ? 'debug-value active' : 'debug-value';
+                console.log('🔧 波形更新:', elements.waveform.textContent);
             }
             
             // AudioContext状態
@@ -135,6 +148,7 @@ class PitchTrainingApp {
                 const state = this.audioContext?.state || 'なし';
                 elements.context.textContent = state;
                 elements.context.className = state === 'running' ? 'debug-value active' : 'debug-value error';
+                console.log('🔧 AudioContext更新:', elements.context.textContent);
             }
             
             // マイク状態
