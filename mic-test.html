@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 マイクテスト専用サイト</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .test-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .start-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .stop-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .stop-btn:hover {
+            background: #d32f2f;
+        }
+
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #waveform-canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .status-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .status-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+
+        .status-value.active {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .status-value.error {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .log-container {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 マイクテスト専用サイト</h1>
+            <p>マイクの動作確認とデバッグ用ツール</p>
+        </div>
+
+        <div class="test-panel">
+            <button id="start-btn" class="start-btn">マイクテスト開始</button>
+            <button id="stop-btn" class="stop-btn">テスト停止</button>
+
+            <div class="canvas-container">
+                <canvas id="waveform-canvas" width="600" height="200"></canvas>
+                <div style="margin-top: 10px; color: #666;">リアルタイム波形とマイクレベル</div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">🎵 検出周波数</div>
+                    <div class="status-value" id="frequency-value">待機中</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">🔊 音量レベル</div>
+                    <div class="status-value" id="volume-value">待機中</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">📡 マイク状態</div>
+                    <div class="status-value" id="mic-status">未接続</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">🎛️ AudioContext</div>
+                    <div class="status-value" id="audio-status">未初期化</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">📊 データ取得</div>
+                    <div class="status-value" id="data-status">停止中</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">⏱️ フレーム数</div>
+                    <div class="status-value" id="frame-count">0</div>
+                </div>
+            </div>
+
+            <div class="log-container" id="log-container">
+                <div>🎤 マイクテストログ - 準備完了</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="mic-test.js"></script>
+</body>
+</html>
