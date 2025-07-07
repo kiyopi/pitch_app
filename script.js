@@ -1,6 +1,6 @@
 class PitchTrainingApp {
     constructor() {
-        console.log('🎵 PitchTrainingApp v2.0.1 初期化開始');
+        console.log('🎵 PitchTrainingApp v2.0.3 初期化開始');
         this.audioContext = null;
         this.analyzer = null;
         this.microphone = null;
@@ -91,12 +91,14 @@ class PitchTrainingApp {
             console.log('デバッグパネルを表示しました');
             
             // 初期値を設定
-            this.updateDebugPanel({
-                frequency: 0,
-                volume: 0,
-                waveformActive: false,
-                frameCount: 0
-            });
+            setTimeout(() => {
+                this.updateDebugPanel({
+                    frequency: 0,
+                    volume: 0,
+                    waveformActive: false,
+                    frameCount: 0
+                });
+            }, 100);
         }
     }
     
@@ -578,8 +580,8 @@ class PitchTrainingApp {
             this.updatePitchDisplay(pitch);
             this.drawWaveform();
             
-            // デバッグパネルの更新（軽量化：10フレームごと）
-            if (this.debugMode && frameCounter % 10 === 0) {
+            // デバッグパネルの更新（軽量化：30フレームごと）
+            if (this.debugMode && frameCounter % 30 === 0) {
                 const volume = this.calculateCurrentVolume();
                 
                 this.updateDebugPanel({
