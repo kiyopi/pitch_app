@@ -22,8 +22,8 @@ class PitchTrainingApp {
             female: [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50] // C5-C6
         };
         
-        // デバッグモード（URLパラメータで有効化）
-        this.debugMode = new URLSearchParams(window.location.search).has('debug');
+        // デバッグモード（常に有効）
+        this.debugMode = true;
         
         this.init();
     }
