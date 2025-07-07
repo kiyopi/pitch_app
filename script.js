@@ -1,5 +1,6 @@
 class PitchTrainingApp {
     constructor() {
+        console.log('🎵 PitchTrainingApp v2.0.1 初期化開始');
         this.audioContext = null;
         this.analyzer = null;
         this.microphone = null;
@@ -474,7 +475,7 @@ class PitchTrainingApp {
                     this.performDataFlowTest();
                 }, 500);
                 
-                console.log('🎤 マイク初期化完了 - 成功手法適用');
+                console.log('🎤✅ Version 2.0.0 - マイク初期化完了 (成功手法適用)');
                 
                 // ストリームを保存（停止時に使用）
                 this.mediaStream = stream;
@@ -633,45 +634,6 @@ class PitchTrainingApp {
         }
     }
     
-    performMicrophoneTest() {
-        console.log('=== マイクテスト開始 ===');
-        
-        if (!this.analyzer) {
-            console.error('アナライザーが存在しません');
-            return;
-        }
-        
-        // 周波数データテスト
-        const freqData = new Float32Array(this.analyzer.frequencyBinCount);
-        this.analyzer.getFloatFrequencyData(freqData);
-        const nonInfinityFreq = freqData.filter(v => v > -Infinity && v < 0).length;
-        console.log('周波数データ:', {
-            total: freqData.length,
-            nonInfinity: nonInfinityFreq,
-            sample: freqData.slice(0, 10)
-        });
-        
-        // 時間データテスト
-        const timeData = new Uint8Array(this.analyzer.fftSize);
-        this.analyzer.getByteTimeDomainData(timeData);
-        const nonMidpoint = timeData.filter(v => v !== 128).length;
-        console.log('時間データ:', {
-            total: timeData.length,
-            nonMidpoint: nonMidpoint,
-            sample: timeData.slice(0, 10),
-            min: Math.min(...timeData),
-            max: Math.max(...timeData)
-        });
-        
-        // AudioContextの状態確認
-        console.log('AudioContext状態:', {
-            state: this.audioContext.state,
-            sampleRate: this.audioContext.sampleRate,
-            currentTime: this.audioContext.currentTime
-        });
-        
-        console.log('=== マイクテスト終了 ===');
-    }
     
     getPitchFromFFT(dataArray) {
         let maxIndex = 0;
