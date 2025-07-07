@@ -368,32 +368,12 @@ class PitchTrainingApp {
         
         console.log('マイクアクセス要求中...');
         
-        // iOS Safari向け最適化されたマイク設定
-        const isIOS = /iPad|iPhone|iPod|iOS/i.test(navigator.userAgent) || 
-                      /iPhone OS/i.test(navigator.userAgent) ||
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        // Safari対応: より寛容なオーディオ制約
-        const audioConstraints = {
-            audio: true  // 最もシンプルな設定でまず試行
-        };
+        // マイクテスト成功手法: シンプルな設定
+        const audioConstraints = { audio: true };
         
-        console.log('初回マイク設定:', audioConstraints);
+        console.log('マイク設定 (シンプル化):', audioConstraints);
         
-        console.log('マイク設定:', audioConstraints);
-        console.log('iOS Safari:', isIOS);
-        
-        // iOS Safari対応: 権限チェック
-        if (isIOS && navigator.permissions) {
-            try {
-                const permission = await navigator.permissions.query({ name: 'microphone' });
-                console.log('マイク権限状態:', permission.state);
-                if (permission.state === 'denied') {
-                    throw new Error('マイクアクセスが拒否されています。設定から許可してください。');
-                }
-            } catch (error) {
-                console.log('権限チェックエラー:', error);
-            }
-        }
+        // 権限チェックは省略（シンプル化）
         
         return navigator.mediaDevices.getUserMedia(audioConstraints)
             .then(stream => {
@@ -416,40 +396,39 @@ class PitchTrainingApp {
                     throw new Error('マイクが使用できません。他のアプリでマイクが使用中でないか確認してください。');
                 }
                 
-                // Safari対応: より確実なアナライザー設定
+                // マイクテスト成功手法: 確実なアナライザー設定
                 this.analyzer = this.audioContext.createAnalyser();
                 this.analyzer.fftSize = 2048;
-                this.analyzer.smoothingTimeConstant = 0.1;  // 反応を良くする
-                this.analyzer.minDecibels = -100;           // 感度を上げる
+                this.analyzer.smoothingTimeConstant = 0.1;
+                this.analyzer.minDecibels = -100;
                 this.analyzer.maxDecibels = -10;
                 
                 console.log('アナライザー設定完了');
                 
-                // マイクソースの作成
+                // マイクテスト成功手法: ゲインノード経由の接続
                 this.microphone = this.audioContext.createMediaStreamSource(stream);
                 console.log('マイクソース作成完了');
                 
-                // データ配列の初期化
                 this.dataArray = new Float32Array(this.analyzer.frequencyBinCount);
                 
-                // Safari対応: 強制的にマイクを有効化
+                // 成功手法: ゲインノードで確実な接続
                 const gainNode = this.audioContext.createGain();
-                gainNode.gain.value = 1.0;  // マイクの音量を確保
+                gainNode.gain.value = 1.0;
                 
                 this.microphone.connect(gainNode);
                 gainNode.connect(this.analyzer);
-                console.log('ゲインノード経由でマイク接続完了');
+                console.log('✅ ゲインノード経由接続完了');
                 
                 console.log('FFTサイズ:', this.analyzer.fftSize);
                 console.log('バッファサイズ:', this.analyzer.frequencyBinCount);
                 
-                // Safari対応: 出力先接続（データフローを確実にするため）
+                // マイクテスト成功手法: 出力先接続
                 try {
                     const outputGain = this.audioContext.createGain();
                     outputGain.gain.value = 0; // 音は出さない
                     this.analyzer.connect(outputGain);
                     outputGain.connect(this.audioContext.destination);
-                    console.log('出力先接続完了');
+                    console.log('✅ 出力先接続完了');
                     
                     // iOS Safari対応: ストリーム停止を監視
                     stream.getAudioTracks().forEach(track => {
@@ -490,23 +469,12 @@ class PitchTrainingApp {
                     smoothingTimeConstant: this.analyzer.smoothingTimeConstant
                 });
                 
-                // Safari対応: データ取得テスト（遅延実行）
+                // マイクテスト成功手法: データフロー確認
                 setTimeout(() => {
-                    this.performMicrophoneTest();
-                }, 1000);  // 1秒待ってからテスト
+                    this.performDataFlowTest();
+                }, 500);
                 
-                // Safari対応: 定期的なデータ確認
-                this.dataCheckInterval = setInterval(() => {
-                    if (this.analyzer) {
-                        const testData = new Uint8Array(this.analyzer.fftSize);
-                        this.analyzer.getByteTimeDomainData(testData);
-                        const hasData = testData.some(v => v !== 128);
-                        if (hasData && this.debugMode) {
-                            console.log('マイクデータ検出: OK');
-                            clearInterval(this.dataCheckInterval);
-                        }
-                    }
-                }, 2000);
+                console.log('🎤 マイク初期化完了 - 成功手法適用');
                 
                 // ストリームを保存（停止時に使用）
                 this.mediaStream = stream;
@@ -595,9 +563,8 @@ class PitchTrainingApp {
             this.updatePitchDisplay(pitch);
             this.drawWaveform();
             
-            // デバッグパネルの更新（毎フレーム）
-            if (this.debugMode) {
-                // 音量計算
+            // デバッグパネルの更新（軽量化：10フレームごと）
+            if (this.debugMode && frameCounter % 10 === 0) {
                 const volume = this.calculateCurrentVolume();
                 
                 this.updateDebugPanel({
@@ -612,6 +579,34 @@ class PitchTrainingApp {
         };
         
         detectPitch();
+    }
+    
+    performDataFlowTest() {
+        console.log('🔍 データフローテスト開始...');
+        
+        if (!this.analyzer) {
+            console.error('❌ アナライザーが存在しません');
+            return;
+        }
+        
+        const timeData = new Uint8Array(this.analyzer.fftSize);
+        const freqData = new Float32Array(this.analyzer.frequencyBinCount);
+        
+        this.analyzer.getByteTimeDomainData(timeData);
+        this.analyzer.getFloatFrequencyData(freqData);
+        
+        const timeDataActive = timeData.filter(v => v !== 128).length;
+        const freqDataActive = freqData.filter(v => v > -Infinity).length;
+        
+        console.log(`📊 データフローテスト結果:`);
+        console.log(`  時間データ: ${timeDataActive}/${timeData.length} (${Math.round(timeDataActive/timeData.length*100)}%)`);
+        console.log(`  周波数データ: ${freqDataActive}/${freqData.length} (${Math.round(freqDataActive/freqData.length*100)}%)`);
+        
+        if (timeDataActive > 0 || freqDataActive > 0) {
+            console.log('✅ データフロー正常');
+        } else {
+            console.log('⚠️ データフロー確認できず');
+        }
     }
     
     calculateCurrentVolume() {
