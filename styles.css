@@ -70,6 +70,77 @@ footer {
     }
 }
 
+/* デバッグパネル */
+.debug-panel {
+    background: #f0f0f0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+}
+
+.debug-panel h4 {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.debug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.debug-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.debug-label {
+    font-weight: bold;
+    color: #555;
+}
+
+.debug-value {
+    font-family: 'Courier New', monospace;
+    color: #333;
+    background: #f8f8f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.debug-value.active {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.debug-value.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+@media (max-width: 600px) {
+    .debug-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .debug-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .debug-label {
+        margin-bottom: 5px;
+    }
+}
+
 .mode-selection {
     text-align: center;
 }

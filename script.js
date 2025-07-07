@@ -40,6 +40,7 @@ class PitchTrainingApp {
         // デバッグモード時の情報表示
         if (this.debugMode) {
             this.showDebugInfo();
+            this.initDebugPanel();
         }
     }
     
@@ -76,6 +77,71 @@ class PitchTrainingApp {
         
         document.body.appendChild(debugInfo);
         console.log('デバッグ情報:', info);
+    }
+    
+    initDebugPanel() {
+        const debugPanel = document.getElementById('debug-panel');
+        if (debugPanel) {
+            debugPanel.style.display = 'block';
+            console.log('デバッグパネルを表示しました');
+        }
+    }
+    
+    updateDebugPanel(data) {
+        if (!this.debugMode) return;
+        
+        const elements = {
+            frequency: document.getElementById('debug-frequency'),
+            volume: document.getElementById('debug-volume'),
+            waveform: document.getElementById('debug-waveform'),
+            context: document.getElementById('debug-context'),
+            mic: document.getElementById('debug-mic'),
+            frames: document.getElementById('debug-frames')
+        };
+        
+        // 周波数情報
+        if (elements.frequency) {
+            if (data.frequency) {
+                elements.frequency.textContent = `${Math.round(data.frequency)}Hz`;
+                elements.frequency.className = 'debug-value active';
+            } else {
+                elements.frequency.textContent = '検出なし';
+                elements.frequency.className = 'debug-value';
+            }
+        }
+        
+        // 音量レベル
+        if (elements.volume) {
+            elements.volume.textContent = `${Math.round(data.volume || 0)}%`;
+            elements.volume.className = data.volume > 5 ? 'debug-value active' : 'debug-value';
+        }
+        
+        // 波形データ状態
+        if (elements.waveform) {
+            const status = data.waveformActive ? '取得中' : '待機中';
+            elements.waveform.textContent = status;
+            elements.waveform.className = data.waveformActive ? 'debug-value active' : 'debug-value';
+        }
+        
+        // AudioContext状態
+        if (elements.context) {
+            const state = this.audioContext?.state || 'なし';
+            elements.context.textContent = state;
+            elements.context.className = state === 'running' ? 'debug-value active' : 'debug-value error';
+        }
+        
+        // マイク状態
+        if (elements.mic) {
+            const status = this.mediaStream?.active ? 'アクティブ' : '非アクティブ';
+            elements.mic.textContent = status;
+            elements.mic.className = this.mediaStream?.active ? 'debug-value active' : 'debug-value error';
+        }
+        
+        // フレーム数
+        if (elements.frames) {
+            elements.frames.textContent = data.frameCount || 0;
+            elements.frames.className = 'debug-value';
+        }
     }
     
     drawInitialCanvas() {
@@ -486,10 +552,47 @@ class PitchTrainingApp {
             this.updatePitchDisplay(pitch);
             this.drawWaveform();
             
+            // デバッグパネルの更新
+            if (this.debugMode) {
+                // 音量計算
+                const volume = this.calculateCurrentVolume();
+                
+                this.updateDebugPanel({
+                    frequency: pitch,
+                    volume: volume,
+                    waveformActive: hasTimeData,
+                    frameCount: frameCounter
+                });
+            }
+            
             requestAnimationFrame(detectPitch);
         };
         
         detectPitch();
+    }
+    
+    calculateCurrentVolume() {
+        if (!this.analyzer) return 0;
+        
+        try {
+            const timeData = new Uint8Array(this.analyzer.fftSize);
+            this.analyzer.getByteTimeDomainData(timeData);
+            
+            let sum = 0;
+            let maxAmplitude = 0;
+            
+            for (let i = 0; i < timeData.length; i++) {
+                const sample = (timeData[i] - 128) / 128;
+                sum += sample * sample;
+                maxAmplitude = Math.max(maxAmplitude, Math.abs(sample));
+            }
+            
+            const rms = Math.sqrt(sum / timeData.length);
+            return Math.max(rms * 200, maxAmplitude * 100);
+        } catch (error) {
+            console.error('音量計算エラー:', error);
+            return 0;
+        }
     }
     
     performMicrophoneTest() {
