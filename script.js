@@ -408,9 +408,12 @@ class PitchTrainingApp {
         
         // マイクテスト用のカウンター
         let testCounter = 0;
+        let frameCounter = 0;
         
         const detectPitch = () => {
             if (!this.isTraining) return;
+            
+            frameCounter++;
             
             // 最初の10回でマイクデータをテスト
             if (testCounter < 10) {
@@ -420,8 +423,24 @@ class PitchTrainingApp {
                 testCounter++;
             }
             
+            // 周波数データと時間データの両方を取得
             this.analyzer.getFloatFrequencyData(this.dataArray);
             const pitch = this.getPitchFromFFT(this.dataArray);
+            
+            // 時間データ（波形）の確認
+            const timeData = new Uint8Array(this.analyzer.fftSize);
+            this.analyzer.getByteTimeDomainData(timeData);
+            const hasTimeData = timeData.some(v => v !== 128);
+            
+            // デバッグ: データ取得状況を確認
+            if (this.debugMode && frameCounter % 60 === 0) { // 1秒ごと
+                console.log('データ取得状況:', {
+                    frequency: this.dataArray.some(v => v > -100),
+                    waveform: hasTimeData,
+                    pitch: pitch,
+                    analyzerState: this.analyzer ? 'active' : 'inactive'
+                });
+            }
             
             this.updatePitchDisplay(pitch);
             this.drawWaveform();
@@ -483,7 +502,7 @@ class PitchTrainingApp {
     }
     
     drawWaveform() {
-        if (!this.canvasContext) return;
+        if (!this.canvasContext || !this.analyzer) return;
         
         const width = this.canvas.width;
         const height = this.canvas.height;
@@ -500,9 +519,18 @@ class PitchTrainingApp {
         this.canvasContext.lineTo(width - 50, height / 2); // 音量バーのスペースを空ける
         this.canvasContext.stroke();
         
-        // 時間領域の波形データを取得
-        const timeDataArray = new Uint8Array(this.analyzer.frequencyBinCount);
+        // 時間領域の波形データを取得（iOS Safari対応でバッファサイズを調整）
+        const bufferLength = this.analyzer.fftSize;
+        const timeDataArray = new Uint8Array(bufferLength);
         this.analyzer.getByteTimeDomainData(timeDataArray);
+        
+        // デバッグ: 波形データの確認
+        if (this.debugMode) {
+            const nonZeroCount = timeDataArray.filter(v => v !== 128).length;
+            if (nonZeroCount > 0) {
+                console.log('波形データ取得成功:', nonZeroCount, '/', timeDataArray.length);
+            }
+        }
         
         // 波形を描画（右側に音量バーのスペースを空ける）
         this.canvasContext.lineWidth = 2;
@@ -510,12 +538,13 @@ class PitchTrainingApp {
         this.canvasContext.beginPath();
         
         const waveformWidth = width - 60; // 音量バー用にスペースを確保
-        const sliceWidth = waveformWidth / timeDataArray.length;
+        const sliceWidth = waveformWidth / bufferLength;
         let x = 0;
         
-        for (let i = 0; i < timeDataArray.length; i++) {
-            const v = timeDataArray[i] / 128.0;
-            const y = v * height / 2;
+        for (let i = 0; i < bufferLength; i++) {
+            // iOS Safari対応: 波形データの正規化を改善
+            const v = (timeDataArray[i] - 128) / 128.0; // -1 to 1の範囲に正規化
+            const y = (height / 2) + (v * height / 4); // 中央を基準に振幅を制限
             
             if (i === 0) {
                 this.canvasContext.moveTo(x, y);
@@ -535,12 +564,21 @@ class PitchTrainingApp {
     drawVolumeIndicator(timeDataArray) {
         // RMS（実効値）を計算してマイク感度を表示
         let sum = 0;
+        let maxAmplitude = 0;
+        
         for (let i = 0; i < timeDataArray.length; i++) {
             const sample = (timeDataArray[i] - 128) / 128;
             sum += sample * sample;
+            maxAmplitude = Math.max(maxAmplitude, Math.abs(sample));
         }
+        
         const rms = Math.sqrt(sum / timeDataArray.length);
-        const volume = rms * 100;
+        const volume = Math.max(rms * 200, maxAmplitude * 100); // 感度を上げる
+        
+        // デバッグ情報
+        if (this.debugMode && volume > 1) {
+            console.log('音量レベル:', Math.round(volume), '% RMS:', Math.round(rms * 100), '% Max:', Math.round(maxAmplitude * 100), '%');
+        }
         
         const width = this.canvas.width;
         const height = this.canvas.height;
