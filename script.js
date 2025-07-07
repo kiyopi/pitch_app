@@ -94,57 +94,68 @@ class PitchTrainingApp {
     updateDebugPanel(data) {
         if (!this.debugMode) return;
         
-        const elements = {
-            frequency: document.getElementById('debug-frequency'),
-            volume: document.getElementById('debug-volume'),
-            waveform: document.getElementById('debug-waveform'),
-            context: document.getElementById('debug-context'),
-            mic: document.getElementById('debug-mic'),
-            frames: document.getElementById('debug-frames')
-        };
-        
-        // 周波数情報
-        if (elements.frequency) {
-            if (data.frequency) {
-                elements.frequency.textContent = `${Math.round(data.frequency)}Hz`;
-                elements.frequency.className = 'debug-value active';
-            } else {
-                elements.frequency.textContent = '検出なし';
-                elements.frequency.className = 'debug-value';
+        try {
+            const elements = {
+                frequency: document.getElementById('debug-frequency'),
+                volume: document.getElementById('debug-volume'),
+                waveform: document.getElementById('debug-waveform'),
+                context: document.getElementById('debug-context'),
+                mic: document.getElementById('debug-mic'),
+                frames: document.getElementById('debug-frames')
+            };
+            
+            // 周波数情報
+            if (elements.frequency) {
+                if (data.frequency && data.frequency > 0) {
+                    elements.frequency.textContent = `${Math.round(data.frequency)}Hz`;
+                    elements.frequency.className = 'debug-value active';
+                } else {
+                    elements.frequency.textContent = '検出なし';
+                    elements.frequency.className = 'debug-value';
+                }
             }
-        }
-        
-        // 音量レベル
-        if (elements.volume) {
-            elements.volume.textContent = `${Math.round(data.volume || 0)}%`;
-            elements.volume.className = data.volume > 5 ? 'debug-value active' : 'debug-value';
-        }
-        
-        // 波形データ状態
-        if (elements.waveform) {
-            const status = data.waveformActive ? '取得中' : '待機中';
-            elements.waveform.textContent = status;
-            elements.waveform.className = data.waveformActive ? 'debug-value active' : 'debug-value';
-        }
-        
-        // AudioContext状態
-        if (elements.context) {
-            const state = this.audioContext?.state || 'なし';
-            elements.context.textContent = state;
-            elements.context.className = state === 'running' ? 'debug-value active' : 'debug-value error';
-        }
-        
-        // マイク状態
-        if (elements.mic) {
-            const status = this.mediaStream?.active ? 'アクティブ' : '非アクティブ';
-            elements.mic.textContent = status;
-            elements.mic.className = this.mediaStream?.active ? 'debug-value active' : 'debug-value error';
-        }
-        
-        // フレーム数
-        if (elements.frames) {
-            elements.frames.textContent = data.frameCount || 0;
-            elements.frames.className = 'debug-value';
+            
+            // 音量レベル
+            if (elements.volume) {
+                const volumeValue = Math.round(data.volume || 0);
+                elements.volume.textContent = `${volumeValue}%`;
+                elements.volume.className = volumeValue > 1 ? 'debug-value active' : 'debug-value';
+            }
+            
+            // 波形データ状態
+            if (elements.waveform) {
+                const status = data.waveformActive ? '取得中' : '待機中';
+                elements.waveform.textContent = status;
+                elements.waveform.className = data.waveformActive ? 'debug-value active' : 'debug-value';
+            }
+            
+            // AudioContext状態
+            if (elements.context) {
+                const state = this.audioContext?.state || 'なし';
+                elements.context.textContent = state;
+                elements.context.className = state === 'running' ? 'debug-value active' : 'debug-value error';
+            }
+            
+            // マイク状態
+            if (elements.mic) {
+                const status = this.mediaStream?.active ? 'アクティブ' : '非アクティブ';
+                elements.mic.textContent = status;
+                elements.mic.className = this.mediaStream?.active ? 'debug-value active' : 'debug-value error';
+            }
+            
+            // フレーム数
+            if (elements.frames) {
+                elements.frames.textContent = data.frameCount || 0;
+                elements.frames.className = 'debug-value';
+            }
+            
+            // デバッグ: 更新ログ（最初の10回のみ）
+            if (data.frameCount <= 10) {
+                console.log('デバッグパネル更新:', data);
+            }
+            
+        } catch (error) {
+            console.error('デバッグパネル更新エラー:', error);
         }
     }
     
@@ -584,7 +595,7 @@ class PitchTrainingApp {
             this.updatePitchDisplay(pitch);
             this.drawWaveform();
             
-            // デバッグパネルの更新
+            // デバッグパネルの更新（毎フレーム）
             if (this.debugMode) {
                 // 音量計算
                 const volume = this.calculateCurrentVolume();
@@ -757,34 +768,38 @@ class PitchTrainingApp {
                 });
             }
             
-            // 波形描画（データがある場合のみ）
-            if (nonMidpoint > 0) {
-                this.canvasContext.lineWidth = 2;
-                this.canvasContext.strokeStyle = '#667eea';
-                this.canvasContext.beginPath();
+            // 波形描画（常に実行、ノイズも可視化）
+            this.canvasContext.lineWidth = 2;
+            this.canvasContext.strokeStyle = nonMidpoint > 10 ? '#667eea' : '#ffb74d'; // データ量に応じて色変更
+            this.canvasContext.beginPath();
+            
+            const waveformWidth = width - 60;
+            
+            for (let i = 0; i < bufferLength; i += 2) { // より細かくサンプリング
+                const v = (timeDataArray[i] - 128) / 128.0;
+                const x = (i / bufferLength) * waveformWidth;
+                const y = (height / 2) + (v * height / 2); // 振幅を大きく
                 
-                const waveformWidth = width - 60;
-                const sliceWidth = waveformWidth / bufferLength;
-                
-                for (let i = 0; i < bufferLength; i += 4) { // サンプリング間隔を広げて軽量化
-                    const v = (timeDataArray[i] - 128) / 128.0;
-                    const x = (i / bufferLength) * waveformWidth;
-                    const y = (height / 2) + (v * height / 3); // 振幅を少し大きく
-                    
-                    if (i === 0) {
-                        this.canvasContext.moveTo(x, y);
-                    } else {
-                        this.canvasContext.lineTo(x, y);
-                    }
+                if (i === 0) {
+                    this.canvasContext.moveTo(x, y);
+                } else {
+                    this.canvasContext.lineTo(x, y);
                 }
-                
-                this.canvasContext.stroke();
-            } else {
-                // データがない場合の表示
-                this.canvasContext.fillStyle = '#999';
-                this.canvasContext.font = '14px Arial';
-                this.canvasContext.textAlign = 'center';
-                this.canvasContext.fillText('マイクデータ待機中...', width / 2, height / 2 + 20);
+            }
+            
+            this.canvasContext.stroke();
+            
+            // データ状態の表示
+            if (nonMidpoint > 100) {
+                this.canvasContext.fillStyle = '#4CAF50';
+                this.canvasContext.font = '12px Arial';
+                this.canvasContext.textAlign = 'left';
+                this.canvasContext.fillText(`データ取得中 (${nonMidpoint}/${bufferLength})`, 10, 20);
+            } else if (nonMidpoint > 0) {
+                this.canvasContext.fillStyle = '#FF9800';
+                this.canvasContext.font = '12px Arial';
+                this.canvasContext.textAlign = 'left';
+                this.canvasContext.fillText(`微弱信号 (${nonMidpoint}/${bufferLength})`, 10, 20);
             }
             
             // 音量レベルインジケーター
