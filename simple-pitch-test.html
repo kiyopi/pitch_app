@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 シンプル音程判定テスト</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .control-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .start-btn, .stop-btn, .play-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .start-btn {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .stop-btn {
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+            color: white;
+            display: none;
+        }
+
+        .play-btn {
+            background: linear-gradient(145deg, #2196F3, #1976D2);
+            color: white;
+            display: none;
+        }
+
+        .target-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f0f8ff;
+            border-radius: 15px;
+            border: 2px solid #2196F3;
+            display: none;
+        }
+
+        .target-note {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 15px;
+        }
+
+        .target-freq {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .frequency-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .frequency-main {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #e0e0e0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .judgment-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px solid #e0e0e0;
+            display: none;
+        }
+
+        .judgment-status {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .judgment-detail {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .judgment-status.perfect {
+            color: #4CAF50;
+        }
+
+        .judgment-status.good {
+            color: #FF9800;
+        }
+
+        .judgment-status.needs-work {
+            color: #f44336;
+        }
+
+        .canvas-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        #waveform-canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+            max-width: 100%;
+        }
+
+        .canvas-label {
+            margin-top: 10px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .version-info {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .main-panel {
+                padding: 25px 20px;
+            }
+            
+            .frequency-main {
+                font-size: 3rem;
+                min-height: 100px;
+            }
+            
+            .target-note {
+                font-size: 2.5rem;
+            }
+            
+            .start-btn, .stop-btn, .play-btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 シンプル音程判定テスト</h1>
+            <p>Do4（262Hz）に合わせて歌って判定をテストしましょう</p>
+        </div>
+
+        <div class="main-panel">
+            <div class="control-section">
+                <button id="start-btn" class="start-btn">開始</button>
+                <button id="stop-btn" class="stop-btn">停止</button>
+                <button id="play-btn" class="play-btn">🔊 Do4 基音再生</button>
+            </div>
+
+            <div class="target-section" id="target-section">
+                <div class="target-note">♪ Do4 ♪</div>
+                <div class="target-freq">目標: 262 Hz</div>
+                <p>基音を聞いてから、同じ高さで歌ってください</p>
+            </div>
+
+            <div class="frequency-display">
+                <div class="frequency-main" id="frequency-main">
+                    --- Hz
+                </div>
+            </div>
+
+            <div class="judgment-section" id="judgment-section">
+                <div class="judgment-status" id="judgment-status">歌ってください</div>
+                <div class="judgment-detail" id="judgment-detail">基音を聞いてから同じ高さで歌ってください</div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="waveform-canvas" width="700" height="150"></canvas>
+                <div class="canvas-label">マイク波形表示</div>
+            </div>
+        </div>
+
+        <div class="version-info">
+            <span>Simple Pitch Test v1.0.0</span>
+        </div>
+    </div>
+
+    <script src="simple-pitch-test.js"></script>
+</body>
+</html>
