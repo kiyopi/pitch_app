@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音程トレーニング</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 音程トレーニング</h1>
+            <p>ピアノの音に合わせて正確な音程で歌いましょう</p>
+        </header>
+
+        <main>
+            <div class="mode-selection" id="mode-selection">
+                <div class="mode-group">
+                    <h3>性別を選択</h3>
+                    <div class="button-group">
+                        <button class="mode-btn" data-gender="male">男性</button>
+                        <button class="mode-btn" data-gender="female">女性</button>
+                    </div>
+                </div>
+
+                <div class="mode-group">
+                    <h3>トレーニングモードを選択</h3>
+                    <div class="button-group">
+                        <button class="mode-btn" data-training="sequential">
+                            <strong>順次モード</strong>
+                            <span>ドレミファソラシド</span>
+                        </button>
+                        <button class="mode-btn" data-training="octave">
+                            <strong>オクターブモード</strong>
+                            <span>各音でオクターブ比較</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="start-btn" class="start-btn" disabled>スタート</button>
+            </div>
+
+            <div class="training-screen" id="training-screen" style="display: none;">
+                <div class="training-info">
+                    <div class="current-note" id="current-note">準備中...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0/8</div>
+                </div>
+
+                <div class="audio-visual">
+                    <div class="canvas-container">
+                        <canvas id="pitch-canvas"></canvas>
+                        <div class="canvas-label">マイク波形 & 音量レベル</div>
+                    </div>
+                    <div class="pitch-info">
+                        <div class="target-pitch" id="target-pitch">♪</div>
+                        <div class="user-pitch" id="user-pitch">♪</div>
+                    </div>
+                </div>
+
+                <div class="debug-panel" id="debug-panel">
+                    <h4>🔧 デバッグ情報</h4>
+                    <div class="debug-grid">
+                        <div class="debug-item">
+                            <span class="debug-label">検出周波数:</span>
+                            <span class="debug-value" id="debug-frequency">-</span>
+                        </div>
+                        <div class="debug-item">
+                            <span class="debug-label">音量レベル:</span>
+                            <span class="debug-value" id="debug-volume">-</span>
+                        </div>
+                        <div class="debug-item">
+                            <span class="debug-label">波形データ:</span>
+                            <span class="debug-value" id="debug-waveform">-</span>
+                        </div>
+                        <div class="debug-item">
+                            <span class="debug-label">AudioContext:</span>
+                            <span class="debug-value" id="debug-context">-</span>
+                        </div>
+                        <div class="debug-item">
+                            <span class="debug-label">マイク状態:</span>
+                            <span class="debug-value" id="debug-mic">-</span>
+                        </div>
+                        <div class="debug-item">
+                            <span class="debug-label">フレーム数:</span>
+                            <span class="debug-value" id="debug-frames">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="stop-btn" class="stop-btn">停止</button>
+                </div>
+            </div>
+
+            <div class="results-screen" id="results-screen" style="display: none;">
+                <h2>結果</h2>
+                <div class="score-summary">
+                    <div class="total-score" id="total-score">0</div>
+                    <div class="accuracy-rate" id="accuracy-rate">0%</div>
+                </div>
+
+                <div class="detailed-results">
+                    <canvas id="results-chart"></canvas>
+                    <div class="note-results" id="note-results"></div>
+                </div>
+
+                <div class="result-actions">
+                    <button id="share-btn" class="share-btn">SNSで共有</button>
+                    <button id="retry-btn" class="retry-btn">もう一度</button>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="version-info">
+                <span>Version: 2.0.4 (デバッグパネル修正)</span>
+                <span>Build: 9123456</span>
+                <span>Updated: 2025-01-07 16:10</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js?v=20250107161000"></script>
+</body>
+</html>
