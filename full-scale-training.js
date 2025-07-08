@@ -498,6 +498,9 @@ class FullScaleTraining {
         this.log('🎊 全ての音程完了！結果を表示します');
         this.log(`📊 結果データ数: ${this.results.length}`);
         
+        // マイクを自動でオフにする
+        this.stopMicrophone();
+        
         // UI切り替え
         document.getElementById('progress-section').style.display = 'none';
         document.getElementById('guide-section').style.display = 'none';
@@ -656,6 +659,36 @@ class FullScaleTraining {
         this.ctx.font = '12px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('🎤', barX + barWidth/2, barY - 5);
+    }
+    
+    stopMicrophone() {
+        this.log('🔇 マイクを自動停止中...');
+        
+        // 周波数検出を停止
+        this.isRunning = false;
+        
+        // マイクストリームを停止
+        if (this.mediaStream) {
+            this.mediaStream.getTracks().forEach(track => {
+                track.stop();
+                this.log(`🔇 マイクトラック停止: ${track.kind}`);
+            });
+            this.mediaStream = null;
+        }
+        
+        // マイクノードを切断
+        if (this.microphone) {
+            this.microphone.disconnect();
+            this.microphone = null;
+        }
+        
+        // アナライザーもクリア
+        if (this.analyzer) {
+            this.analyzer.disconnect();
+            this.analyzer = null;
+        }
+        
+        this.log('✅ マイク自動停止完了');
     }
     
     stopTraining() {
