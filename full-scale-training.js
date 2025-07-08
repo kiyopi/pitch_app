@@ -555,16 +555,6 @@ class FullScaleTraining {
             `;
         }
         
-        // アイコンの意味説明
-        let legendHtml = '<div style="margin-bottom: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px; border: 2px solid #2196F3;">';
-        legendHtml += '<h4 style="margin-bottom: 10px; color: #2196F3;">📊 判定結果の見方</h4>';
-        legendHtml += '<div style="font-size: 0.9rem; line-height: 1.6;">';
-        legendHtml += '• 🎉 <strong>完璧</strong>: ±10セント以内（非常に正確）<br>';
-        legendHtml += '• 👍 <strong>良い</strong>: ±20セント以内（良好な精度）<br>';
-        legendHtml += '• 😭 <strong>要調整</strong>: ±20セント超（練習が必要）<br>';
-        legendHtml += '• <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分';
-        legendHtml += '</div></div>';
-        
         // 詳細結果表示
         let detailHtml = '<div>';
         detailHtml += '<h4 style="margin-bottom: 15px; color: #333;">🎵 各音程の詳細結果</h4>';
@@ -575,8 +565,18 @@ class FullScaleTraining {
         });
         detailHtml += '</div>';
         
-        // 凡例と詳細結果を組み合わせ
-        const finalDetailHtml = legendHtml + detailHtml;
+        // アイコンの意味説明
+        let legendHtml = '<div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px; border: 2px solid #2196F3;">';
+        legendHtml += '<h4 style="margin-bottom: 10px; color: #2196F3;">📊 判定結果の見方</h4>';
+        legendHtml += '<div style="font-size: 0.9rem; line-height: 1.6;">';
+        legendHtml += '• 🎉 <strong>完璧</strong>: ±10セント以内（非常に正確）<br>';
+        legendHtml += '• 👍 <strong>良い</strong>: ±20セント以内（良好な精度）<br>';
+        legendHtml += '• 😭 <strong>要調整</strong>: ±20セント超（練習が必要）<br>';
+        legendHtml += '• <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分';
+        legendHtml += '</div></div>';
+        
+        // 詳細結果と凡例を組み合わせ
+        const finalDetailHtml = detailHtml + legendHtml;
         
         detailElement.innerHTML = finalDetailHtml;
         
