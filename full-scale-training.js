@@ -65,6 +65,8 @@ class FullScaleTraining {
             document.getElementById('progress-section').style.display = 'block';
             document.getElementById('guide-section').style.display = 'block';
             document.getElementById('guidance-section').style.display = 'block';
+            document.getElementById('frequency-display').style.display = 'block';
+            document.getElementById('canvas-container').style.display = 'block';
             
             // AudioContext初期化
             await this.initAudioContext();
@@ -731,6 +733,8 @@ class FullScaleTraining {
         document.getElementById('guide-section').style.display = 'none';
         document.getElementById('guidance-section').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
+        document.getElementById('frequency-display').style.display = 'none';
+        document.getElementById('canvas-container').style.display = 'none';
         
         // 表示リセット
         document.getElementById('frequency-main').textContent = '--- Hz';

@@ -333,7 +333,7 @@
             <div class="control-section">
                 <button id="start-btn" class="start-btn">トレーニング開始</button>
                 <button id="main-start-btn" class="main-start-btn" style="display: none;">🎹 基音を聞いてスタート！</button>
-                <button id="stop-btn" class="stop-btn">中断</button>
+                <button id="stop-btn" class="stop-btn" style="display: none;">中断</button>
             </div>
 
             <div class="guide-section" id="guide-section" style="display: none;">
@@ -356,7 +356,7 @@
                 <div class="target-freq" id="target-freq">目標: 262 Hz</div>
             </div>
 
-            <div class="frequency-display">
+            <div class="frequency-display" id="frequency-display" style="display: none;">
                 <div class="frequency-main" id="frequency-main">
                     --- Hz
                 </div>
@@ -372,7 +372,7 @@
                 <div class="results-detail" id="results-detail"></div>
             </div>
 
-            <div class="canvas-container">
+            <div class="canvas-container" id="canvas-container" style="display: none;">
                 <canvas id="waveform-canvas" width="700" height="150"></canvas>
                 <div class="canvas-label">マイク波形表示</div>
             </div>
