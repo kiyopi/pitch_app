@@ -32,12 +32,93 @@ class FullScaleTraining {
         this.referenceOscillator = null;
         this.referenceGain = null;
         
+        // ノイズリダクション機能
+        this.noiseReduction = {
+            enabled: true,
+            lowPassFilter: null,
+            highPassFilter: null,
+            notchFilter: null,
+            gainNode: null
+        };
+        
+        // デバッグ機能
+        this.debugMode = false;
+        this.debugAnalyzer = null; // フィルター前の音声分析用
+        this.spectrumCanvas = null;
+        this.spectrumCtx = null;
+        
         // 状態管理
         this.trainingPhase = 'waiting'; // waiting, playing, animating, completed
         
         // 初期化
         this.setupEventListeners();
         this.log('🎵 FullScaleTraining v1.0.0 初期化完了');
+    }
+    
+    initNoiseReductionFilters() {
+        if (!this.audioContext || !this.noiseReduction.enabled) {
+            this.log('🔇 ノイズリダクション無効または AudioContext なし');
+            return null;
+        }
+        
+        this.log('🎛️ ノイズリダクションフィルター初期化開始');
+        
+        try {
+            // ハイパスフィルター: 低周波ノイズ（エアコン、ファンなど）をカット
+            this.noiseReduction.highPassFilter = this.audioContext.createBiquadFilter();
+            this.noiseReduction.highPassFilter.type = 'highpass';
+            this.noiseReduction.highPassFilter.frequency.setValueAtTime(80, this.audioContext.currentTime); // 80Hz以下カット
+            this.noiseReduction.highPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
+            
+            // ローパスフィルター: 高周波ノイズをカット
+            this.noiseReduction.lowPassFilter = this.audioContext.createBiquadFilter();
+            this.noiseReduction.lowPassFilter.type = 'lowpass';
+            this.noiseReduction.lowPassFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime); // 2kHz以上カット
+            this.noiseReduction.lowPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
+            
+            // ノッチフィルター: 60Hz電源ノイズをカット
+            this.noiseReduction.notchFilter = this.audioContext.createBiquadFilter();
+            this.noiseReduction.notchFilter.type = 'notch';
+            this.noiseReduction.notchFilter.frequency.setValueAtTime(60, this.audioContext.currentTime); // 60Hzノイズカット
+            this.noiseReduction.notchFilter.Q.setValueAtTime(30, this.audioContext.currentTime); // 狭い範囲でカット
+            
+            // ゲインノード: 音量調整
+            this.noiseReduction.gainNode = this.audioContext.createGain();
+            this.noiseReduction.gainNode.gain.setValueAtTime(1.2, this.audioContext.currentTime); // 少し音量を上げる
+            
+            this.log('✅ ノイズリダクションフィルター初期化完了');
+            this.log(`  - ハイパス: 80Hz以下カット`);
+            this.log(`  - ローパス: 2kHz以上カット`);
+            this.log(`  - ノッチ: 60Hz電源ノイズカット`);
+            this.log(`  - ゲイン: 1.2倍`);
+            
+            return this.noiseReduction.highPassFilter; // 最初のフィルターを返す
+            
+        } catch (error) {
+            this.log(`❌ ノイズリダクションフィルター初期化エラー: ${error.message}`);
+            this.noiseReduction.enabled = false;
+            return null;
+        }
+    }
+    
+    connectNoiseReductionChain(inputNode, outputNode) {
+        if (!this.noiseReduction.enabled || !this.noiseReduction.highPassFilter) {
+            // ノイズリダクション無効の場合は直接接続
+            inputNode.connect(outputNode);
+            this.log('🔗 ノイズリダクション無効 - 直接接続');
+            return;
+        }
+        
+        // フィルターチェーンを構築
+        // 入力 → ハイパス → ローパス → ノッチ → ゲイン → 出力
+        inputNode.connect(this.noiseReduction.highPassFilter);
+        this.noiseReduction.highPassFilter.connect(this.noiseReduction.lowPassFilter);
+        this.noiseReduction.lowPassFilter.connect(this.noiseReduction.notchFilter);
+        this.noiseReduction.notchFilter.connect(this.noiseReduction.gainNode);
+        this.noiseReduction.gainNode.connect(outputNode);
+        
+        this.log('🔗 ノイズリダクションチェーン接続完了');
+        this.log('  マイク → ハイパス → ローパス → ノッチ → ゲイン → アナライザー');
     }
     
     setupEventListeners() {
@@ -52,6 +133,68 @@ class FullScaleTraining {
         document.getElementById('main-start-btn').addEventListener('click', () => {
             this.playReferenceAndStartAnimation();
         });
+        
+        // ノイズリダクションON/OFF切り替え
+        document.getElementById('noise-reduction-toggle').addEventListener('change', (event) => {
+            this.toggleNoiseReduction(event.target.checked);
+        });
+        
+        // デバッグパネル切り替え
+        document.getElementById('toggle-noise-debug').addEventListener('click', () => {
+            this.toggleNoiseDebugPanel();
+        });
+    }
+    
+    toggleNoiseReduction(enabled) {
+        this.noiseReduction.enabled = enabled;
+        
+        const statusElement = document.getElementById('noise-status');
+        if (enabled) {
+            statusElement.textContent = 'ON';
+            statusElement.style.color = '#4CAF50';
+            this.log('🎛️ ノイズリダクション有効化');
+        } else {
+            statusElement.textContent = 'OFF';
+            statusElement.style.color = '#f44336';
+            this.log('🔇 ノイズリダクション無効化');
+        }
+        
+        // 実行中の場合は再接続が必要
+        if (this.isRunning && this.microphone && this.analyzer) {
+            this.log('🔄 ノイズリダクション設定変更 - 再接続中...');
+            this.reconnectMicrophoneWithNoiseReduction();
+        }
+    }
+    
+    reconnectMicrophoneWithNoiseReduction() {
+        // 既存の接続を切断
+        this.microphone.disconnect();
+        if (this.noiseReduction.highPassFilter) {
+            this.noiseReduction.highPassFilter.disconnect();
+        }
+        if (this.noiseReduction.lowPassFilter) {
+            this.noiseReduction.lowPassFilter.disconnect();
+        }
+        if (this.noiseReduction.notchFilter) {
+            this.noiseReduction.notchFilter.disconnect();
+        }
+        if (this.noiseReduction.gainNode) {
+            this.noiseReduction.gainNode.disconnect();
+        }
+        
+        // フィルター再初期化
+        this.initNoiseReductionFilters();
+        
+        // 新しい設定で再接続
+        this.connectNoiseReductionChain(this.microphone, this.analyzer);
+        
+        // 出力先も再接続
+        const outputGain = this.audioContext.createGain();
+        outputGain.gain.value = 0;
+        this.analyzer.connect(outputGain);
+        outputGain.connect(this.audioContext.destination);
+        
+        this.log('✅ ノイズリダクション設定変更完了');
     }
     
     async startTraining() {
@@ -114,20 +257,31 @@ class FullScaleTraining {
         this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         this.log(`📡 マイクストリーム取得成功 (ID: ${this.mediaStream.id})`);
         
-        // アナライザー設定
+        // アナライザー設定（フィルター後用）
         this.analyzer = this.audioContext.createAnalyser();
         this.analyzer.fftSize = 2048;
         this.analyzer.smoothingTimeConstant = 0.1;
         this.analyzer.minDecibels = -100;
         this.analyzer.maxDecibels = -10;
         
-        // マイク接続（ゲインノード経由）
-        this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
-        const gainNode = this.audioContext.createGain();
-        gainNode.gain.value = 1.0;
+        // デバッグ用アナライザー（フィルター前用）
+        this.debugAnalyzer = this.audioContext.createAnalyser();
+        this.debugAnalyzer.fftSize = 2048;
+        this.debugAnalyzer.smoothingTimeConstant = 0.1;
+        this.debugAnalyzer.minDecibels = -100;
+        this.debugAnalyzer.maxDecibels = -10;
         
-        this.microphone.connect(gainNode);
-        gainNode.connect(this.analyzer);
+        // マイク接続（ノイズリダクション経由）
+        this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
+        
+        // デバッグ用：フィルター前の音声もキャプチャ
+        this.microphone.connect(this.debugAnalyzer);
+        
+        // ノイズリダクションフィルター初期化
+        this.initNoiseReductionFilters();
+        
+        // ノイズリダクションチェーンでマイクとアナライザーを接続
+        this.connectNoiseReductionChain(this.microphone, this.analyzer);
         
         // 出力先接続（Safari対応）
         const outputGain = this.audioContext.createGain();
@@ -135,7 +289,7 @@ class FullScaleTraining {
         this.analyzer.connect(outputGain);
         outputGain.connect(this.audioContext.destination);
         
-        this.log('🔌 マイク接続完了');
+        this.log('🔌 ノイズリダクション付きマイク接続完了');
     }
     
     updateProgress() {
@@ -760,6 +914,162 @@ class FullScaleTraining {
         const timestamp = new Date().toLocaleTimeString();
         const logLine = `[${timestamp}] ${message}`;
         console.log(logLine);
+    }
+    
+    toggleNoiseDebugPanel() {
+        const panel = document.getElementById('noise-debug-panel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            this.debugMode = true;
+            this.initSpectrumCanvas();
+            this.startDebugMonitoring();
+            this.log('🔍 ノイズリダクションデバッグモード開始');
+        } else {
+            panel.style.display = 'none';
+            this.debugMode = false;
+            this.stopDebugMonitoring();
+            this.log('🔍 ノイズリダクションデバッグモード終了');
+        }
+    }
+    
+    initSpectrumCanvas() {
+        this.spectrumCanvas = document.getElementById('spectrum-comparison-canvas');
+        this.spectrumCtx = this.spectrumCanvas.getContext('2d');
+    }
+    
+    startDebugMonitoring() {
+        if (!this.debugMode || !this.analyzer || !this.debugAnalyzer) return;
+        
+        this.debugInterval = setInterval(() => {
+            this.updateDebugInfo();
+        }, 100); // 100msごとに更新
+    }
+    
+    stopDebugMonitoring() {
+        if (this.debugInterval) {
+            clearInterval(this.debugInterval);
+            this.debugInterval = null;
+        }
+    }
+    
+    updateDebugInfo() {
+        if (!this.debugMode || !this.analyzer || !this.debugAnalyzer) return;
+        
+        // FFTデータ取得
+        const beforeData = new Uint8Array(this.debugAnalyzer.frequencyBinCount);
+        const afterData = new Uint8Array(this.analyzer.frequencyBinCount);
+        
+        this.debugAnalyzer.getByteFrequencyData(beforeData);
+        this.analyzer.getByteFrequencyData(afterData);
+        
+        // 音量レベル計算
+        const volumeBefore = this.calculateVolume(beforeData);
+        const volumeAfter = this.calculateVolume(afterData);
+        const improvement = volumeBefore > 0 ? ((volumeBefore - volumeAfter) / volumeBefore * 100) : 0;
+        
+        // ノイズ成分検出
+        const noiseAnalysis = this.analyzeNoiseComponents(beforeData);
+        
+        // UI更新
+        document.getElementById('debug-volume-before').textContent = volumeBefore.toFixed(1) + 'dB';
+        document.getElementById('debug-volume-after').textContent = volumeAfter.toFixed(1) + 'dB';
+        document.getElementById('debug-volume-improvement').textContent = improvement.toFixed(1) + '%';
+        
+        document.getElementById('debug-low-noise').textContent = noiseAnalysis.lowFreq.toFixed(1) + 'dB';
+        document.getElementById('debug-power-noise').textContent = noiseAnalysis.powerLine.toFixed(1) + 'dB';
+        document.getElementById('debug-high-noise').textContent = noiseAnalysis.highFreq.toFixed(1) + 'dB';
+        
+        // スペクトラム比較描画
+        this.drawSpectrumComparison(beforeData, afterData);
+    }
+    
+    calculateVolume(frequencyData) {
+        let sum = 0;
+        for (let i = 0; i < frequencyData.length; i++) {
+            sum += frequencyData[i];
+        }
+        const average = sum / frequencyData.length;
+        return 20 * Math.log10((average + 1) / 256); // dB変換
+    }
+    
+    analyzeNoiseComponents(frequencyData) {
+        const sampleRate = this.audioContext.sampleRate;
+        const binSize = sampleRate / (2 * frequencyData.length);
+        
+        // 低周波ノイズ (0-80Hz)
+        const lowFreqEnd = Math.floor(80 / binSize);
+        let lowFreqSum = 0;
+        for (let i = 1; i < lowFreqEnd && i < frequencyData.length; i++) {
+            lowFreqSum += frequencyData[i];
+        }
+        const lowFreq = lowFreqEnd > 1 ? 20 * Math.log10((lowFreqSum / (lowFreqEnd - 1) + 1) / 256) : -60;
+        
+        // 電源ノイズ (58-62Hz)
+        const powerStart = Math.floor(58 / binSize);
+        const powerEnd = Math.floor(62 / binSize);
+        let powerSum = 0;
+        for (let i = powerStart; i < powerEnd && i < frequencyData.length; i++) {
+            powerSum += frequencyData[i];
+        }
+        const powerLine = powerEnd > powerStart ? 20 * Math.log10((powerSum / (powerEnd - powerStart) + 1) / 256) : -60;
+        
+        // 高周波ノイズ (2kHz以上)
+        const highFreqStart = Math.floor(2000 / binSize);
+        let highFreqSum = 0;
+        let highFreqCount = 0;
+        for (let i = highFreqStart; i < frequencyData.length; i++) {
+            highFreqSum += frequencyData[i];
+            highFreqCount++;
+        }
+        const highFreq = highFreqCount > 0 ? 20 * Math.log10((highFreqSum / highFreqCount + 1) / 256) : -60;
+        
+        return { lowFreq, powerLine, highFreq };
+    }
+    
+    drawSpectrumComparison(beforeData, afterData) {
+        if (!this.spectrumCtx) return;
+        
+        const canvas = this.spectrumCanvas;
+        const ctx = this.spectrumCtx;
+        
+        // キャンバスクリア
+        ctx.fillStyle = '#f8f8f8';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const width = canvas.width;
+        const height = canvas.height;
+        const dataPoints = Math.min(150, beforeData.length); // 150ポイントまで
+        
+        // フィルター前（赤）
+        ctx.strokeStyle = '#f44336';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < dataPoints; i++) {
+            const x = (i / dataPoints) * width;
+            const y = height - (beforeData[i] / 255) * height;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        
+        // フィルター後（緑）
+        ctx.strokeStyle = '#4CAF50';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < dataPoints; i++) {
+            const x = (i / dataPoints) * width;
+            const y = height - (afterData[i] / 255) * height;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        
+        // 凡例
+        ctx.font = '10px Arial';
+        ctx.fillStyle = '#f44336';
+        ctx.fillText('フィルター前', 5, 15);
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillText('フィルター後', 5, 28);
     }
 }
 
