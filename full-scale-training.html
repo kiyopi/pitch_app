@@ -425,6 +425,27 @@
         </div>
     </div>
 
-    <script src="full-scale-training.js"></script>
+    <script type="module">
+        import { PitchDetector } from "https://esm.sh/pitchy@4";
+        
+        // グローバルにPitchDetectorを公開
+        window.PitchDetector = PitchDetector;
+        console.log('✅ Pitchy PitchDetectorを読み込みました');
+        
+        // DOMContentLoadedを待ってからメインスクリプト読み込み
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadMainScript);
+        } else {
+            loadMainScript();
+        }
+        
+        function loadMainScript() {
+            const script = document.createElement('script');
+            script.src = 'full-scale-training.js';
+            script.onload = () => console.log('✅ メインスクリプト読み込み完了');
+            script.onerror = () => console.error('❌ メインスクリプト読み込み失敗');
+            document.head.appendChild(script);
+        }
+    </script>
 </body>
 </html>

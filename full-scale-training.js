@@ -47,6 +47,9 @@ class FullScaleTraining {
         this.spectrumCanvas = null;
         this.spectrumCtx = null;
         
+        // Pitchy (McLeod Pitch Method)
+        this.pitchDetector = null;
+        
         // 状態管理
         this.trainingPhase = 'waiting'; // waiting, playing, animating, completed
         
@@ -249,6 +252,22 @@ class FullScaleTraining {
         this.log(`✅ AudioContext: ${this.audioContext.state}`);
     }
     
+    initPitchDetector() {
+        if (typeof window.PitchDetector !== 'undefined') {
+            try {
+                // Pitchy PitchDetectorクラスの正しい初期化方法
+                // FFTサイズと同じ長さのFloat32Array用のDetectorを作成
+                this.pitchDetector = window.PitchDetector.forFloat32Array(this.analyzer.fftSize);
+                this.log('🎯 Pitchy PitchDetector初期化完了 (fftSize: ' + this.analyzer.fftSize + ')');
+            } catch (error) {
+                this.log(`❌ PitchDetector初期化エラー: ${error.message}`);
+                this.pitchDetector = null;
+            }
+        } else {
+            this.log('⚠️ Pitchyライブラリが見つかりません - フォールバック使用');
+        }
+    }
+    
     async initMicrophone() {
         this.log('🎤 マイクアクセス要求中...');
         
@@ -282,6 +301,9 @@ class FullScaleTraining {
         
         // ノイズリダクションチェーンでマイクとアナライザーを接続
         this.connectNoiseReductionChain(this.microphone, this.analyzer);
+        
+        // PitchDetector初期化（analyzerが作成された後）
+        this.initPitchDetector();
         
         // 出力先接続（Safari対応）
         const outputGain = this.audioContext.createGain();
@@ -571,6 +593,63 @@ class FullScaleTraining {
     }
     
     detectPitch(freqData) {
+        // Pitchy PitchDetectorクラスを使用
+        if (this.pitchDetector) {
+            try {
+                // 時間域データを取得（Pitchyは時間域データが必要）
+                const timeData = new Float32Array(this.analyzer.fftSize);
+                this.analyzer.getFloatTimeDomainData(timeData);
+                
+                // PitchDetectorで基音検出（倍音問題を自動解決）
+                const result = this.pitchDetector.findPitch(timeData, this.audioContext.sampleRate);
+                
+                if (result && Array.isArray(result) && result.length >= 2) {
+                    const [pitch, clarity] = result;
+                    
+                    // デバッグ: 検出結果をログ出力（フレームが多すぎるので条件付き）
+                    if (this.frameCount % 60 === 0) { // 1秒に1回程度
+                        this.log(`🔍 Pitchy検出: pitch=${pitch?.toFixed(1)}Hz, clarity=${clarity?.toFixed(3)}`);
+                    }
+                    
+                    // オクターブエラー検出：周波数が半分の場合は2倍して修正（動的）
+                    let correctedPitch = pitch;
+                    if (pitch && pitch >= 80 && pitch <= 1200 && clarity > 0.1) {
+                        // 現在の目標周波数範囲に基づく動的補正
+                        const minTargetFreq = Math.min(...this.targetFrequencies); // 最低目標周波数
+                        const maxTargetFreq = Math.max(...this.targetFrequencies); // 最高目標周波数
+                        
+                        // 補正しきい値：最高目標周波数の半分＋余裕(10%)
+                        const correctionThreshold = maxTargetFreq * 0.55;
+                        
+                        // 補正後の範囲：最低目標の80%〜最高目標の120%
+                        const correctedMin = minTargetFreq * 0.8;
+                        const correctedMax = maxTargetFreq * 1.2;
+                        
+                        if (pitch < correctionThreshold && pitch * 2 >= correctedMin && pitch * 2 <= correctedMax) {
+                            correctedPitch = pitch * 2;
+                            
+                            if (this.frameCount % 60 === 0) {
+                                this.log(`🔧 動的オクターブ補正: ${pitch.toFixed(1)}Hz → ${correctedPitch.toFixed(1)}Hz (閾値: ${correctionThreshold.toFixed(1)}Hz)`);
+                            }
+                        }
+                        
+                        return correctedPitch;
+                    }
+                }
+                
+                return 0;
+                
+            } catch (error) {
+                this.log(`❌ Pitchy エラー: ${error.message}`);
+                return this.detectPitchFallback(freqData);
+            }
+        } else {
+            // フォールバック：元の方法
+            return this.detectPitchFallback(freqData);
+        }
+    }
+    
+    detectPitchFallback(freqData) {
         let maxIndex = 0;
         let maxValue = -Infinity;
         
@@ -717,12 +796,36 @@ class FullScaleTraining {
         // 詳細結果表示
         let detailHtml = '<div>';
         detailHtml += '<h4 style="margin-bottom: 15px; color: #333;">🎵 各音程の詳細結果</h4>';
+        detailHtml += '<div style="display: grid; gap: 10px;">';
+        
         this.results.forEach((result) => {
             const statusIcon = result.accuracy === '完璧' ? '🎉' : 
                              result.accuracy === '良い' ? '👍' : '😭';
-            detailHtml += `${statusIcon} <strong>${result.note}</strong>: ${result.cents > 0 ? '+' : ''}${result.cents}¢ (${result.accuracy})<br>`;
+            
+            // 周波数比較の視覚的表示
+            const targetHz = Math.round(result.targetFreq);
+            const actualHz = Math.round(result.actualFreq);
+            const freqDiff = actualHz - targetHz;
+            const freqDiffText = freqDiff > 0 ? `+${freqDiff}Hz` : `${freqDiff}Hz`;
+            
+            detailHtml += `
+                <div style="background: ${result.accuracy === '完璧' ? '#f0fff0' : result.accuracy === '良い' ? '#fff8f0' : '#fff0f0'}; 
+                            padding: 12px; border-radius: 8px; border-left: 4px solid ${result.accuracy === '完璧' ? '#4CAF50' : result.accuracy === '良い' ? '#FF9800' : '#f44336'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: bold; font-size: 1.1rem;">${statusIcon} ${result.note}</span>
+                        <span style="font-weight: bold; color: ${result.accuracy === '完璧' ? '#4CAF50' : result.accuracy === '良い' ? '#FF9800' : '#f44336'};">
+                            ${result.cents > 0 ? '+' : ''}${result.cents}¢ (${result.accuracy})
+                        </span>
+                    </div>
+                    <div style="font-size: 0.9rem; color: #666; display: flex; justify-content: space-between;">
+                        <span>🎯 正解: <strong>${targetHz}Hz</strong></span>
+                        <span>🎤 あなた: <strong>${actualHz}Hz</strong> <em style="color: ${freqDiff > 0 ? '#e91e63' : freqDiff < 0 ? '#2196f3' : '#4caf50'};">(${freqDiffText})</em></span>
+                    </div>
+                </div>
+            `;
         });
-        detailHtml += '</div>';
+        
+        detailHtml += '</div></div>';
         
         // アイコンの意味説明
         let legendHtml = '<div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px; border: 2px solid #2196F3;">';
@@ -1074,6 +1177,13 @@ class FullScaleTraining {
 }
 
 // 初期化
-document.addEventListener('DOMContentLoaded', () => {
+function initializeApp() {
     new FullScaleTraining();
-});
+}
+
+// DOMが既に読み込まれている場合は即座に初期化、そうでなければイベントを待つ
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
