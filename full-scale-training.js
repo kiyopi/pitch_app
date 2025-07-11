@@ -2,10 +2,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.0.1',
-            codename: 'Mobile-Fix',
+            app: 'v1.0.3',
+            codename: 'Clean',
             build: '2025-07-11',
-            commit: '455f1ab'
+            commit: 'clean'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
@@ -288,25 +288,15 @@ class FullScaleTraining {
     showMainStartButton() {
         this.log('🔍 オーディオシステム初期化完了 - 基音ボタンを有効化');
         
-        // モバイルデバイス判定
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        // モバイルの場合、ガイダンスを表示
-        if (isMobile) {
-            const mobileGuidance = document.getElementById('mobile-guidance');
-            mobileGuidance.style.display = 'block';
-            this.log('📱 モバイルガイダンス表示');
-        }
-        
         // メインスタートボタンを有効化（準備完了後）
         const mainStartBtn = document.getElementById('main-start-btn');
         mainStartBtn.disabled = false;
         mainStartBtn.style.opacity = '1';
         mainStartBtn.textContent = '🎹 基音を聞いてスタート！';
         
-        
         // ボタンにパルスアニメーションを追加（準備完了の視覚的フィードバック）
         mainStartBtn.style.animation = 'pulse 2s infinite';
+        
         
         this.log('✅ 基音ボタンがクリック可能になりました');
     }
@@ -320,11 +310,6 @@ class FullScaleTraining {
         this.log('🔊 基音再生とアニメーション準備');
         this.trainingPhase = 'playing';
         
-        // モバイルガイダンスを非表示
-        const mobileGuidance = document.getElementById('mobile-guidance');
-        if (mobileGuidance) {
-            mobileGuidance.style.display = 'none';
-        }
         
         // ボタンを無効化（重複クリック防止）、アニメーション停止
         const startButton = document.getElementById('main-start-btn');
