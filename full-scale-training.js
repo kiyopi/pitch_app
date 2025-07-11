@@ -209,7 +209,6 @@ class FullScaleTraining {
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('progress-section').style.display = 'block';
             document.getElementById('guide-section').style.display = 'block';
-            document.getElementById('guidance-section').style.display = 'block';
             document.getElementById('frequency-display').style.display = 'block';
             document.getElementById('canvas-container').style.display = 'block';
             
@@ -221,7 +220,6 @@ class FullScaleTraining {
             mainStartBtn.textContent = '🔍 Loading...';
             mainStartBtn.style.animation = 'none';
             
-            this.updateGuidance('🔍 オーディオシステムを初期化中...');
             
             // AudioContext初期化
             await this.initAudioContext();
@@ -342,12 +340,6 @@ class FullScaleTraining {
         }
     }
     
-    updateGuidance(text) {
-        const guidanceElement = document.getElementById('guidance-text');
-        if (guidanceElement) {
-            guidanceElement.textContent = text;
-        }
-    }
     
     showMainStartButton() {
         this.log('🔍 オーディオシステム初期化完了 - 基音ボタンを有効化');
@@ -358,8 +350,6 @@ class FullScaleTraining {
         mainStartBtn.style.opacity = '1';
         mainStartBtn.textContent = '🎹 基音を聞いてスタート！';
         
-        // ガイダンスメッセージを更新
-        this.updateGuidance('🎹 オレンジのボタンを押して基音を聞いてください');
         
         // ボタンにパルスアニメーションを追加（準備完了の視覚的フィードバック）
         mainStartBtn.style.animation = 'pulse 2s infinite';
@@ -388,14 +378,6 @@ class FullScaleTraining {
         // Do4基音再生
         this.playReferenceNote();
         
-        // ガイダンス更新
-        this.updateGuidance('ピアノ音を聞いて音程を覚えてください...');
-        
-        // 基音再生時間に合わせてアニメーション開始
-        // 1秒後にカウントダウン開始
-        setTimeout(() => {
-            this.updateGuidance('まもなくガイドが始まります...');
-        }, 1000);
         
         // 基音終了と同時にアニメーション開始
         setTimeout(() => {
@@ -531,7 +513,6 @@ class FullScaleTraining {
         this.currentNoteIndex = 0; // アニメーション開始時にリセット
         
         this.log('🎼 ドレミファソラシド ガイドアニメーション開始');
-        this.updateGuidance('ガイドに合わせてドレミファソラシドを発声してください！');
         
         // メインスタートボタンをアニメーション中状態に変更
         const mainStartBtn = document.getElementById('main-start-btn');
@@ -577,7 +558,6 @@ class FullScaleTraining {
         this.trainingPhase = 'completed';
         
         this.log('🎼 ガイドアニメーション完了');
-        this.updateGuidance('お疲れ様でした！結果を集計中...');
         
         // ガイドリセット
         const guideNotes = document.querySelectorAll('.guide-note');
@@ -802,7 +782,6 @@ class FullScaleTraining {
         // UI切り替え
         document.getElementById('progress-section').style.display = 'none';
         document.getElementById('guide-section').style.display = 'none';
-        document.getElementById('guidance-section').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none'; // 周波数表示を非表示
         document.getElementById('results-section').style.display = 'block';
         
@@ -1066,7 +1045,6 @@ class FullScaleTraining {
         
         document.getElementById('progress-section').style.display = 'none';
         document.getElementById('guide-section').style.display = 'none';
-        document.getElementById('guidance-section').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none';
         document.getElementById('canvas-container').style.display = 'none';
