@@ -531,11 +531,11 @@ class FullScaleTraining {
         this.currentNoteIndex = 0; // アニメーション開始時にリセット
         
         this.log('🎼 ドレミファソラシド ガイドアニメーション開始');
-        this.updateGuidance('ガイドに合わせて歌ってください！');
+        this.updateGuidance('ガイドに合わせてドレミファソラシドを発声してください！');
         
         // メインスタートボタンをアニメーション中状態に変更
         const mainStartBtn = document.getElementById('main-start-btn');
-        mainStartBtn.textContent = '🎵 ガイドに合わせて歌ってください';
+        mainStartBtn.textContent = '🎵 ガイドに合わせて発声してください';
         mainStartBtn.disabled = true;
         mainStartBtn.style.opacity = '0.5';
         mainStartBtn.style.animation = 'none';
