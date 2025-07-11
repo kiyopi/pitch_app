@@ -26,7 +26,7 @@ class FullScaleTraining {
         // アニメーション設定
         this.isAnimating = false;
         this.animationSpeed = 600; // 各音程600ms
-        this.animationStartDelay = 3000; // 基音再生後3秒（ピアノ音完了後）
+        this.baseToneDuration = 1500; // 基音再生時間1.5秒
         
         // 基音再生用
         this.referenceOscillator = null;
@@ -206,13 +206,22 @@ class FullScaleTraining {
             
             // UI更新
             document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('main-start-btn').style.display = 'inline-block';
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('progress-section').style.display = 'block';
             document.getElementById('guide-section').style.display = 'block';
             document.getElementById('guidance-section').style.display = 'block';
             document.getElementById('frequency-display').style.display = 'block';
             document.getElementById('canvas-container').style.display = 'block';
+            
+            // メインスタートボタンを準備中状態で表示
+            const mainStartBtn = document.getElementById('main-start-btn');
+            mainStartBtn.style.display = 'inline-block';
+            mainStartBtn.disabled = true;
+            mainStartBtn.style.opacity = '0.6';
+            mainStartBtn.textContent = '🔍 Loading...';
+            mainStartBtn.style.animation = 'none';
+            
+            this.updateGuidance('🔍 オーディオシステムを初期化中...');
             
             // AudioContext初期化
             await this.initAudioContext();
@@ -228,7 +237,9 @@ class FullScaleTraining {
             
             // 初期表示更新
             this.updateProgress();
-            this.updateGuidance('🎹 オレンジのボタンを押して基音を聞いてください');
+            
+            // 初期化完了後にメインスタートボタンを表示
+            this.showMainStartButton();
             
             this.trainingPhase = 'waiting';
             this.log('✅ トレーニング開始成功');
@@ -338,6 +349,24 @@ class FullScaleTraining {
         }
     }
     
+    showMainStartButton() {
+        this.log('🔍 オーディオシステム初期化完了 - 基音ボタンを有効化');
+        
+        // メインスタートボタンを有効化（準備完了後）
+        const mainStartBtn = document.getElementById('main-start-btn');
+        mainStartBtn.disabled = false;
+        mainStartBtn.style.opacity = '1';
+        mainStartBtn.textContent = '🎹 基音を聞いてスタート！';
+        
+        // ガイダンスメッセージを更新
+        this.updateGuidance('🎹 オレンジのボタンを押して基音を聞いてください');
+        
+        // ボタンにパルスアニメーションを追加（準備完了の視覚的フィードバック）
+        mainStartBtn.style.animation = 'pulse 2s infinite';
+        
+        this.log('✅ 基音ボタンがクリック可能になりました');
+    }
+    
     playReferenceAndStartAnimation() {
         if (this.trainingPhase !== 'waiting') {
             this.log('⚠️ まだ前のアニメーションが実行中です');
@@ -347,26 +376,43 @@ class FullScaleTraining {
         this.log('🔊 基音再生とアニメーション準備');
         this.trainingPhase = 'playing';
         
+        // ボタンを無効化（重複クリック防止）、アニメーション停止
+        const startButton = document.getElementById('main-start-btn');
+        if (startButton) {
+            startButton.disabled = true;
+            startButton.style.opacity = '0.5';
+            startButton.style.animation = 'none'; // パルスアニメーション停止
+            startButton.textContent = '🎵 基音再生中...'; // テキスト変更
+        }
+        
         // Do4基音再生
         this.playReferenceNote();
         
         // ガイダンス更新
         this.updateGuidance('ピアノ音を聞いて音程を覚えてください...');
         
-        // 2秒後にカウントダウン開始
+        // 基音再生時間に合わせてアニメーション開始
+        // 1秒後にカウントダウン開始
         setTimeout(() => {
             this.updateGuidance('まもなくガイドが始まります...');
-        }, 2000);
+        }, 1000);
         
-        // 3秒後にアニメーション開始
+        // 基音終了と同時にアニメーション開始
         setTimeout(() => {
             this.startGuideAnimation();
-        }, this.animationStartDelay);
+        }, this.baseToneDuration);
     }
     
     playReferenceNote() {
         const frequency = 261.63; // Do4
+        const startTimestamp = performance.now();
         this.log(`🔊 Do4 (${Math.round(frequency)}Hz) ピアノ音再生開始`);
+        
+        // AudioContextの状態確認
+        if (this.audioContext.state === 'suspended') {
+            this.log('⚠️ AudioContext が suspended 状態です');
+            this.audioContext.resume();
+        }
         
         // 既存の再生を停止
         this.stopReferenceNote();
@@ -388,13 +434,13 @@ class FullScaleTraining {
         this.referenceMainGain = this.audioContext.createGain();
         
         const startTime = this.audioContext.currentTime;
-        const duration = 2.5; // 少し長めに設定
+        const duration = this.baseToneDuration / 1000; // 1.5秒（ms→秒変換）
         
-        // ピアノらしいADSRエンベロープ
+        // ピアノらしいADSRエンベロープ - 即座に開始
         this.referenceMainGain.gain.setValueAtTime(0, startTime);
-        this.referenceMainGain.gain.linearRampToValueAtTime(0.6, startTime + 0.02);  // 鋭いアタック
-        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.25, startTime + 0.3); // ディケイ
-        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.15, startTime + 1.5); // サスティン
+        this.referenceMainGain.gain.linearRampToValueAtTime(0.7, startTime + 0.005);  // より鋭く大きなアタック
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.25, startTime + 0.2); // より早いディケイ
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.15, startTime + 1.0); // サスティン
         this.referenceMainGain.gain.exponentialRampToValueAtTime(0.01, startTime + duration); // リリース
         
         // 各倍音のオシレーターを作成
@@ -411,7 +457,7 @@ class FullScaleTraining {
             
             // 高次倍音は早めに減衰させる（よりリアルなピアノ音）
             if (index > 1) {
-                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * 0.1, startTime + 0.8);
+                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * 0.1, startTime + 0.6);
             }
             
             // 接続
@@ -422,13 +468,17 @@ class FullScaleTraining {
             this.referenceOscillators.push(oscillator);
             this.referenceGains.push(gainNode);
             
-            // 再生開始・停止
+            // 再生開始・停止 - 即座に開始
             oscillator.start(startTime);
             oscillator.stop(startTime + duration);
         });
         
         // メインゲインを出力に接続
         this.referenceMainGain.connect(this.audioContext.destination);
+        
+        // 処理時間を計測
+        const processingTime = performance.now() - startTimestamp;
+        this.log(`⏱️ 基音準備完了: ${processingTime.toFixed(2)}ms`);
         
         // 終了時にクリーンアップ
         setTimeout(() => {
@@ -483,8 +533,12 @@ class FullScaleTraining {
         this.log('🎼 ドレミファソラシド ガイドアニメーション開始');
         this.updateGuidance('ガイドに合わせて歌ってください！');
         
-        // メインスタートボタンを無効化
-        document.getElementById('main-start-btn').style.display = 'none';
+        // メインスタートボタンをアニメーション中状態に変更
+        const mainStartBtn = document.getElementById('main-start-btn');
+        mainStartBtn.textContent = '🎵 ガイドに合わせて歌ってください';
+        mainStartBtn.disabled = true;
+        mainStartBtn.style.opacity = '0.5';
+        mainStartBtn.style.animation = 'none';
         
         const guideNotes = document.querySelectorAll('.guide-note');
         
@@ -530,6 +584,15 @@ class FullScaleTraining {
         guideNotes.forEach(note => {
             note.classList.remove('animate');
         });
+        
+        // メインスタートボタンを結果集計中状態に変更
+        const mainStartBtn = document.getElementById('main-start-btn');
+        if (mainStartBtn) {
+            mainStartBtn.disabled = true;
+            mainStartBtn.style.opacity = '0.6';
+            mainStartBtn.textContent = '🎆 結果を集計中...'; // 集計中メッセージ
+            mainStartBtn.style.animation = 'none';
+        }
         
         // 2秒後に結果表示
         setTimeout(() => {
@@ -740,7 +803,15 @@ class FullScaleTraining {
         document.getElementById('progress-section').style.display = 'none';
         document.getElementById('guide-section').style.display = 'none';
         document.getElementById('guidance-section').style.display = 'none';
+        document.getElementById('frequency-display').style.display = 'none'; // 周波数表示を非表示
         document.getElementById('results-section').style.display = 'block';
+        
+        // メインスタートボタンを結果表示状態に変更
+        const mainStartBtn = document.getElementById('main-start-btn');
+        mainStartBtn.textContent = '🎉 トレーニング完了！';
+        mainStartBtn.disabled = true;
+        mainStartBtn.style.opacity = '0.6';
+        mainStartBtn.style.animation = 'none';
         
         // 停止ボタンを「再開始」に変更
         const stopBtn = document.getElementById('stop-btn');
@@ -985,13 +1056,25 @@ class FullScaleTraining {
         stopBtn.textContent = '中断';
         stopBtn.style.background = 'linear-gradient(145deg, #f44336, #d32f2f)';
         
-        document.getElementById('main-start-btn').style.display = 'none';
+        // メインスタートボタンの状態を完全リセット
+        const mainStartBtn = document.getElementById('main-start-btn');
+        mainStartBtn.style.display = 'none'; // リセット時のみ非表示
+        mainStartBtn.disabled = false;
+        mainStartBtn.style.opacity = '1';
+        mainStartBtn.textContent = '🎹 基音を聞いてスタート！'; // テキストをデフォルトに戻す
+        mainStartBtn.style.animation = 'none'; // アニメーションもリセット
+        
         document.getElementById('progress-section').style.display = 'none';
         document.getElementById('guide-section').style.display = 'none';
         document.getElementById('guidance-section').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none';
         document.getElementById('canvas-container').style.display = 'none';
+        
+        // 周波数表示をリセット（再試行時に備えて）
+        document.getElementById('frequency-main').textContent = '--- Hz';
+        document.getElementById('frequency-main').style.color = '#999';
+        document.getElementById('frequency-main').style.borderColor = '#e0e0e0';
         
         // 表示リセット
         document.getElementById('frequency-main').textContent = '--- Hz';
