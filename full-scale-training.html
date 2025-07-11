@@ -486,7 +486,13 @@
         </div>
     </div>
 
+    <!-- Tone.js ローカルファイル -->
+    <script src="tone.js"></script>
+    
     <script type="module">
+        // Tone.jsの初期化
+        console.log('🎹 Tone.js loading...');
+        
         import { PitchDetector } from "https://esm.sh/pitchy@4";
         
         // グローバルにPitchDetectorを公開

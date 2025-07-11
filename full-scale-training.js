@@ -2,10 +2,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.0.3',
-            codename: 'Clean',
+            app: 'v1.0.4',
+            codename: 'GrandPiano',
             build: '2025-07-11',
-            commit: 'clean'
+            commit: 'grandpiano'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
@@ -32,7 +32,7 @@ class FullScaleTraining {
         // アニメーション設定
         this.isAnimating = false;
         this.animationSpeed = 600; // 各音程600ms
-        this.baseToneDuration = 1500; // 基音再生時間1.5秒
+        this.baseToneDuration = 2500; // 基音再生時間2.5秒
         
         // 基音再生用
         this.referenceOscillator = null;
@@ -285,8 +285,11 @@ class FullScaleTraining {
     }
     
     
-    showMainStartButton() {
+    async showMainStartButton() {
         this.log('🔍 オーディオシステム初期化完了 - 基音ボタンを有効化');
+        
+        // Tone.jsサンプラーを事前に準備してラグを削減
+        await this.preloadPianoSampler();
         
         // メインスタートボタンを有効化（準備完了後）
         const mainStartBtn = document.getElementById('main-start-btn');
@@ -299,6 +302,40 @@ class FullScaleTraining {
         
         
         this.log('✅ 基音ボタンがクリック可能になりました');
+    }
+    
+    async preloadPianoSampler() {
+        try {
+            if (typeof Tone !== 'undefined') {
+                this.log('🎹 ピアノサンプラー事前読み込み開始...');
+                
+                // Tone.jsのAudioContextを開始
+                if (Tone.context.state !== 'running') {
+                    await Tone.start();
+                    this.log('🎵 Tone.js AudioContext 事前開始完了');
+                }
+                
+                // サンプラーを事前に作成（音量とサスティンを調整）
+                this.pianoSampler = new Tone.Sampler({
+                    urls: {
+                        "C4": "C4.mp3",
+                        "D#4": "Ds4.mp3", 
+                        "F#4": "Fs4.mp3",
+                        "A4": "A4.mp3",
+                    },
+                    release: 0.5,      // リリース時間（フェイドアウトの長さ）
+                    attack: 0.01,      // アタック時間（すぐに立ち上がる）
+                    volume: 6,         // 音量を上げる（dB）
+                    baseUrl: "https://tonejs.github.io/audio/salamander/"
+                }).toDestination();
+                
+                // サンプル読み込み完了を待機
+                await Tone.loaded();
+                this.log('✅ ピアノサンプラー事前読み込み完了 - ラグなし再生準備完了');
+            }
+        } catch (error) {
+            this.log(`⚠️ ピアノサンプラー事前読み込みエラー: ${error.message}`);
+        }
     }
     
     playReferenceAndStartAnimation() {
@@ -330,10 +367,101 @@ class FullScaleTraining {
         }, this.baseToneDuration);
     }
     
-    playReferenceNote() {
+    async playReferenceNote() {
         const frequency = 261.63; // Do4
         const startTimestamp = performance.now();
-        this.log(`🔊 Do4 (${Math.round(frequency)}Hz) ピアノ音再生開始`);
+        this.log(`🔊 Do4 (${Math.round(frequency)}Hz) 本物のピアノ音再生開始`);
+        
+        try {
+            // 事前読み込み済みのTone.jsサンプラーを使用
+            if (this.pianoSampler && typeof Tone !== 'undefined') {
+                this.log('🎹 事前読み込み済みピアノサンプラー使用（ラグなし）');
+                
+                // C4 (Do4) を手動でアタック→長時間サスティン→リリース
+                this.pianoSampler.triggerAttack("C4", undefined, 0.8);
+                
+                // 2秒後にリリース開始（0.5秒かけてフェイドアウト）
+                setTimeout(() => {
+                    this.pianoSampler.triggerRelease("C4");
+                    this.log('🎹 ピアノ音 フェイドアウト開始');
+                }, 2000);
+                
+                // 2.7秒後に完全停止（フェイドアウト完了後）
+                setTimeout(() => {
+                    this.pianoSampler.releaseAll();
+                    this.log('🔇 ピアノ音 完全停止');
+                }, 2700);
+                
+                const processingTime = performance.now() - startTimestamp;
+                this.log(`⚡ 即座にピアノ再生開始: ${processingTime.toFixed(2)}ms`);
+                
+                return;
+            }
+            
+            // フォールバック: リアルタイム読み込み
+            if (typeof Tone !== 'undefined') {
+                this.log('🎹 Tone.js リアルタイム読み込み（初回のみ）');
+                
+                // Tone.jsのAudioContextを開始
+                if (Tone.context.state !== 'running') {
+                    await Tone.start();
+                    this.log('🎵 Tone.js AudioContext 開始');
+                }
+                
+                // 既存のサンプラーを停止
+                if (this.pianoSampler) {
+                    this.pianoSampler.dispose();
+                }
+                
+                // Salamander Piano サンプラーを作成（音量とサスティンを調整）
+                this.pianoSampler = new Tone.Sampler({
+                    urls: {
+                        "C4": "C4.mp3",
+                        "D#4": "Ds4.mp3",
+                        "F#4": "Fs4.mp3",
+                        "A4": "A4.mp3",
+                    },
+                    release: 0.5,      // リリース時間（フェイドアウトの長さ）
+                    attack: 0.01,      // アタック時間（すぐに立ち上がる）
+                    volume: 6,         // 音量を上げる（dB）
+                    baseUrl: "https://tonejs.github.io/audio/salamander/"
+                }).toDestination();
+                
+                // サンプル読み込み完了を待機
+                await Tone.loaded();
+                this.log('🎹 ピアノサンプル読み込み完了');
+                
+                // C4 (Do4) を手動でアタック→長時間サスティン→リリース
+                this.pianoSampler.triggerAttack("C4", undefined, 0.8);
+                
+                // 2秒後にリリース開始（0.5秒かけてフェイドアウト）
+                setTimeout(() => {
+                    this.pianoSampler.triggerRelease("C4");
+                    this.log('🎹 ピアノ音 フェイドアウト開始');
+                }, 2000);
+                
+                // 2.7秒後に完全停止（フェイドアウト完了後）
+                setTimeout(() => {
+                    this.pianoSampler.releaseAll();
+                    this.log('🔇 ピアノ音 完全停止');
+                }, 2700);
+                
+                const processingTime = performance.now() - startTimestamp;
+                this.log(`⏱️ Tone.js ピアノ再生開始: ${processingTime.toFixed(2)}ms`);
+                
+                return;
+            }
+        } catch (error) {
+            this.log(`❌ Tone.js ピアノ再生エラー: ${error.message}`);
+            this.log('🔄 フォールバック: 合成音に切り替え');
+        }
+        
+        // フォールバック: 従来の合成音
+        this.playFallbackNote(frequency, startTimestamp);
+    }
+    
+    playFallbackNote(frequency, startTimestamp) {
+        this.log('🎵 フォールバック合成音再生');
         
         // AudioContextの状態確認
         if (this.audioContext.state === 'suspended') {
@@ -344,13 +472,24 @@ class FullScaleTraining {
         // 既存の再生を停止
         this.stopReferenceNote();
         
-        // ピアノらしい音を作るための複合波形（基音+倍音）
+        // よりピアノらしい音を作るための複合波形（基音中心）
         const harmonics = [
-            { freq: frequency, gain: 1.0, type: 'triangle' },      // 基音（三角波でより温かい音）
-            { freq: frequency * 2, gain: 0.4, type: 'sine' },      // 2倍音
-            { freq: frequency * 3, gain: 0.25, type: 'sine' },     // 3倍音
-            { freq: frequency * 4, gain: 0.15, type: 'sine' },     // 4倍音
-            { freq: frequency * 5, gain: 0.08, type: 'sine' },     // 5倍音
+            // 基音を強く、ピアノらしい暖かい音色
+            { freq: frequency, gain: 1.2, type: 'sawtooth', decay: 1.0 },           // 基音（のこぎり波で豊かな倍音）
+            { freq: frequency, gain: 0.8, type: 'sine', decay: 1.0 },               // 基音補強（正弦波でクリア）
+            
+            // 控えめな整数倍音（ピアノは倍音が比較的少ない）
+            { freq: frequency * 2, gain: 0.25, type: 'sine', decay: 0.6 },          // 2倍音
+            { freq: frequency * 3, gain: 0.15, type: 'sine', decay: 0.5 },          // 3倍音
+            { freq: frequency * 4, gain: 0.08, type: 'sine', decay: 0.4 },          // 4倍音
+            { freq: frequency * 5, gain: 0.05, type: 'sine', decay: 0.3 },          // 5倍音
+            
+            // 微細なデチューンで自然さを演出
+            { freq: frequency * 1.001, gain: 0.3, type: 'sine', decay: 0.9 },       // わずかなデチューン
+            { freq: frequency * 0.999, gain: 0.2, type: 'sine', decay: 0.8 },       // 反対方向のデチューン
+            
+            // 低音域の共鳴（控えめに）
+            { freq: frequency * 0.5, gain: 0.06, type: 'sine', decay: 0.7 },        // サブハーモニック
         ];
         
         // 複数のオシレーターとゲインノードを保存する配列
@@ -361,16 +500,23 @@ class FullScaleTraining {
         this.referenceMainGain = this.audioContext.createGain();
         
         const startTime = this.audioContext.currentTime;
-        const duration = this.baseToneDuration / 1000; // 1.5秒（ms→秒変換）
+        const duration = this.baseToneDuration / 1000; // 2.5秒（ms→秒変換）
         
-        // ピアノらしいADSRエンベロープ - 即座に開始
+        // グランドピアノの精密なADSRエンベロープ（自然なフェイドアウト）
         this.referenceMainGain.gain.setValueAtTime(0, startTime);
-        this.referenceMainGain.gain.linearRampToValueAtTime(0.7, startTime + 0.005);  // より鋭く大きなアタック
-        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.25, startTime + 0.2); // より早いディケイ
-        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.15, startTime + 1.0); // サスティン
-        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.01, startTime + duration); // リリース
+        // アタック: 非常に鋭い立ち上がり（ハンマーの衝撃）
+        this.referenceMainGain.gain.linearRampToValueAtTime(0.9, startTime + 0.003);  
+        // 初期ディケイ: 急激な減衰
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.4, startTime + 0.05);
+        // セカンダリディケイ: より緩やかな減衰
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.25, startTime + 0.3);
+        // サスティン: 長い持続
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.15, startTime + 1.0);
+        // 長いリリース: 非常にゆっくりとした自然な消失
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.08, startTime + 1.5);
+        this.referenceMainGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
         
-        // 各倍音のオシレーターを作成
+        // 各倍音のオシレーターを作成（個別のダイナミクス適用）
         harmonics.forEach((harmonic, index) => {
             const oscillator = this.audioContext.createOscillator();
             const gainNode = this.audioContext.createGain();
@@ -379,13 +525,26 @@ class FullScaleTraining {
             oscillator.frequency.setValueAtTime(harmonic.freq, startTime);
             oscillator.type = harmonic.type;
             
-            // 倍音ごとの音量設定
-            gainNode.gain.setValueAtTime(harmonic.gain, startTime);
+            // 倍音ごとの個別エンベロープ
+            gainNode.gain.setValueAtTime(0, startTime);
             
-            // 高次倍音は早めに減衰させる（よりリアルなピアノ音）
-            if (index > 1) {
-                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * 0.1, startTime + 0.6);
+            if (harmonic.type === 'square') {
+                // 打鍵ノイズ: 瞬間的なアタックで即座に減衰
+                gainNode.gain.linearRampToValueAtTime(harmonic.gain, startTime + 0.001);
+                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * 0.01, startTime + 0.02);
+            } else if (harmonic.freq < frequency) {
+                // サブ倍音: ゆっくりとした立ち上がりと長い持続
+                gainNode.gain.linearRampToValueAtTime(harmonic.gain, startTime + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * harmonic.decay, startTime + duration * 0.9);
+            } else {
+                // 通常の倍音: ピアノらしい減衰
+                gainNode.gain.linearRampToValueAtTime(harmonic.gain, startTime + 0.005);
+                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * 0.5, startTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(harmonic.gain * harmonic.decay * 0.3, startTime + duration * 0.8);
             }
+            
+            // 最終的にゼロに
+            gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
             
             // 接続
             oscillator.connect(gainNode);
@@ -395,7 +554,7 @@ class FullScaleTraining {
             this.referenceOscillators.push(oscillator);
             this.referenceGains.push(gainNode);
             
-            // 再生開始・停止 - 即座に開始
+            // 再生開始・停止
             oscillator.start(startTime);
             oscillator.stop(startTime + duration);
         });
@@ -412,11 +571,22 @@ class FullScaleTraining {
             this.stopReferenceNote();
         }, duration * 1000 + 100); // 少し余裕を持って
         
-        this.log(`🎹 ピアノ音 Do4 (${harmonics.length}倍音合成) 再生中...`);
+        this.log(`🎹 グランドピアノ音 Do4 (${harmonics.length}成分合成: 基音+倍音+非整数倍音+打鍵音) 再生中...`);
     }
     
     stopReferenceNote() {
-        // 複数のオシレーターを停止
+        // Tone.js サンプラーを完全停止
+        if (this.pianoSampler) {
+            try {
+                this.pianoSampler.triggerRelease("C4");  // 特定の音を停止
+                this.pianoSampler.releaseAll();          // 全ての音を停止
+                this.log('🎹 Tone.js ピアノサンプラー完全停止');
+            } catch (e) {
+                this.log(`⚠️ Tone.js 停止エラー: ${e.message}`);
+            }
+        }
+        
+        // 複数のオシレーターを停止（フォールバック用）
         if (this.referenceOscillators && this.referenceOscillators.length > 0) {
             this.referenceOscillators.forEach(oscillator => {
                 try {
