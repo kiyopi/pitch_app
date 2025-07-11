@@ -212,7 +212,7 @@
             }
             
             .title {
-                font-size: 2rem;
+                font-size: 1.6rem;
             }
             
             .start-btn {
@@ -230,7 +230,7 @@
     <div class="page-wrapper">
         <div class="container">
         <div class="logo">🎵</div>
-        <h1 class="title">相対音感トレーニング</h1>
+        <h1 class="title" id="main-title">相対音感トレーニング</h1>
         <p class="subtitle">高精度音程トレーニング</p>
 
         <div class="buttons">
@@ -309,6 +309,25 @@
             }
         }
 
+        // モバイル版のタイトル調整
+        function adjustMobileTitle() {
+            if (window.innerWidth <= 768) {
+                const title = document.getElementById('main-title');
+                if (title) {
+                    title.textContent = '相対音感トレーニング';
+                }
+            } else {
+                const title = document.getElementById('main-title');
+                if (title) {
+                    title.textContent = '相対音感トレーニング';
+                }
+            }
+        }
+        
+        // 初期読み込み時とリサイズ時に実行
+        adjustMobileTitle();
+        window.addEventListener('resize', adjustMobileTitle);
+        
         // モバイルデバイスの場合のみ自動リダイレクトを開始
         if (isMobile()) {
             startAutoRedirect();

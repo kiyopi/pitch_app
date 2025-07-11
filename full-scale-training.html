@@ -363,7 +363,11 @@
             }
             
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.6rem;
+            }
+            
+            .header h1:before {
+                content: '';
             }
             
             .header p {
@@ -436,7 +440,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 相対音感トレーニング</h1>
+            <h1 id="app-title">🎵 相対音感トレーニング</h1>
             <p>基音を聞いて基音に合わせてドレミファソラシドを発声しましょう</p>
         </div>
 
@@ -550,6 +554,25 @@
         // グローバルにPitchDetectorを公開
         window.PitchDetector = PitchDetector;
         console.log('✅ Pitchy PitchDetectorを読み込みました');
+        
+        // モバイル版のタイトル調整
+        function adjustMobileTitle() {
+            if (window.innerWidth <= 768) {
+                const title = document.getElementById('app-title');
+                if (title) {
+                    title.textContent = '相対音感トレーニング';
+                }
+            } else {
+                const title = document.getElementById('app-title');
+                if (title) {
+                    title.textContent = '🎵 相対音感トレーニング';
+                }
+            }
+        }
+        
+        // 初期読み込み時とリサイズ時に実行
+        adjustMobileTitle();
+        window.addEventListener('resize', adjustMobileTitle);
         
         // DOMContentLoadedを待ってからメインスクリプト読み込み
         if (document.readyState === 'loading') {

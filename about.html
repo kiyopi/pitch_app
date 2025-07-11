@@ -273,7 +273,7 @@
             }
             
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.6rem;
             }
             
             .features-grid {
@@ -289,7 +289,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 相対音感トレーニング</h1>
+            <h1 id="about-title">🎵 相対音感トレーニング</h1>
             <p>高精度音程トレーニングアプリケーション</p>
             <div class="technology-badge">
                 🎯 Powered by Pitchy (McLeod Pitch Method)
@@ -456,5 +456,26 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        // モバイル版のタイトル調整
+        function adjustMobileTitle() {
+            if (window.innerWidth <= 768) {
+                const title = document.getElementById('about-title');
+                if (title) {
+                    title.textContent = '相対音感トレーニング';
+                }
+            } else {
+                const title = document.getElementById('about-title');
+                if (title) {
+                    title.textContent = '🎵 相対音感トレーニング';
+                }
+            }
+        }
+        
+        // 初期読み込み時とリサイズ時に実行
+        adjustMobileTitle();
+        window.addEventListener('resize', adjustMobileTitle);
+    </script>
 </body>
 </html>
