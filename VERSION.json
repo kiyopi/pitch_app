@@ -1,0 +1,33 @@
+{
+  "version": "1.0.1",
+  "codename": "Mobile-Fix",
+  "build": "2025-07-11",
+  "commit": "455f1ab",
+  "features": [
+    "モバイル版ユーザーガイダンス追加",
+    "iPhone操作性改善",
+    "UI簡素化完了",
+    "Pitchy高精度音程検出"
+  ],
+  "changes": {
+    "1.0.1": {
+      "date": "2025-07-11",
+      "description": "モバイル版操作性改善",
+      "details": [
+        "iPhoneでのユーザーガイダンス追加",
+        "モバイルデバイス判定機能",
+        "タッチ操作最適化"
+      ]
+    },
+    "1.0.0": {
+      "date": "2025-07-10", 
+      "description": "UI簡素化版リリース",
+      "details": [
+        "guidance-section削除",
+        "noise-reduction UI削除",
+        "waveform表示削除",
+        "Pitchy McLeod Pitch Method採用"
+      ]
+    }
+  }
+}

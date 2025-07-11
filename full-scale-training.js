@@ -1,6 +1,15 @@
 class FullScaleTraining {
     constructor() {
-        console.log('🎵 FullScaleTraining v1.0.0 初期化開始');
+        // バージョン情報
+        this.version = {
+            app: 'v1.0.1',
+            codename: 'Mobile-Fix',
+            build: '2025-07-11',
+            commit: '455f1ab'
+        };
+        
+        console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
+        console.log(`📦 Build: ${this.version.build} | Commit: ${this.version.commit}`);
         
         // 基本プロパティ（simple-pitch-testからコピー）
         this.audioContext = null;
@@ -47,7 +56,7 @@ class FullScaleTraining {
         
         // 初期化
         this.setupEventListeners();
-        this.log('🎵 FullScaleTraining v1.0.0 初期化完了');
+        this.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化完了`);
     }
     
     initNoiseReductionFilters() {
