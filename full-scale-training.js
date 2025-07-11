@@ -279,6 +279,16 @@ class FullScaleTraining {
     showMainStartButton() {
         this.log('🔍 オーディオシステム初期化完了 - 基音ボタンを有効化');
         
+        // モバイルデバイス判定
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // モバイルの場合、ガイダンスを表示
+        if (isMobile) {
+            const mobileGuidance = document.getElementById('mobile-guidance');
+            mobileGuidance.style.display = 'block';
+            this.log('📱 モバイルガイダンス表示');
+        }
+        
         // メインスタートボタンを有効化（準備完了後）
         const mainStartBtn = document.getElementById('main-start-btn');
         mainStartBtn.disabled = false;
@@ -300,6 +310,12 @@ class FullScaleTraining {
         
         this.log('🔊 基音再生とアニメーション準備');
         this.trainingPhase = 'playing';
+        
+        // モバイルガイダンスを非表示
+        const mobileGuidance = document.getElementById('mobile-guidance');
+        if (mobileGuidance) {
+            mobileGuidance.style.display = 'none';
+        }
         
         // ボタンを無効化（重複クリック防止）、アニメーション停止
         const startButton = document.getElementById('main-start-btn');
