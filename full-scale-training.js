@@ -118,6 +118,8 @@ class FullScaleTraining {
     
     setupEventListeners() {
         document.getElementById('start-btn').addEventListener('click', () => {
+            console.log('🔘 start-btnがクリックされました');
+            this.log('🔘 start-btnクリック - トレーニング開始処理開始');
             this.startTraining();
         });
         
@@ -136,13 +138,16 @@ class FullScaleTraining {
     async startTraining() {
         try {
             this.log('🚀 フルスケールトレーニング開始...');
+            console.log('🚀 startTraining() メソッド実行開始');
             
             // UI更新
+            this.log('📱 UI要素の表示を更新中...');
             document.getElementById('start-btn').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('progress-section').style.display = 'block';
             document.getElementById('guide-section').style.display = 'block';
             document.getElementById('frequency-display').style.display = 'block';
+            this.log('✅ UI要素表示更新完了');
             
             // メインスタートボタンを準備中状態で表示
             const mainStartBtn = document.getElementById('main-start-btn');
@@ -154,10 +159,14 @@ class FullScaleTraining {
             
             
             // AudioContext初期化
+            this.log('🎵 AudioContext初期化開始');
             await this.initAudioContext();
+            this.log('✅ AudioContext初期化完了');
             
             // マイクアクセス（simple-pitch-test成功手法）
+            this.log('🎤 マイクアクセス開始');
             await this.initMicrophone();
+            this.log('✅ マイクアクセス完了');
             
             // isRunningを先に設定
             this.isRunning = true;
@@ -175,7 +184,9 @@ class FullScaleTraining {
             this.log('✅ トレーニング開始成功');
             
         } catch (error) {
-            this.log(`❌ エラー: ${error.message}`);
+            console.error('❌ startTraining()でエラーが発生:', error);
+            this.log(`❌ startTraining()エラー: ${error.message}`);
+            this.log(`❌ エラー詳細: ${error.stack}`);
             this.resetUI();
         }
     }
