@@ -20,6 +20,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# 重要な開発ドキュメントは除外対象外
+# DEVELOPMENT_RULES.md
+# VERSION.json
+
 # Runtime data
 pids
 *.pid

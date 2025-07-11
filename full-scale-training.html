@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎵 相対音感トレーニング</title>
+    
+    <!-- キャッシュ制御メタタグ（モバイル対応） -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="cache-version" content="v1.0.1-mobile-fix">
+    
+    <!-- モバイルPWA対応 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
         * {
             margin: 0;
@@ -498,12 +509,110 @@
             loadMainScript();
         }
         
+        // モバイルキャッシュ管理クラス
+        class MobileCacheManager {
+            constructor() {
+                this.version = 'v1.0.1';
+                this.buildTime = '2025-07-11';
+                this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                console.log(`🗂️ CacheManager ${this.version} 初期化 (Mobile: ${this.isMobile})`);
+            }
+            
+            async checkAndClearOldCache() {
+                if (!this.isMobile) return;
+                
+                try {
+                    const storedVersion = localStorage.getItem('app-version');
+                    const storedBuild = localStorage.getItem('app-build');
+                    
+                    if (storedVersion !== this.version || storedBuild !== this.buildTime) {
+                        console.log(`🔄 バージョン変更検出: ${storedVersion} → ${this.version}`);
+                        await this.clearCaches();
+                        localStorage.setItem('app-version', this.version);
+                        localStorage.setItem('app-build', this.buildTime);
+                    }
+                } catch (error) {
+                    console.warn('⚠️ キャッシュ管理エラー:', error);
+                }
+            }
+            
+            async clearCaches() {
+                console.log('🗑️ モバイルキャッシュクリア開始');
+                
+                // Service Worker キャッシュクリア
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    console.log('✅ Service Worker キャッシュクリア完了');
+                }
+                
+                // 部分的なLocalStorageクリア（バージョン情報以外）
+                const preserveKeys = ['app-version', 'app-build'];
+                const keysToRemove = [];
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && !preserveKeys.includes(key) && key.startsWith('pitch-')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                sessionStorage.clear();
+                
+                console.log('✅ ブラウザストレージクリア完了');
+            }
+            
+            getCacheBustingUrl(url) {
+                const separator = url.includes('?') ? '&' : '?';
+                return `${url}${separator}v=${this.version}&t=${Date.now()}`;
+            }
+        }
+        
+        // Service Worker 登録
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/'
+                    });
+                    console.log('✅ Service Worker 登録成功:', registration);
+                    
+                    // 更新チェック
+                    registration.addEventListener('updatefound', () => {
+                        console.log('🔄 Service Worker 更新発見');
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('📦 新しいバージョンが利用可能です');
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.warn('⚠️ Service Worker 登録失敗:', error);
+                }
+            }
+        }
+        
+        // キャッシュマネージャー初期化
+        const cacheManager = new MobileCacheManager();
+        
+        // Service Worker登録（モバイルのみ）
+        if (cacheManager.isMobile) {
+            registerServiceWorker();
+        }
+        
         function loadMainScript() {
-            const script = document.createElement('script');
-            script.src = 'full-scale-training.js';
-            script.onload = () => console.log('✅ メインスクリプト読み込み完了');
-            script.onerror = () => console.error('❌ メインスクリプト読み込み失敗');
-            document.head.appendChild(script);
+            // キャッシュ確認後にスクリプト読み込み
+            cacheManager.checkAndClearOldCache().then(() => {
+                const script = document.createElement('script');
+                // キャッシュバスティング付きURL
+                script.src = cacheManager.getCacheBustingUrl('full-scale-training.js');
+                script.onload = () => console.log('✅ メインスクリプト読み込み完了');
+                script.onerror = () => console.error('❌ メインスクリプト読み込み失敗');
+                document.head.appendChild(script);
+            });
         }
     </script>
 </body>
