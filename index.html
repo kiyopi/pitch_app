@@ -15,16 +15,23 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .page-wrapper {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: white;
+            min-height: calc(100vh - 40px);
         }
 
         .container {
             text-align: center;
             max-width: 600px;
             padding: 40px;
+            flex: 1;
         }
 
         .logo {
@@ -150,6 +157,55 @@
             color: #FFD700;
         }
 
+        .footer-info {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .about-link-info {
+            margin-bottom: 10px;
+        }
+
+        .footer-about-link {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .footer-about-link:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .technology-info {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .technology-info span {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
         @media (max-width: 768px) {
             .logo {
                 font-size: 3rem;
@@ -171,20 +227,15 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page-wrapper">
+        <div class="container">
         <div class="logo">🎵</div>
         <h1 class="title">ドレミファソラシド</h1>
         <p class="subtitle">高精度音程トレーニング</p>
-        <div class="technology-badge">
-            🎯 Powered by Pitchy (McLeod Pitch Method)
-        </div>
 
         <div class="buttons">
             <a href="full-scale-training.html" class="start-btn">
                 🎹 トレーニング開始
-            </a>
-            <a href="about.html" class="about-link">
-                📋 技術詳細・仕様情報
             </a>
         </div>
 
@@ -212,6 +263,18 @@
             <button onclick="clearAutoRedirect()" style="background: none; border: 1px solid rgba(255,255,255,0.5); color: white; padding: 5px 15px; border-radius: 15px; cursor: pointer; margin-top: 10px;">
                 自動開始を停止
             </button>
+        </div>
+        </div>
+
+        <div class="footer-info">
+            <div class="about-link-info">
+                <a href="about.html" class="footer-about-link">
+                    📋 技術詳細・仕様情報
+                </a>
+            </div>
+            <div class="technology-info">
+                <span>🎯 Powered by Pitchy (McLeod Pitch Method)</span>
+            </div>
         </div>
     </div>
 

@@ -289,12 +289,54 @@
             margin-top: 15px;
         }
 
-        .version-info {
+        .footer-info {
             text-align: center;
             color: white;
-            opacity: 0.8;
             margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .version-info {
             font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .about-link-info {
+            margin-bottom: 8px;
+        }
+
+        .about-link-info a {
+            display: inline-block;
+            padding: 5px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .about-link-info a:hover {
+            background: rgba(255,255,255,0.2);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .technology-info {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .technology-info span {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         @media (max-width: 768px) {
@@ -420,8 +462,16 @@
             </div>
         </div>
 
-        <div class="version-info">
-            <span>Full Scale Training v1.0.0</span>
+        <div class="footer-info">
+            <div class="version-info">
+                <span>Full Scale Training v1.0.0</span>
+            </div>
+            <div class="about-link-info">
+                <a href="about.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.9rem;">📋 技術詳細・仕様情報</a>
+            </div>
+            <div class="technology-info">
+                <span>🎯 Powered by Pitchy (McLeod Pitch Method)</span>
+            </div>
         </div>
     </div>
 
