@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 ドレミファソラシド 音程トレーニング - Pitchy高精度版</title>
+    <title>🎵 ドレミファソラシド 音程トレーニング</title>
     <style>
         * {
             margin: 0;
@@ -15,36 +15,34 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: #333;
-            padding: 20px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
         }
 
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
             text-align: center;
-            color: white;
-            margin-bottom: 30px;
+            max-width: 600px;
+            padding: 40px;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
             margin-bottom: 10px;
+            opacity: 0.9;
         }
 
         .technology-badge {
@@ -53,52 +51,73 @@
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 0.9rem;
+            margin-bottom: 40px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.3);
         }
 
-        .main-panel {
-            background: white;
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .start-btn {
+            padding: 20px 60px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(76, 175, 80, 0.4);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .about-link {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 10px 20px;
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            flex: 1;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .about-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .features {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
             text-align: center;
         }
 
-        .app-description {
-            margin-bottom: 30px;
+        .feature {
+            background: rgba(255,255,255,0.1);
             padding: 20px;
-            background: #f8f9fa;
             border-radius: 15px;
-            border-left: 4px solid #667eea;
-        }
-
-        .app-description h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.4rem;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .feature-card {
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .feature-icon {
@@ -108,179 +127,44 @@
 
         .feature-title {
             font-weight: bold;
-            color: #667eea;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .feature-description {
             font-size: 0.9rem;
-            color: #666;
-            line-height: 1.4;
+            opacity: 0.9;
         }
 
-        .start-btn {
-            padding: 20px 40px;
-            font-size: 1.4rem;
-            font-weight: bold;
-            background: linear-gradient(145deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
-            margin: 20px 0;
-        }
-
-        .start-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.4);
-        }
-
-        .start-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-        }
-
-        .tech-specs {
+        .auto-redirect {
             margin-top: 30px;
-            padding: 20px;
-            background: #f0f8ff;
-            border-radius: 12px;
-            border: 2px solid #2196F3;
-            text-align: left;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
         }
 
-        .tech-specs h3 {
-            color: #2196F3;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .tech-specs ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .tech-specs li {
-            padding: 8px 0;
-            border-bottom: 1px solid #e0e8ff;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .tech-specs li:last-child {
-            border-bottom: none;
-        }
-
-        .tech-label {
-            font-weight: 600;
-            color: #555;
-        }
-
-        .tech-value {
-            color: #2196F3;
-            font-family: 'Courier New', monospace;
-        }
-
-        /* フッター */
-        .footer {
-            margin-top: 30px;
-            padding: 25px;
-            background: rgba(255,255,255,0.95);
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .version-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .version-card {
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .version-title {
+        .countdown {
+            font-size: 1.2rem;
             font-weight: bold;
-            color: #667eea;
-            font-size: 1.1rem;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .version-details {
-            font-size: 0.9rem;
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .version-details .detail-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            padding: 4px 0;
-            border-bottom: 1px dotted #ddd;
-        }
-
-        .version-details .detail-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-
-        .detail-label {
-            font-weight: 500;
-        }
-
-        .detail-value {
-            font-family: 'Courier New', monospace;
-            color: #2196F3;
-        }
-
-        .footer-links {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .footer-links a {
-            color: #667eea;
-            text-decoration: none;
-            margin: 0 15px;
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
+            color: #FFD700;
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+            .logo {
+                font-size: 3rem;
             }
             
-            .main-panel {
-                padding: 25px 20px;
-            }
-            
-            .header h1 {
+            .title {
                 font-size: 2rem;
             }
             
-            .features-grid {
-                grid-template-columns: 1fr;
+            .start-btn {
+                padding: 15px 40px;
+                font-size: 1.4rem;
             }
             
-            .version-section {
+            .features {
                 grid-template-columns: 1fr;
             }
         }
@@ -288,173 +172,93 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎵 ドレミファソラシド</h1>
-            <p>高精度音程トレーニングアプリケーション</p>
-            <div class="technology-badge">
-                🎯 Powered by Pitchy (McLeod Pitch Method)
-            </div>
+        <div class="logo">🎵</div>
+        <h1 class="title">ドレミファソラシド</h1>
+        <p class="subtitle">高精度音程トレーニング</p>
+        <div class="technology-badge">
+            🎯 Powered by Pitchy (McLeod Pitch Method)
         </div>
 
-        <div class="main-panel">
-            <div class="app-description">
-                <h2>📊 次世代音程検出技術</h2>
-                <p>
-                    従来のFFTピーク検出を超えた、Pitchy（McLeod Pitch Method）による高精度基音検出を採用。
-                    倍音誤検出やオクターブエラーを自動回避し、5セント精度の正確な音程判定を実現します。
-                </p>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <div class="feature-title">高精度周波数検出</div>
-                    <div class="feature-description">
-                        Pitchy McLeod Pitch Methodによる基音検出で、従来の1000+セント誤差から5セント精度へ飛躍的向上
-                    </div>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🔧</div>
-                    <div class="feature-title">動的オクターブ補正</div>
-                    <div class="feature-description">
-                        目標周波数に応じて補正しきい値を動的調整。固定値ではなく適応的な誤差修正システム
-                    </div>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎛️</div>
-                    <div class="feature-title">3段階ノイズリダクション</div>
-                    <div class="feature-description">
-                        ハイパス・ローパス・ノッチフィルターによる包括的ノイズ除去。電源ノイズや環境音を自動カット
-                    </div>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <div class="feature-title">リアルタイム分析</div>
-                    <div class="feature-description">
-                        スペクトラム比較表示、音量モニタリング、デバッグパネルによる詳細な音声分析機能
-                    </div>
-                </div>
-            </div>
-
-            <button class="start-btn" onclick="window.location.href='full-scale-training.html'">
+        <div class="buttons">
+            <a href="full-scale-training.html" class="start-btn">
                 🎹 トレーニング開始
-            </button>
+            </a>
+            <a href="about.html" class="about-link">
+                📋 技術詳細・仕様情報
+            </a>
+        </div>
 
-            <div class="tech-specs">
-                <h3>🔬 技術仕様</h3>
-                <ul>
-                    <li>
-                        <span class="tech-label">音程検出ライブラリ</span>
-                        <span class="tech-value">Pitchy v4 (McLeod Pitch Method)</span>
-                    </li>
-                    <li>
-                        <span class="tech-label">検出精度</span>
-                        <span class="tech-value">±5セント (半音の1/20)</span>
-                    </li>
-                    <li>
-                        <span class="tech-label">対応周波数範囲</span>
-                        <span class="tech-value">80Hz - 1200Hz</span>
-                    </li>
-                    <li>
-                        <span class="tech-label">FFTサイズ</span>
-                        <span class="tech-value">2048サンプル</span>
-                    </li>
-                    <li>
-                        <span class="tech-label">更新レート</span>
-                        <span class="tech-value">60FPS (requestAnimationFrame)</span>
-                    </li>
-                    <li>
-                        <span class="tech-label">対象音階</span>
-                        <span class="tech-value">C4-C5 (261.63Hz - 523.25Hz)</span>
-                    </li>
-                </ul>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">高精度検出</div>
+                <div class="feature-description">5セント精度</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔧</div>
+                <div class="feature-title">自動補正</div>
+                <div class="feature-description">オクターブエラー解決</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎛️</div>
+                <div class="feature-title">ノイズ除去</div>
+                <div class="feature-description">3段階フィルタリング</div>
             </div>
         </div>
 
-        <div class="footer">
-            <div class="version-section">
-                <div class="version-card">
-                    <div class="version-title">
-                        🚀 アプリケーション情報
-                    </div>
-                    <div class="version-details">
-                        <div class="detail-item">
-                            <span class="detail-label">バージョン</span>
-                            <span class="detail-value">v1.0.0 Pitchy Edition</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">リリース日</span>
-                            <span class="detail-value">2025-07-10</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">最終更新</span>
-                            <span class="detail-value">2025-07-10 JST</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">ビルド番号</span>
-                            <span class="detail-value">#91a6b2a</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="version-card">
-                    <div class="version-title">
-                        🎯 技術スタック
-                    </div>
-                    <div class="version-details">
-                        <div class="detail-item">
-                            <span class="detail-label">音程検出</span>
-                            <span class="detail-value">Pitchy v4 (ESM)</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Web Audio API</span>
-                            <span class="detail-value">AnalyserNode + BiquadFilter</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">UI Framework</span>
-                            <span class="detail-value">Vanilla JavaScript</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">モジュール形式</span>
-                            <span class="detail-value">ES6 Modules</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="version-card">
-                    <div class="version-title">
-                        📊 パフォーマンス指標
-                    </div>
-                    <div class="version-details">
-                        <div class="detail-item">
-                            <span class="detail-label">検出精度向上</span>
-                            <span class="detail-value">1000¢ → 5¢ (200倍改善)</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">倍音誤検出</span>
-                            <span class="detail-value">完全解決</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">オクターブエラー</span>
-                            <span class="detail-value">動的補正で解決</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">ノイズ耐性</span>
-                            <span class="detail-value">3段階フィルタリング</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-links">
-                <a href="PITCHY_SPECS.md" target="_blank">📋 技術仕様書</a>
-                <a href="full-scale-training.html">🎵 アプリ起動</a>
-                <a href="https://github.com/mlomb/pitchy" target="_blank">🔗 Pitchy公式</a>
-            </div>
+        <div class="auto-redirect">
+            <p>📱 モバイルユーザー向け自動リダイレクト</p>
+            <p class="countdown" id="countdown">5秒後に自動でアプリが開始されます...</p>
+            <button onclick="clearAutoRedirect()" style="background: none; border: 1px solid rgba(255,255,255,0.5); color: white; padding: 5px 15px; border-radius: 15px; cursor: pointer; margin-top: 10px;">
+                自動開始を停止
+            </button>
         </div>
     </div>
+
+    <script>
+        // モバイルデバイス判定
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // 自動リダイレクト機能
+        let countdownTimer;
+        let countdown = 5;
+
+        function startAutoRedirect() {
+            const countdownElement = document.getElementById('countdown');
+            
+            countdownTimer = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = `${countdown}秒後に自動でアプリが開始されます...`;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownTimer);
+                    window.location.href = 'full-scale-training.html';
+                }
+            }, 1000);
+        }
+
+        function clearAutoRedirect() {
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                document.getElementById('countdown').textContent = '自動開始を停止しました';
+            }
+        }
+
+        // モバイルデバイスの場合のみ自動リダイレクトを開始
+        if (isMobile()) {
+            startAutoRedirect();
+        } else {
+            document.querySelector('.auto-redirect').style.display = 'none';
+        }
+
+        // キーボードショートカット
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                window.location.href = 'full-scale-training.html';
+            }
+        });
+    </script>
 </body>
 </html>
