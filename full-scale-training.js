@@ -10,9 +10,6 @@ class FullScaleTraining {
         this.isRunning = false;
         this.frameCount = 0;
         
-        // Canvas設定
-        this.canvas = document.getElementById('waveform-canvas');
-        this.ctx = this.canvas.getContext('2d');
         
         // 8音階データ
         this.targetNotes = ['ド4', 'レ4', 'ミ4', 'ファ4', 'ソ4', 'ラ4', 'シ4', 'ド5'];
@@ -146,7 +143,6 @@ class FullScaleTraining {
             document.getElementById('progress-section').style.display = 'block';
             document.getElementById('guide-section').style.display = 'block';
             document.getElementById('frequency-display').style.display = 'block';
-            document.getElementById('canvas-container').style.display = 'block';
             
             // メインスタートボタンを準備中状態で表示
             const mainStartBtn = document.getElementById('main-start-btn');
@@ -540,8 +536,6 @@ class FullScaleTraining {
                 this.recordAccuracy(frequency);
             }
             
-            // 波形描画
-            this.drawWaveform(timeData, volume);
             
             requestAnimationFrame(detectLoop);
         };
@@ -825,78 +819,6 @@ class FullScaleTraining {
         // 自動停止を削除 - ユーザーが停止ボタンを押すまで結果を表示し続ける
     }
     
-    drawWaveform(timeData, volume) {
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        
-        // 背景クリア
-        this.ctx.fillStyle = '#f8f9fa';
-        this.ctx.fillRect(0, 0, width, height);
-        
-        // 中央線
-        this.ctx.strokeStyle = '#e0e0e0';
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, height / 2);
-        this.ctx.lineTo(width - 60, height / 2);
-        this.ctx.stroke();
-        
-        // 波形描画
-        const waveformWidth = width - 60;
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeStyle = volume > 5 ? '#667eea' : '#ffb74d';
-        this.ctx.beginPath();
-        
-        for (let i = 0; i < timeData.length; i += 4) {
-            const v = (timeData[i] - 128) / 128.0;
-            const x = (i / timeData.length) * waveformWidth;
-            const y = (height / 2) + (v * height / 3);
-            
-            if (i === 0) {
-                this.ctx.moveTo(x, y);
-            } else {
-                this.ctx.lineTo(x, y);
-            }
-        }
-        
-        this.ctx.stroke();
-        
-        // 音量バー描画
-        this.drawVolumeBar(volume, width, height);
-    }
-    
-    drawVolumeBar(volume, width, height) {
-        const barWidth = 15;
-        const barHeight = height * 0.8;
-        const barX = width - 40;
-        const barY = height * 0.1;
-        
-        // 背景
-        this.ctx.fillStyle = '#e0e0e0';
-        this.ctx.fillRect(barX, barY, barWidth, barHeight);
-        
-        // レベル
-        const levelHeight = Math.min(volume / 100, 1) * barHeight;
-        const levelY = barY + barHeight - levelHeight;
-        
-        if (volume > 80) {
-            this.ctx.fillStyle = '#f44336';
-        } else if (volume > 20) {
-            this.ctx.fillStyle = '#4CAF50';
-        } else if (volume > 5) {
-            this.ctx.fillStyle = '#FF9800';
-        } else {
-            this.ctx.fillStyle = '#ccc';
-        }
-        
-        this.ctx.fillRect(barX, levelY, barWidth, levelHeight);
-        
-        // マイクアイコン
-        this.ctx.fillStyle = volume > 2 ? '#4CAF50' : '#ccc';
-        this.ctx.font = '12px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('🎤', barX + barWidth/2, barY - 5);
-    }
     
     stopMicrophone() {
         this.log('🔇 マイクを自動停止中...');
@@ -975,7 +897,6 @@ class FullScaleTraining {
         document.getElementById('guide-section').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none';
-        document.getElementById('canvas-container').style.display = 'none';
         
         // 周波数表示をリセット（再試行時に備えて）
         document.getElementById('frequency-main').textContent = '--- Hz';
@@ -987,13 +908,6 @@ class FullScaleTraining {
         document.getElementById('frequency-main').style.color = '#999';
         document.getElementById('frequency-main').style.borderColor = '#e0e0e0';
         
-        // Canvas クリア
-        this.ctx.fillStyle = '#f8f9fa';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = '#999';
-        this.ctx.font = '16px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('トレーニング停止中', this.canvas.width/2, this.canvas.height/2);
         
         // 設定リセット
         this.frameCount = 0;
