@@ -854,8 +854,8 @@ class FullScaleTraining {
         const legacyElement = document.getElementById('frequency-main-legacy');
         
         const displayText = frequency > 0 ? `${Math.round(frequency)} Hz` : '--- Hz';
-        const color = frequency > 0 ? '#333' : '#999';
-        const borderColor = frequency > 0 ? '#4CAF50' : '#e0e0e0';
+        const color = frequency > 0 ? '#4CAF50' : '#999';
+        const borderColor = '#4CAF50'; // 常に緑で固定
         
         // 音量を0-100%に正規化（最大値を調整）
         const volumePercent = Math.min(Math.max(volume / 30 * 100, 0), 100);
@@ -869,7 +869,7 @@ class FullScaleTraining {
             // 音量バー背景の更新
             if (frequency > 0 && volume > 1) {
                 // 音を検出している時は緑のグラデーション
-                element.style.backgroundImage = `linear-gradient(to top, #4CAF50 ${volumePercent}%, transparent ${volumePercent}%)`;
+                element.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
                 // 音を検出していない時は薄いグレー
                 element.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
@@ -884,7 +884,7 @@ class FullScaleTraining {
             
             // レガシー要素にも音量バー適用
             if (frequency > 0 && volume > 1) {
-                legacyElement.style.backgroundImage = `linear-gradient(to top, #4CAF50 ${volumePercent}%, transparent ${volumePercent}%)`;
+                legacyElement.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
                 legacyElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
