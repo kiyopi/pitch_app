@@ -125,6 +125,48 @@ class FullScaleTraining {
         this.log('  マイク → ハイパス → ローパス → ノッチ → ゲイン → アナライザー');
     }
     
+    // 確実な画面サイズ判定（Safari リロード対応）
+    isDesktopLayout() {
+        // 複数の方法で判定して確実性を高める
+        const windowWidth = window.innerWidth;
+        const screenWidth = screen.width;
+        const documentWidth = document.documentElement.clientWidth;
+        
+        // 最も信頼できる値を使用
+        const width = Math.max(windowWidth, documentWidth);
+        const isDesktop = width >= 769;
+        
+        this.log(`🖥️ 画面サイズ判定: ${width}px (window:${windowWidth}, doc:${documentWidth}, screen:${screenWidth}) → ${isDesktop ? 'デスクトップ' : 'モバイル'}`);
+        
+        return isDesktop;
+    }
+    
+    // ガイドノート要素を取得（画面サイズに応じて）
+    getGuideNotes() {
+        let selector, layoutType;
+        
+        if (this.isDesktopLayout()) {
+            selector = '#note-guide-desktop .guide-note';
+            layoutType = 'デスクトップ';
+        } else {
+            selector = '#note-guide-mobile .guide-note';
+            layoutType = 'モバイル';
+        }
+        
+        const elements = document.querySelectorAll(selector);
+        this.log(`🎯 ガイドノート取得: ${elements.length}個 (${layoutType}レイアウト)`);
+        
+        // 要素が見つからない場合は代替手段を試行
+        if (elements.length === 0) {
+            this.log('⚠️ ガイドノートが見つかりません！代替セレクターを試行...');
+            const fallbackElements = document.querySelectorAll('.guide-note');
+            this.log(`🔄 代替取得: ${fallbackElements.length}個のガイドノート`);
+            return fallbackElements;
+        }
+        
+        return elements;
+    }
+    
     setupEventListeners() {
         document.getElementById('start-btn').addEventListener('click', () => {
             console.log('🔘 start-btnがクリックされました');
@@ -622,22 +664,13 @@ class FullScaleTraining {
         
         // メインスタートボタンをアニメーション中状態に変更
         const mainStartBtn = document.getElementById('main-start-btn');
-        mainStartBtn.textContent = '🎵 測定中';
+        mainStartBtn.textContent = '🎵 測定中...';
         mainStartBtn.disabled = true;
         mainStartBtn.style.opacity = '0.5';
         mainStartBtn.style.animation = 'none';
         
         // 現在表示されているレイアウトのguide-noteのみを取得
-        let guideNotes;
-        if (window.innerWidth >= 769) {
-            // PC用デスクトップレイアウト
-            guideNotes = document.querySelectorAll('#note-guide-desktop .guide-note');
-        } else {
-            // モバイルレイアウト
-            guideNotes = document.querySelectorAll('#note-guide-mobile .guide-note');
-        }
-        
-        this.log(`🎯 アニメーション対象: ${guideNotes.length}個のガイドノート (${window.innerWidth >= 769 ? 'デスクトップ' : 'モバイル'})`);
+        const guideNotes = this.getGuideNotes();
         
         if (guideNotes.length === 0) {
             this.log('⚠️ ガイドノートが見つかりません！アニメーションを中止します。');
@@ -689,12 +722,7 @@ class FullScaleTraining {
         this.log('🎼 ガイドアニメーション完了');
         
         // ガイドリセット（現在表示されているレイアウトのみ）
-        let guideNotes;
-        if (window.innerWidth >= 769) {
-            guideNotes = document.querySelectorAll('#note-guide-desktop .guide-note');
-        } else {
-            guideNotes = document.querySelectorAll('#note-guide-mobile .guide-note');
-        }
+        const guideNotes = this.getGuideNotes();
         guideNotes.forEach(note => {
             note.classList.remove('animate');
         });
