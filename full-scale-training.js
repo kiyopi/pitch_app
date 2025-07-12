@@ -339,7 +339,7 @@ class FullScaleTraining {
     
     async startTraining() {
         try {
-            this.log('🚀 フルスケールトレーニング開始...');
+            this.log('🚀 フルスケールトレーニング準備開始...');
             console.log('🚀 startTraining() メソッド実行開始');
             
             // UI更新
@@ -362,39 +362,18 @@ class FullScaleTraining {
             // 新しいセッション用に基音を再選択
             this.selectNewBaseTone();
             
-            // メインスタートボタンを準備中状態で表示
+            // メインスタートボタンを表示（ユーザーインタラクション待ち）
             const mainStartBtn = document.getElementById('main-start-btn');
             mainStartBtn.style.display = 'inline-block';
-            mainStartBtn.disabled = true;
-            mainStartBtn.style.opacity = '0.6';
-            mainStartBtn.textContent = '🔍 Loading...';
-            mainStartBtn.style.animation = 'none';
+            mainStartBtn.disabled = false;
+            mainStartBtn.style.opacity = '1';
+            mainStartBtn.style.animation = 'pulse 2s infinite';
             
-            
-            // AudioContext初期化（再利用または新規作成）
-            this.log('🎵 AudioContext初期化開始');
-            await this.initAudioContext();
-            this.log('✅ AudioContext初期化完了');
-            
-            // マイクアクセス（simple-pitch-test成功手法）
-            this.log('🎤 マイクアクセス開始');
-            await this.initMicrophone();
-            this.log('✅ マイクアクセス完了');
-            
-            // isRunningを先に設定
-            this.isRunning = true;
-            
-            // 周波数検出開始
-            this.startFrequencyDetection();
-            
-            // 初期表示更新
-            this.updateProgress();
-            
-            // 初期化完了後にメインスタートボタンを表示
-            this.showMainStartButton();
+            // 基音情報をボタンに表示
+            this.updateStartButtonWithBaseTone(mainStartBtn);
             
             this.trainingPhase = 'waiting';
-            this.log('✅ トレーニング開始成功');
+            this.log('✅ トレーニング準備完了 - スタートボタンを押してください');
             
         } catch (error) {
             console.error('❌ startTraining()でエラーが発生:', error);
@@ -573,7 +552,7 @@ class FullScaleTraining {
         }
     }
     
-    playReferenceAndStartAnimation() {
+    async playReferenceAndStartAnimation() {
         if (this.trainingPhase !== 'waiting') {
             this.log('⚠️ まだ前のアニメーションが実行中です');
             return;
@@ -582,21 +561,60 @@ class FullScaleTraining {
         this.log('🔊 基音再生とアニメーション準備');
         this.trainingPhase = 'playing';
         
-        // 基音再生前にマイクを一時停止（雑音回避）
-        this.pauseMicrophone();
-        
         // ボタンを無効化（重複クリック防止）、アニメーション停止
         const startButton = document.getElementById('main-start-btn');
         if (startButton) {
             startButton.disabled = true;
             startButton.style.opacity = '0.5';
             startButton.style.animation = 'none'; // パルスアニメーション停止
-            startButton.textContent = '🎵 基音再生中...'; // テキスト変更
+            startButton.textContent = '🔍 マイク初期化中...'; // テキスト変更
         }
         
-        
-        // 基音再生
-        this.playReferenceNote();
+        try {
+            // ユーザーインタラクション後にマイクアクセスを実行
+            if (!this.audioContext) {
+                this.log('🎵 AudioContext初期化開始');
+                await this.initAudioContext();
+                this.log('✅ AudioContext初期化完了');
+            }
+            
+            if (!this.mediaStream) {
+                this.log('🎤 マイクアクセス開始');
+                await this.initMicrophone();
+                this.log('✅ マイクアクセス完了');
+                
+                // isRunningを設定
+                this.isRunning = true;
+                
+                // 周波数検出開始
+                this.startFrequencyDetection();
+                
+                this.log('📊 周波数検出開始');
+            }
+            
+            // マイクを一時停止（基音再生のため）
+            this.pauseMicrophone();
+            
+            // ボタンテキストを更新
+            if (startButton) {
+                startButton.textContent = '🎵 基音再生中...';
+            }
+            
+            // 基音再生
+            this.playReferenceNote();
+            
+        } catch (error) {
+            this.log(`❌ マイク初期化エラー: ${error.message}`);
+            // エラー時はボタンを元に戻す
+            if (startButton) {
+                startButton.disabled = false;
+                startButton.style.opacity = '1';
+                startButton.style.animation = 'pulse 2s infinite';
+                startButton.textContent = '🎹 スタート (再試行)';
+            }
+            this.trainingPhase = 'waiting';
+            return;
+        }
         
         
         // 基音終了後すぐにアニメーション開始（0.2秒早める）
