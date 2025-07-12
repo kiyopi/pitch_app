@@ -557,6 +557,8 @@
         .restart-buttons-inline {
             display: flex;
             gap: 10px;
+            justify-content: center;
+            align-items: center;
         }
 
         .restart-btn-inline {
@@ -905,9 +907,7 @@
 
 
             <div class="results-section" id="results-section">
-                <div class="overall-grade" id="overall-grade">🎊 完了！</div>
-                
-                <!-- 再開始オプション -->
+                <!-- 再開始オプション（結果見出しの上に移動） -->
                 <div class="completion-section">
                     <div class="restart-buttons-inline">
                         <button class="restart-btn-inline same-tone" id="same-tone-btn">
@@ -920,6 +920,8 @@
                         </button>
                     </div>
                 </div>
+                
+                <div class="overall-grade" id="overall-grade">🎊 完了！</div>
                 
                 <div class="results-summary" id="results-summary"></div>
                 <div class="results-detail" id="results-detail"></div>
