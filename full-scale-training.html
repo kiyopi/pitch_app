@@ -710,7 +710,11 @@
             
             .control-section {
                 min-height: 50px;
-                padding: 10px 0; /* パディング10px */
+                padding: 5px 0; /* パディングを5pxに削減 */
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                justify-content: center;
             }
             
             .guide-section {
@@ -750,15 +754,26 @@
             }
             
             
-            .start-btn, .stop-btn, .play-btn {
+            .start-btn {
                 width: 100%;
-                margin: 5px 0;
+                margin: 0;
                 font-size: 1.1rem;
             }
             
             .main-start-btn {
-                font-size: 1.2rem;
-                padding: 15px 30px;
+                font-size: 1.1rem;
+                padding: 12px 20px;
+                flex: 2;
+                margin: 0;
+            }
+            
+            .stop-btn {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+                flex: 1;
+                margin: 0;
+                min-width: 70px;
+                white-space: nowrap;
             }
             
             .restart-buttons-inline {
