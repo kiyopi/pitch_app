@@ -1678,7 +1678,16 @@ class FullScaleTraining {
 
 // 初期化
 function initializeApp() {
-    new FullScaleTraining();
+    const app = new FullScaleTraining();
+    
+    // モード選択から直接遷移した場合は、自動でトレーニング開始状態にする
+    if (document.referrer.includes('index.html') || document.referrer.endsWith('/')) {
+        console.log('🎯 モード選択からの直接遷移を検出 - 自動でトレーニング開始状態に移行');
+        // 少し遅延させてDOMの準備を待つ
+        setTimeout(() => {
+            app.startTraining();
+        }, 500);
+    }
 }
 
 // DOMが既に読み込まれている場合は即座に初期化、そうでなければイベントを待つ
