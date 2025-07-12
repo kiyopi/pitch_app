@@ -286,7 +286,7 @@ class FullScaleTraining {
         const mainStartBtn = document.getElementById('main-start-btn');
         mainStartBtn.disabled = false;
         mainStartBtn.style.opacity = '1';
-        mainStartBtn.textContent = '🎹 基音を聞いてスタート！';
+        mainStartBtn.textContent = '🎹 スタート';
         
         // ボタンにパルスアニメーションを追加（準備完了の視覚的フィードバック）
         mainStartBtn.style.animation = 'pulse 2s infinite';
@@ -1148,7 +1148,7 @@ class FullScaleTraining {
         mainStartBtn.style.display = 'none'; // リセット時のみ非表示
         mainStartBtn.disabled = false;
         mainStartBtn.style.opacity = '1';
-        mainStartBtn.textContent = '🎹 基音を聞いてスタート！'; // テキストをデフォルトに戻す
+        mainStartBtn.textContent = '🎹 スタート'; // テキストをデフォルトに戻す
         mainStartBtn.style.animation = 'none'; // アニメーションもリセット
         
         document.getElementById('training-layout').style.display = 'none';

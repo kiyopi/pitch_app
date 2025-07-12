@@ -144,7 +144,7 @@
 
         /* 新しいレスポンシブトレーニングレイアウト */
         .training-layout {
-            margin: 20px 0;
+            margin: 10px 0;
         }
 
         /* モバイル用レイアウト（縦1列） */
@@ -163,7 +163,7 @@
 
         /* モバイル用周波数表示（上部・最小限） */
         .frequency-display-mobile {
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             text-align: center;
         }
 
@@ -358,6 +358,21 @@
                 color: #666;
             }
 
+        }
+
+        /* モバイル用の余白調整 */
+        @media (max-width: 768px) {
+            .training-layout {
+                margin: 5px 0;
+            }
+            
+            .frequency-display-mobile {
+                margin-bottom: 6px;
+            }
+            
+            .control-section {
+                margin-bottom: 5px;
+            }
         }
 
         /* 大画面対応 */
@@ -622,7 +637,7 @@
         <div class="main-panel">
             <div class="control-section">
                 <button id="start-btn" class="start-btn">トレーニング開始</button>
-                <button id="main-start-btn" class="main-start-btn" style="display: none;">🎹 基音を聞いてスタート！</button>
+                <button id="main-start-btn" class="main-start-btn" style="display: none;">🎹 スタート</button>
                 <button id="stop-btn" class="stop-btn" style="display: none;">中断</button>
             </div>
 
