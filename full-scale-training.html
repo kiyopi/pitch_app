@@ -360,18 +360,31 @@
 
         }
 
-        /* モバイル用の余白調整 */
+        /* モバイル用の余白調整 - 画面収まり最適化 */
         @media (max-width: 768px) {
+            body {
+                padding: 10px; /* 20px → 10px (-10px) */
+            }
+            
+            .header {
+                margin-bottom: 15px; /* 30px → 15px (-15px) */
+            }
+            
+            .main-panel {
+                padding-top: 15px; /* 25px → 15px (-10px) */
+            }
+            
             .training-layout {
-                margin: 5px 0;
+                margin: 2px 0; /* 5px → 2px (-3px) */
             }
             
             .frequency-display-mobile {
-                margin-bottom: 6px;
+                margin-bottom: 3px; /* 6px → 3px (-3px) */
             }
             
             .control-section {
-                margin-bottom: 5px;
+                padding: 10px 0; /* 15px → 10px (-5px) */
+                margin-bottom: 2px; /* 5px → 2px (-3px) */
             }
         }
 
