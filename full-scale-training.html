@@ -360,18 +360,18 @@
 
         }
 
-        /* モバイル用の余白調整 - 5px統一設定 */
+        /* モバイル用の余白調整 - スタートボタン上部10px */
         @media (max-width: 768px) {
             body {
-                padding: 5px 10px 10px 10px; /* 上部5px */
+                padding: 10px 10px 10px 10px; /* 上部10px */
             }
             
             .header {
-                margin-bottom: 5px; /* 5px */
+                margin-bottom: 5px; /* 5px (非表示時は無効) */
             }
             
             .main-panel {
-                padding-top: 5px; /* 5px */
+                padding-top: 10px; /* 10px */
                 margin-top: 0;
             }
             
@@ -385,7 +385,7 @@
             }
             
             .control-section {
-                padding: 5px 0; /* 5px */
+                padding: 10px 0; /* 10px */
                 margin: 0;
                 min-height: 50px;
             }
@@ -584,13 +584,13 @@
             }
             
             .main-panel {
-                padding: 5px 20px 25px 20px; /* 上部パディング5px */
+                padding: 10px 20px 25px 20px; /* 上部パディング10px */
                 min-height: 600px;
             }
             
             .control-section {
                 min-height: 50px;
-                padding: 5px 0; /* パディング5px */
+                padding: 10px 0; /* パディング10px */
             }
             
             .guide-section {
