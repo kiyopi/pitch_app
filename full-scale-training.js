@@ -1,3 +1,77 @@
+// ランダム基音管理クラス（将来の拡張に対応）
+class BaseToneManager {
+    constructor(mode = 'single') {
+        this.mode = mode;
+        this.baseToneOptions = [
+            { name: 'Bb3', note: 'シ♭3', frequency: 233.08, tonejs: 'Bb3' },
+            { name: 'C4',  note: 'ド4',   frequency: 261.63, tonejs: 'C4' },
+            { name: 'Db4', note: 'レ♭4', frequency: 277.18, tonejs: 'Db4' },
+            { name: 'D4',  note: 'レ4',   frequency: 293.66, tonejs: 'D4' },
+            { name: 'Eb4', note: 'ミ♭4', frequency: 311.13, tonejs: 'Eb4' },
+            { name: 'E4',  note: 'ミ4',   frequency: 329.63, tonejs: 'E4' },
+            { name: 'F4',  note: 'ファ4', frequency: 349.23, tonejs: 'F4' },
+            { name: 'Gb4', note: 'ソ♭4', frequency: 369.99, tonejs: 'Gb4' },
+            { name: 'G4',  note: 'ソ4',   frequency: 392.00, tonejs: 'G4' },
+            { name: 'Ab4', note: 'ラ♭4', frequency: 415.30, tonejs: 'Ab4' }
+        ];
+        
+        this.currentBaseTone = null;
+        this.sessionHistory = []; // 将来の連続モード用履歴
+        this.currentSession = 0;
+        
+        console.log(`🎲 BaseToneManager初期化 (${mode}モード, ${this.baseToneOptions.length}種類の基音)`);
+    }
+    
+    // 新しいセッション開始時の基音選択
+    selectBaseToneForNewSession() {
+        if (this.mode === 'single') {
+            // 短音モード：毎回完全ランダム
+            this.currentBaseTone = this.getRandomBaseTone();
+        } else {
+            // 将来の連続モード：履歴を考慮したランダム選択
+            this.currentBaseTone = this.getRandomBaseToneAvoidingRecent();
+            this.sessionHistory.push(this.currentBaseTone);
+        }
+        
+        console.log(`🎲 セッション${this.currentSession + 1} 基音選択: ${this.currentBaseTone.note} (${this.currentBaseTone.frequency}Hz)`);
+        return this.currentBaseTone;
+    }
+    
+    // 完全ランダム選択
+    getRandomBaseTone() {
+        const randomIndex = Math.floor(Math.random() * this.baseToneOptions.length);
+        return this.baseToneOptions[randomIndex];
+    }
+    
+    // 重複回避ランダム選択（将来の連続モード用）
+    getRandomBaseToneAvoidingRecent() {
+        const recentCount = Math.min(3, this.sessionHistory.length);
+        const recentTones = this.sessionHistory.slice(-recentCount).map(t => t.name);
+        
+        const availableTones = this.baseToneOptions.filter(tone => 
+            !recentTones.includes(tone.name)
+        );
+        
+        if (availableTones.length === 0) {
+            console.log('🔄 基音履歴リセット - 全基音を再利用可能に');
+            return this.getRandomBaseTone();
+        }
+        
+        const randomIndex = Math.floor(Math.random() * availableTones.length);
+        return availableTones[randomIndex];
+    }
+    
+    // 基音情報取得
+    getCurrentBaseToneInfo() {
+        return {
+            name: this.currentBaseTone.name,
+            note: this.currentBaseTone.note,
+            frequency: this.currentBaseTone.frequency,
+            tonejs: this.currentBaseTone.tonejs
+        };
+    }
+}
+
 class FullScaleTraining {
     constructor() {
         // バージョン情報
@@ -55,9 +129,84 @@ class FullScaleTraining {
         // 状態管理
         this.trainingPhase = 'waiting'; // waiting, playing, animating, completed
         
+        // ランダム基音システム（拡張可能設計）
+        this.trainingMode = 'single'; // 'single' | 'continuous' (将来実装)
+        this.baseToneManager = new BaseToneManager(this.trainingMode);
+        
         // 初期化
         this.setupEventListeners();
+        this.initRandomBaseToneSystem();
         this.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化完了`);
+    }
+    
+    initRandomBaseToneSystem() {
+        this.log('🎲 ランダム基音システム初期化開始');
+        
+        // 初回基音選択
+        this.selectNewBaseTone();
+        
+        this.log(`✅ 初期基音設定: ${this.baseToneManager.currentBaseTone.note} (${this.baseToneManager.currentBaseTone.frequency}Hz)`);
+    }
+    
+    selectNewBaseTone() {
+        // 新しい基音を選択
+        this.baseToneManager.selectBaseToneForNewSession();
+        
+        // 移調計算とUI更新
+        this.calculateTransposedFrequencies();
+        
+        this.log(`🎲 新しい基音選択: ${this.baseToneManager.currentBaseTone.note}`);
+    }
+    
+    calculateTransposedFrequencies() {
+        // 基準はC4 (261.63Hz) からの移調比率を計算
+        const baseRatio = this.baseToneManager.currentBaseTone.frequency / 261.63;
+        
+        // 元の相対音程（C4基準）を新しい基音に移調
+        const originalFreqs = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+        this.targetFrequencies = originalFreqs.map(freq => Math.round(freq * baseRatio * 100) / 100);
+        
+        // UI表示用の音名も更新（相対表記のまま）
+        this.updateNoteNamesForBaseTone();
+        
+        this.log(`🎼 移調計算完了 (比率: ${baseRatio.toFixed(3)})`);
+        this.log(`  ド: ${this.targetFrequencies[0]}Hz → ド: ${this.targetFrequencies[7]}Hz`);
+        
+        // UI の周波数表示を更新
+        this.updateGuideFrequencyDisplay();
+    }
+    
+    updateNoteNamesForBaseTone() {
+        // 基音に関係なく相対音名（ド・レ・ミ...）で表示
+        const baseTone = this.baseToneManager.currentBaseTone;
+        const octave = baseTone.name.includes('3') ? ['3', '4'] : ['4', '5'];
+        
+        this.targetNotes = [
+            `ド${octave[0]}`, `レ${octave[0]}`, `ミ${octave[0]}`, `ファ${octave[0]}`, 
+            `ソ${octave[0]}`, `ラ${octave[0]}`, `シ${octave[0]}`, `ド${octave[1]}`
+        ];
+        
+        this.log(`🎵 音名更新: ${this.targetNotes[0]} - ${this.targetNotes[7]}`);
+    }
+    
+    updateGuideFrequencyDisplay() {
+        // モバイルとデスクトップ両方のガイドノートを更新
+        const mobileGuides = document.querySelectorAll('#note-guide-mobile .guide-note');
+        const desktopGuides = document.querySelectorAll('#note-guide-desktop .guide-note');
+        
+        [mobileGuides, desktopGuides].forEach(guides => {
+            guides.forEach((guideElement, index) => {
+                const noteNameSpan = guideElement.querySelector('.note-name');
+                const noteFreqSpan = guideElement.querySelector('.note-freq');
+                
+                if (noteNameSpan && noteFreqSpan && index < this.targetNotes.length) {
+                    noteNameSpan.textContent = this.targetNotes[index];
+                    noteFreqSpan.textContent = `${Math.round(this.targetFrequencies[index])}Hz`;
+                }
+            });
+        });
+        
+        this.log(`🎼 ガイド周波数表示更新完了 (基音: ${this.baseToneManager.currentBaseTone.note})`);
     }
     
     initNoiseReductionFilters() {
@@ -209,6 +358,9 @@ class FullScaleTraining {
             
             this.log('✅ UI要素表示更新完了');
             
+            // 新しいセッション用に基音を再選択
+            this.selectNewBaseTone();
+            
             // メインスタートボタンを準備中状態で表示
             const mainStartBtn = document.getElementById('main-start-btn');
             mainStartBtn.style.display = 'inline-block';
@@ -350,13 +502,31 @@ class FullScaleTraining {
         const mainStartBtn = document.getElementById('main-start-btn');
         mainStartBtn.disabled = false;
         mainStartBtn.style.opacity = '1';
-        mainStartBtn.textContent = '🎹 スタート';
+        
+        // 基音情報をボタンに表示
+        this.updateStartButtonWithBaseTone(mainStartBtn);
         
         // ボタンにパルスアニメーションを追加（準備完了の視覚的フィードバック）
         mainStartBtn.style.animation = 'pulse 2s infinite';
         
         
         this.log('✅ 基音ボタンがクリック可能になりました');
+    }
+    
+    updateStartButtonWithBaseTone(startBtn) {
+        const baseTone = this.baseToneManager.currentBaseTone;
+        
+        if (this.trainingMode === 'single') {
+            // 短音モード：ボタンに基音表示
+            startBtn.innerHTML = `🎹 スタート<br><small>(基音: ${baseTone.note})</small>`;
+            startBtn.style.lineHeight = '1.2';
+            startBtn.style.fontSize = '1.3rem';
+            
+            this.log(`🎵 スタートボタン更新: 基音 ${baseTone.note} (${baseTone.frequency}Hz)`);
+        } else {
+            // 将来の連続モード：シンプルなボタン
+            startBtn.textContent = '🎹 次のセッション開始';
+        }
     }
     
     async preloadPianoSampler() {
@@ -425,21 +595,24 @@ class FullScaleTraining {
     }
     
     async playReferenceNote() {
-        const frequency = 261.63; // Do4
+        const baseTone = this.baseToneManager.currentBaseTone;
+        const frequency = baseTone.frequency;
+        const toneName = baseTone.tonejs;
+        
         const startTimestamp = performance.now();
-        this.log(`🔊 Do4 (${Math.round(frequency)}Hz) 本物のピアノ音再生開始`);
+        this.log(`🔊 ${baseTone.note} (${Math.round(frequency)}Hz) 本物のピアノ音再生開始`);
         
         try {
             // 事前読み込み済みのTone.jsサンプラーを使用
             if (this.pianoSampler && typeof Tone !== 'undefined') {
                 this.log('🎹 事前読み込み済みピアノサンプラー使用（ラグなし）');
                 
-                // C4 (Do4) を手動でアタック→長時間サスティン→リリース
-                this.pianoSampler.triggerAttack("C4", undefined, 0.8);
+                // 選択された基音を手動でアタック→長時間サスティン→リリース
+                this.pianoSampler.triggerAttack(toneName, undefined, 0.8);
                 
                 // 2秒後にリリース開始（0.5秒かけてフェイドアウト）
                 setTimeout(() => {
-                    this.pianoSampler.triggerRelease("C4");
+                    this.pianoSampler.triggerRelease(toneName);
                     this.log('🎹 ピアノ音 フェイドアウト開始');
                 }, 2000);
                 
@@ -488,12 +661,12 @@ class FullScaleTraining {
                 await Tone.loaded();
                 this.log('🎹 ピアノサンプル読み込み完了');
                 
-                // C4 (Do4) を手動でアタック→長時間サスティン→リリース
-                this.pianoSampler.triggerAttack("C4", undefined, 0.8);
+                // 選択された基音を手動でアタック→長時間サスティン→リリース
+                this.pianoSampler.triggerAttack(toneName, undefined, 0.8);
                 
                 // 2秒後にリリース開始（0.5秒かけてフェイドアウト）
                 setTimeout(() => {
-                    this.pianoSampler.triggerRelease("C4");
+                    this.pianoSampler.triggerRelease(toneName);
                     this.log('🎹 ピアノ音 フェイドアウト開始');
                 }, 2000);
                 
@@ -635,8 +808,9 @@ class FullScaleTraining {
         // Tone.js サンプラーを完全停止
         if (this.pianoSampler) {
             try {
-                this.pianoSampler.triggerRelease("C4");  // 特定の音を停止
-                this.pianoSampler.releaseAll();          // 全ての音を停止
+                const toneName = this.baseToneManager.currentBaseTone.tonejs;
+                this.pianoSampler.triggerRelease(toneName);  // 選択された基音を停止
+                this.pianoSampler.releaseAll();              // 全ての音を停止
                 this.log('🎹 Tone.js ピアノサンプラー完全停止');
             } catch (e) {
                 this.log(`⚠️ Tone.js 停止エラー: ${e.message}`);
