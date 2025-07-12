@@ -348,13 +348,10 @@ class FullScaleTraining {
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('training-layout').style.display = 'block';
             
-            // モバイル版では上部ヘッダーを非表示
+            // モバイル版でのヘッダー処理（現在は表示維持）
             if (!this.isDesktopLayout()) {
-                const header = document.querySelector('.header');
-                if (header) {
-                    header.style.display = 'none';
-                    this.log('📱 モバイル版: ヘッダー非表示');
-                }
+                this.log('📱 モバイル版: ヘッダーを表示維持');
+                // ヘッダーは表示したままにする（ユーザビリティ向上のため）
             }
             
             this.log('✅ UI要素表示更新完了');
@@ -1464,13 +1461,10 @@ class FullScaleTraining {
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('training-layout').style.display = 'block';
             
-            // モバイル版では上部ヘッダーを非表示
+            // モバイル版でのヘッダー処理（現在は表示維持）
             if (!this.isDesktopLayout()) {
-                const header = document.querySelector('.header');
-                if (header) {
-                    header.style.display = 'none';
-                    this.log('📱 モバイル版: ヘッダー非表示');
-                }
+                this.log('📱 モバイル版: ヘッダーを表示維持');
+                // ヘッダーは表示したままにする（ユーザビリティ向上のため）
             }
             
             // メインスタートボタンを準備中状態で表示
@@ -1707,8 +1701,19 @@ class FullScaleTraining {
 function initializeApp() {
     const app = new FullScaleTraining();
     
+    // リファラー情報をデバッグ出力
+    console.log('🔍 リファラー情報:', document.referrer);
+    console.log('🔍 URL情報:', window.location.href);
+    
     // モード選択から直接遷移した場合は、自動でトレーニング開始状態にする
-    if (document.referrer.includes('index.html') || document.referrer.endsWith('/')) {
+    const isFromIndex = document.referrer.includes('index.html') || 
+                       document.referrer.endsWith('/') || 
+                       document.referrer === '' ||
+                       window.location.search.includes('auto=true');
+    
+    console.log('🔍 自動開始判定:', isFromIndex);
+    
+    if (isFromIndex) {
         console.log('🎯 モード選択からの直接遷移を検出 - 自動でトレーニング開始状態に移行');
         // 少し遅延させてDOMの準備を待つ
         setTimeout(async () => {
@@ -1722,6 +1727,10 @@ function initializeApp() {
                 document.getElementById('start-btn').style.display = 'inline-block';
             }
         }, 500);
+    } else {
+        console.log('🎯 手動アクセス - 通常の開始ボタンを表示');
+        // 手動アクセスの場合は通常の開始ボタンを表示
+        document.getElementById('start-btn').style.display = 'inline-block';
     }
 }
 
