@@ -2,10 +2,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.0.4',
-            codename: 'GrandPiano',
-            build: '2025-07-11',
-            commit: 'grandpiano'
+            app: 'v1.0.5',
+            codename: 'MobileFirst',
+            build: '2025-07-12',
+            commit: 'mobile-responsive'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
@@ -850,6 +850,8 @@ class FullScaleTraining {
     updateFrequencyDisplay(frequency, volume = 0) {
         // PCレイアウトの周波数表示を更新
         const element = document.getElementById('frequency-main');
+        // モバイル用（上部表示）
+        const mobileElement = document.getElementById('frequency-main-mobile');
         // 後方互換性のためのレガシー要素
         const legacyElement = document.getElementById('frequency-main-legacy');
         
@@ -873,6 +875,20 @@ class FullScaleTraining {
             } else {
                 // 音を検出していない時は薄いグレー
                 element.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
+            }
+        }
+        
+        // モバイル用（上部表示）
+        if (mobileElement) {
+            mobileElement.textContent = displayText;
+            mobileElement.style.color = color;
+            mobileElement.style.borderColor = borderColor;
+            
+            // モバイルにも音量バー適用
+            if (frequency > 0 && volume > 1) {
+                mobileElement.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
+            } else {
+                mobileElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
         }
         
