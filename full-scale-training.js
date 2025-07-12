@@ -1335,11 +1335,11 @@ class FullScaleTraining {
         const restartMainStartBtn = document.getElementById('restart-main-start-btn');
         
         if (sameToneBtn) {
-            sameToneBtn.onclick = () => this.selectRestartOption('same');
+            sameToneBtn.onclick = () => this.directRestart('same');
         }
         
         if (newToneBtn) {
-            newToneBtn.onclick = () => this.selectRestartOption('new');
+            newToneBtn.onclick = () => this.directRestart('new');
         }
         
         if (restartMainStartBtn) {
@@ -1406,6 +1406,82 @@ class FullScaleTraining {
         this.updateStartButtonWithBaseTone();
         
         this.log('✅ 再開始完了 - スタートボタンを押して開始してください');
+    }
+    
+    // 直接再開始（新しいメソッド：トレーニング開始状態まで自動実行）
+    async directRestart(option) {
+        this.log(`🚀 直接再開始実行: ${option} モード`);
+        
+        // 基音を選択（sameの場合は現在の基音を維持、newの場合は新しい基音を選択）
+        if (option === 'new') {
+            this.selectNewBaseTone(); // 新しい基音を選択
+        }
+        // sameの場合は現在の基音をそのまま使用
+        
+        // 結果セクションを非表示
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) resultsSection.style.display = 'none';
+        
+        // トレーニングをリセット
+        this.resetTrainingState();
+        
+        // トレーニングインターフェースを表示
+        this.showTrainingInterface();
+        
+        // 直接トレーニング開始（startTraining相当の処理）
+        try {
+            this.log('🔄 直接トレーニング開始処理...');
+            
+            // UI更新
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'inline-block';
+            document.getElementById('training-layout').style.display = 'block';
+            
+            // モバイル版では上部ヘッダーを非表示
+            if (!this.isDesktopLayout()) {
+                const header = document.querySelector('.header');
+                if (header) {
+                    header.style.display = 'none';
+                    this.log('📱 モバイル版: ヘッダー非表示');
+                }
+            }
+            
+            // メインスタートボタンを準備中状態で表示
+            const mainStartBtn = document.getElementById('main-start-btn');
+            mainStartBtn.style.display = 'inline-block';
+            mainStartBtn.disabled = true;
+            mainStartBtn.style.opacity = '0.6';
+            mainStartBtn.textContent = '🔍 Loading...';
+            mainStartBtn.style.animation = 'none';
+            
+            // AudioContext初期化（既に初期化済みの場合は再利用）
+            this.log('🎵 AudioContext確認...');
+            await this.initAudioContext();
+            
+            // マイクアクセス
+            this.log('🎤 マイクアクセス開始...');
+            await this.initMicrophone();
+            
+            // isRunningを設定
+            this.isRunning = true;
+            
+            // 周波数検出開始
+            this.startFrequencyDetection();
+            
+            // 初期表示更新
+            this.updateProgress();
+            
+            // メインスタートボタンを有効化
+            await this.showMainStartButton();
+            
+            this.trainingPhase = 'waiting';
+            this.log(`✅ 直接再開始完了 (${option}モード) - 基音ボタンをタップして開始`);
+            
+        } catch (error) {
+            console.error('❌ directRestart()でエラーが発生:', error);
+            this.log(`❌ directRestart()エラー: ${error.message}`);
+            this.resetUI();
+        }
     }
     
     // トレーニング状態をリセット
