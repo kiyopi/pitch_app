@@ -196,6 +196,16 @@ class FullScaleTraining {
             document.getElementById('start-btn').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('training-layout').style.display = 'block';
+            
+            // モバイル版では上部ヘッダーを非表示
+            if (!this.isDesktopLayout()) {
+                const header = document.querySelector('.header');
+                if (header) {
+                    header.style.display = 'none';
+                    this.log('📱 モバイル版: ヘッダー非表示');
+                }
+            }
+            
             this.log('✅ UI要素表示更新完了');
             
             // メインスタートボタンを準備中状態で表示
@@ -1178,6 +1188,13 @@ class FullScaleTraining {
         mainStartBtn.style.opacity = '1';
         mainStartBtn.textContent = '🎹 スタート'; // テキストをデフォルトに戻す
         mainStartBtn.style.animation = 'none'; // アニメーションもリセット
+        
+        // モバイル版でヘッダーが非表示の場合は再表示
+        const header = document.querySelector('.header');
+        if (header && header.style.display === 'none') {
+            header.style.display = 'block';
+            this.log('📱 モバイル版: ヘッダー再表示');
+        }
         
         document.getElementById('training-layout').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
