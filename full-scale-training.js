@@ -1,92 +1,3 @@
-// タイミングドットガイドクラス
-class TimingDotsGuide {
-    constructor() {
-        this.dotTimers = [];
-        this.isActive = false;
-    }
-    
-    startTiming() {
-        this.isActive = true;
-        const dotsContainer = document.getElementById('timing-dots');
-        const dots = document.querySelectorAll('.dot');
-        
-        // 表示開始
-        dotsContainer.style.display = 'flex';
-        
-        // 全ドットをリセット
-        dots.forEach(dot => {
-            dot.classList.remove('active', 'completed');
-        });
-        
-        console.log('🔵 タイミングドットガイド開始');
-        
-        // ドット1: 0.83秒後にアクティブ
-        this.dotTimers.push(setTimeout(() => {
-            this.activateDot(1);
-        }, 833));
-        
-        // ドット2: 1.66秒後にアクティブ
-        this.dotTimers.push(setTimeout(() => {
-            this.completeDot(1);
-            this.activateDot(2);
-        }, 1666));
-        
-        // ドット3: 2.5秒後にアクティブ（発声開始）
-        this.dotTimers.push(setTimeout(() => {
-            this.completeDot(2);
-            this.activateDot(3);
-            this.onSingingStart();
-        }, 2500));
-    }
-    
-    activateDot(dotNumber) {
-        const dot = document.getElementById(`dot-${dotNumber}`);
-        dot.classList.add('active');
-        console.log(`🟠 ドット${dotNumber} アクティブ`);
-    }
-    
-    completeDot(dotNumber) {
-        const dot = document.getElementById(`dot-${dotNumber}`);
-        dot.classList.remove('active');
-        dot.classList.add('completed');
-        console.log(`🟢 ドット${dotNumber} 完了`);
-    }
-    
-    onSingingStart() {
-        // 全ドット完了で発声準備完了を表示
-        const dot3 = document.getElementById('dot-3');
-        dot3.classList.remove('active');
-        dot3.classList.add('completed');
-        
-        // コンテナ全体を「準備完了」状態に
-        const dotsContainer = document.getElementById('timing-dots');
-        dotsContainer.classList.add('singing-ready');
-        
-        console.log('🎤 発声開始タイミング！');
-    }
-    
-    hide() {
-        this.isActive = false;
-        
-        // 全タイマーをクリア
-        this.dotTimers.forEach(timer => clearTimeout(timer));
-        this.dotTimers = [];
-        
-        // 表示を隠す
-        const dotsContainer = document.getElementById('timing-dots');
-        if (dotsContainer) {
-            dotsContainer.style.display = 'none';
-            dotsContainer.classList.remove('singing-ready');
-        }
-        
-        // ドット状態をリセット
-        document.querySelectorAll('.dot').forEach(dot => {
-            dot.classList.remove('active', 'completed');
-        });
-        
-        console.log('🔴 タイミングドットガイド終了');
-    }
-}
 
 // ランダム基音管理クラス（将来の拡張に対応）
 class BaseToneManager {
@@ -222,9 +133,6 @@ class FullScaleTraining {
         // ランダム基音システム（拡張可能設計）
         this.trainingMode = 'single'; // 'single' | 'continuous' (将来実装)
         this.baseToneManager = new BaseToneManager(this.trainingMode);
-        
-        // タイミングガイドシステム
-        this.timingGuide = new TimingDotsGuide();
         
         // 初期化
         this.setupEventListeners();
@@ -677,8 +585,6 @@ class FullScaleTraining {
             startButton.textContent = '🎵 基音再生中...'; // テキスト変更
         }
         
-        // タイミングガイド開始（一旦非表示）
-        // this.timingGuide.startTiming();
         
         // 基音再生
         this.playReferenceNote();
@@ -1475,9 +1381,6 @@ class FullScaleTraining {
         // 基音再生停止
         this.stopReferenceNote();
         
-        // タイミングガイド非表示
-        this.timingGuide.hide();
-        
         if (this.mediaStream) {
             this.mediaStream.getTracks().forEach(track => {
                 track.stop();
@@ -1497,9 +1400,6 @@ class FullScaleTraining {
     }
     
     resetUI() {
-        // タイミングガイド非表示
-        this.timingGuide.hide();
-        
         document.getElementById('start-btn').style.display = 'inline-block';
         
         // 停止ボタンを元に戻す
