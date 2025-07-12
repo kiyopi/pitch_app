@@ -216,7 +216,242 @@
             }
         }
 
+        /* 新しいレスポンシブトレーニングレイアウト */
+        .training-layout {
+            margin: 20px 0;
+        }
 
+        /* モバイル用レイアウト（縦1列） */
+        .mobile-layout {
+            display: block;
+        }
+
+        .desktop-layout {
+            display: none;
+        }
+
+        .note-guide-container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* モバイル用周波数表示（上部・最小限） */
+        .frequency-display-mobile {
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .frequency-main-mobile {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #999;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(to top, rgba(76, 175, 80, 0.3) 0%, transparent 0%);
+            background-size: 100% 100%;
+            padding: 8px 15px;
+            border-radius: 12px;
+            border: 4px solid #4CAF50;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .note-guide {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px;
+            border: 4px solid #9c27b0;
+            border-radius: 15px;
+            overflow: visible;
+            background: rgba(156, 39, 176, 0.15);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.2);
+        }
+
+        .guide-note {
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid #e0e0e0;
+            font-size: 0.9rem;
+            font-weight: bold;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 0 20px;
+            border-radius: 20px;
+            gap: 15px;
+            overflow: visible;
+            box-shadow: 0 2px 4px rgba(224, 224, 224, 0.2);
+        }
+
+        .note-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .note-freq {
+            font-size: 0.8rem;
+            color: #666;
+            font-family: 'Courier New', monospace;
+        }
+
+        .guide-note.current {
+            background: #9c27b0;
+            color: white;
+            border-color: #9c27b0;
+            transform: scale(1.05);
+            z-index: 1;
+            box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+        }
+
+        .guide-note.completed {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .guide-note.animate {
+            background: #FF9800 !important;
+            color: white !important;
+            border-color: #FF9800 !important;
+            transform: scale(1.05) !important;
+            z-index: 2;
+            box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4) !important;
+            animation: pulse-animate 0.6s ease-in-out;
+        }
+
+        .guide-note.animate .note-name {
+            color: white !important;
+        }
+
+        .guide-note.animate .note-freq {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .guide-note:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(224, 224, 224, 0.3);
+        }
+
+        /* PC用レイアウト（769px以上） */
+        @media (min-width: 769px) {
+            .mobile-layout {
+                display: none;
+            }
+
+            .desktop-layout {
+                display: flex;
+                gap: 40px;
+                justify-content: center;
+                align-items: flex-start;
+                max-width: 1000px;
+                margin: 0 auto;
+            }
+
+            .frequency-panel {
+                flex: 4;
+                max-width: none;
+            }
+
+            .note-guide-panel {
+                flex: 6;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .frequency-main {
+                font-size: 3.5rem;
+                font-weight: bold;
+                color: #333;
+                background: linear-gradient(to top, rgba(76, 175, 80, 0.3) 0%, transparent 0%);
+                background-size: 100% 100%;
+                padding: 30px 20px;
+                border-radius: 15px;
+                border: 4px solid #4CAF50;
+                text-align: center;
+                margin-bottom: 20px;
+                font-family: 'Courier New', monospace;
+                min-height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                overflow: hidden;
+                transition: background-size 0.1s ease;
+            }
+
+            .frequency-main > * {
+                position: relative;
+                z-index: 10;
+            }
+
+            .desktop-layout .note-guide {
+                border: 4px solid #9c27b0;
+                border-radius: 15px;
+                overflow: visible;
+                gap: 12px;
+                padding: 20px;
+                background: rgba(156, 39, 176, 0.15);
+                backdrop-filter: blur(5px);
+                box-shadow: 0 4px 12px rgba(118, 75, 162, 0.2);
+            }
+
+            .desktop-layout .guide-note {
+                height: 55px;
+                font-size: 1.1rem;
+                padding: 0 30px;
+                gap: 20px;
+                overflow: visible;
+                border: 2px solid #e0e0e0;
+                border-radius: 25px;
+                box-shadow: 0 2px 6px rgba(224, 224, 224, 0.2);
+            }
+
+            .desktop-layout .note-name {
+                font-size: 1.1rem;
+                color: #333;
+            }
+
+            .desktop-layout .note-freq {
+                font-size: 1rem;
+                color: #666;
+            }
+        }
+
+        /* 中断ボタンを小さく・右上に配置 */
+        .stop-btn {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .stop-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(244, 67, 54, 0.4);
+        }
+
+        .control-section {
+            position: relative;
+        }
 
         .frequency-display {
             text-align: center;
@@ -437,17 +672,94 @@
                 <button id="stop-btn" class="stop-btn" style="display: none;">中断</button>
             </div>
 
-            <div class="guide-section" id="guide-section" style="display: none;">
-                <h3>🎵 ドレミガイド</h3>
-                <div class="note-guide" id="note-guide">
-                    <div class="guide-note" data-note="ド4">ド4</div>
-                    <div class="guide-note" data-note="レ4">レ4</div>
-                    <div class="guide-note" data-note="ミ4">ミ4</div>
-                    <div class="guide-note" data-note="ファ4">ファ4</div>
-                    <div class="guide-note" data-note="ソ4">ソ4</div>
-                    <div class="guide-note" data-note="ラ4">ラ4</div>
-                    <div class="guide-note" data-note="シ4">シ4</div>
-                    <div class="guide-note" data-note="ド5">ド5</div>
+            <!-- 新しいレスポンシブトレーニングレイアウト -->
+            <div class="training-layout" id="training-layout" style="display: none;">
+                <!-- モバイル用: 縦積みレイアウト -->
+                <div class="mobile-layout">
+                    <div class="note-guide-container">
+                        <!-- 周波数表示を上部に追加 -->
+                        <div class="frequency-display-mobile" id="frequency-display-mobile">
+                            <div class="frequency-main-mobile" id="frequency-main-mobile">--- Hz</div>
+                        </div>
+                        
+                        <div class="note-guide" id="note-guide-mobile">
+                            <div class="guide-note" data-note="ド4">
+                                <span class="note-name">ド4</span>
+                                <span class="note-freq">262Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="レ4">
+                                <span class="note-name">レ4</span>
+                                <span class="note-freq">294Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ミ4">
+                                <span class="note-name">ミ4</span>
+                                <span class="note-freq">330Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ファ4">
+                                <span class="note-name">ファ4</span>
+                                <span class="note-freq">349Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ソ4">
+                                <span class="note-name">ソ4</span>
+                                <span class="note-freq">392Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ラ4">
+                                <span class="note-name">ラ4</span>
+                                <span class="note-freq">440Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="シ4">
+                                <span class="note-name">シ4</span>
+                                <span class="note-freq">494Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ド5">
+                                <span class="note-name">ド5</span>
+                                <span class="note-freq">523Hz</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PC用: 2列横並びレイアウト -->
+                <div class="desktop-layout">
+                    <div class="note-guide-panel">
+                        <div class="note-guide" id="note-guide-desktop">
+                            <div class="guide-note" data-note="ド4">
+                                <span class="note-name">ド4</span>
+                                <span class="note-freq">262Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="レ4">
+                                <span class="note-name">レ4</span>
+                                <span class="note-freq">294Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ミ4">
+                                <span class="note-name">ミ4</span>
+                                <span class="note-freq">330Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ファ4">
+                                <span class="note-name">ファ4</span>
+                                <span class="note-freq">349Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ソ4">
+                                <span class="note-name">ソ4</span>
+                                <span class="note-freq">392Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ラ4">
+                                <span class="note-name">ラ4</span>
+                                <span class="note-freq">440Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="シ4">
+                                <span class="note-name">シ4</span>
+                                <span class="note-freq">494Hz</span>
+                            </div>
+                            <div class="guide-note" data-note="ド5">
+                                <span class="note-name">ド5</span>
+                                <span class="note-freq">523Hz</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="frequency-panel">
+                        <div class="frequency-main" id="frequency-main">--- Hz</div>
+                    </div>
                 </div>
             </div>
 

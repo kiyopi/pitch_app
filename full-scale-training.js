@@ -154,7 +154,7 @@ class FullScaleTraining {
             document.getElementById('start-btn').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('progress-section').style.display = 'block';
-            document.getElementById('guide-section').style.display = 'block';
+            document.getElementById('training-layout').style.display = 'block';
             document.getElementById('frequency-display').style.display = 'block';
             this.log('✅ UI要素表示更新完了');
             
@@ -720,7 +720,7 @@ class FullScaleTraining {
             const frequency = this.detectPitch(freqData);
             
             // 周波数表示更新
-            this.updateFrequencyDisplay(frequency);
+            this.updateFrequencyDisplay(frequency, volume);
             
             // アニメーション中の判定（内部処理のみ）
             if (this.trainingPhase === 'animating' && frequency > 0) {
@@ -828,17 +828,62 @@ class FullScaleTraining {
         return frequency;
     }
     
-    updateFrequencyDisplay(frequency) {
+    updateFrequencyDisplay(frequency, volume = 0) {
+        // PC用（デスクトップレイアウト）
         const element = document.getElementById('frequency-main');
+        // モバイル用（上部表示）
+        const mobileElement = document.getElementById('frequency-main-mobile');
+        // 後方互換性のためのレガシー要素
+        const legacyElement = document.getElementById('frequency-main-legacy');
+        
+        const displayText = frequency > 0 ? `${Math.round(frequency)} Hz` : '--- Hz';
+        const color = frequency > 0 ? '#4CAF50' : '#999';
+        const borderColor = '#4CAF50'; // 常に緑で固定
+        
+        // 音量を0-100%に正規化（最大値を調整）
+        const volumePercent = Math.min(Math.max(volume / 30 * 100, 0), 100);
+        
+        // PC用（デスクトップレイアウト）
         if (element) {
-            if (frequency > 0) {
-                element.textContent = `${Math.round(frequency)} Hz`;
-                element.style.color = '#4CAF50';
-                element.style.borderColor = '#4CAF50';
+            element.textContent = displayText;
+            element.style.color = color;
+            element.style.borderColor = borderColor;
+            
+            // 音量バー背景の更新
+            if (frequency > 0 && volume > 1) {
+                // 音を検出している時は緑のグラデーション
+                element.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
-                element.textContent = '--- Hz';
-                element.style.color = '#999';
-                element.style.borderColor = '#e0e0e0';
+                // 音を検出していない時は薄いグレー
+                element.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
+            }
+        }
+        
+        // モバイル用（上部表示）
+        if (mobileElement) {
+            mobileElement.textContent = displayText;
+            mobileElement.style.color = color;
+            mobileElement.style.borderColor = borderColor;
+            
+            // モバイルにも音量バー適用
+            if (frequency > 0 && volume > 1) {
+                mobileElement.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
+            } else {
+                mobileElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
+            }
+        }
+        
+        // 後方互換性用（レガシー要素もボリューム対応）
+        if (legacyElement) {
+            legacyElement.textContent = displayText;
+            legacyElement.style.color = color;
+            legacyElement.style.borderColor = borderColor;
+            
+            // レガシー要素にも音量バー適用
+            if (frequency > 0 && volume > 1) {
+                legacyElement.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
+            } else {
+                legacyElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
         }
     }
@@ -894,7 +939,7 @@ class FullScaleTraining {
         
         // UI切り替え
         document.getElementById('progress-section').style.display = 'none';
-        document.getElementById('guide-section').style.display = 'none';
+        document.getElementById('training-layout').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none'; // 周波数表示を非表示
         document.getElementById('results-section').style.display = 'block';
         
@@ -1085,19 +1130,25 @@ class FullScaleTraining {
         mainStartBtn.style.animation = 'none'; // アニメーションもリセット
         
         document.getElementById('progress-section').style.display = 'none';
-        document.getElementById('guide-section').style.display = 'none';
+        document.getElementById('training-layout').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none';
         
         // 周波数表示をリセット（再試行時に備えて）
-        document.getElementById('frequency-main').textContent = '--- Hz';
-        document.getElementById('frequency-main').style.color = '#999';
-        document.getElementById('frequency-main').style.borderColor = '#e0e0e0';
+        const frequencyMain = document.getElementById('frequency-main');
+        const frequencyMobile = document.getElementById('frequency-main-mobile');
         
-        // 表示リセット
-        document.getElementById('frequency-main').textContent = '--- Hz';
-        document.getElementById('frequency-main').style.color = '#999';
-        document.getElementById('frequency-main').style.borderColor = '#e0e0e0';
+        if (frequencyMain) {
+            frequencyMain.textContent = '--- Hz';
+            frequencyMain.style.color = '#999';
+            frequencyMain.style.borderColor = '#4CAF50';
+        }
+        
+        if (frequencyMobile) {
+            frequencyMobile.textContent = '--- Hz';
+            frequencyMobile.style.color = '#999';
+            frequencyMobile.style.borderColor = '#4CAF50';
+        }
         
         
         // 設定リセット
