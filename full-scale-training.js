@@ -1211,10 +1211,9 @@ class FullScaleTraining {
         mainStartBtn.style.opacity = '0.6';
         mainStartBtn.style.animation = 'none';
         
-        // 停止ボタンを「再開始」に変更
+        // 停止ボタンを非表示（新しい再開始システムを使用）
         const stopBtn = document.getElementById('stop-btn');
-        stopBtn.textContent = '再開始';
-        stopBtn.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
+        stopBtn.style.display = 'none';
         
         // 統計計算
         const perfectCount = this.results.filter(r => r.accuracy === '完璧').length;
@@ -1313,7 +1312,140 @@ class FullScaleTraining {
         
         this.log(`📊 総合結果: ${overallGrade} (完璧:${perfectCount}, 良い:${goodCount}, 要調整:${needsWorkCount})`);
         
+        // 再開始オプションを初期化
+        this.initializeRestartOptions();
+        
         // 自動停止を削除 - ユーザーが停止ボタンを押すまで結果を表示し続ける
+    }
+    
+    // 再開始オプションの初期化
+    initializeRestartOptions() {
+        this.log('🔄 再開始オプションを初期化中...');
+        
+        // 現在の基音情報を表示
+        const currentBaseTone = this.baseToneManager.currentBaseTone;
+        const sameToneDetail = document.getElementById('same-tone-detail');
+        if (sameToneDetail && currentBaseTone) {
+            sameToneDetail.textContent = `(現在: ${currentBaseTone.note})`;
+        }
+        
+        // ボタンイベントリスナーを設定
+        const sameToneBtn = document.getElementById('same-tone-btn');
+        const newToneBtn = document.getElementById('new-tone-btn');
+        const restartMainStartBtn = document.getElementById('restart-main-start-btn');
+        
+        if (sameToneBtn) {
+            sameToneBtn.onclick = () => this.selectRestartOption('same');
+        }
+        
+        if (newToneBtn) {
+            newToneBtn.onclick = () => this.selectRestartOption('new');
+        }
+        
+        if (restartMainStartBtn) {
+            restartMainStartBtn.onclick = () => this.executeRestart();
+        }
+        
+        this.log('✅ 再開始オプション初期化完了');
+    }
+    
+    // 再開始オプションの選択
+    selectRestartOption(option) {
+        this.log(`🎯 再開始オプション選択: ${option}`);
+        
+        this.restartOption = option;
+        
+        // ボタンを非表示にしてスタートボタンを表示
+        const restartButtons = document.querySelector('.restart-buttons');
+        const restartStartSection = document.getElementById('restart-start-section');
+        const selectedModeInfo = document.getElementById('selected-mode-info');
+        const restartMainStartBtn = document.getElementById('restart-main-start-btn');
+        
+        if (restartButtons) restartButtons.style.display = 'none';
+        if (restartStartSection) restartStartSection.style.display = 'block';
+        
+        let modeText = '';
+        let baseToneText = '';
+        
+        if (option === 'same') {
+            // 同じ基音で再開始
+            const currentBaseTone = this.baseToneManager.currentBaseTone;
+            modeText = '🔄 もう一回トレーニング';
+            baseToneText = currentBaseTone ? currentBaseTone.note : 'ド4';
+        } else {
+            // 新しい基音で再開始
+            this.selectNewBaseTone(); // 新しい基音を選択
+            const newBaseTone = this.baseToneManager.currentBaseTone;
+            modeText = '🎲 新しい基音でトレーニング';
+            baseToneText = newBaseTone ? newBaseTone.note : 'ド4';
+        }
+        
+        if (selectedModeInfo) {
+            selectedModeInfo.textContent = `${modeText} (基音: ${baseToneText})`;
+        }
+        
+        if (restartMainStartBtn) {
+            restartMainStartBtn.textContent = `🎹 スタート (基音: ${baseToneText})`;
+            restartMainStartBtn.style.display = 'block';
+        }
+    }
+    
+    // 再開始を実行
+    executeRestart() {
+        this.log(`🚀 再開始実行: ${this.restartOption} モード`);
+        
+        // 結果セクションを非表示
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) resultsSection.style.display = 'none';
+        
+        // トレーニングをリセットして開始
+        this.resetTrainingState();
+        this.showTrainingInterface();
+        
+        // スタートボタンを更新
+        this.updateStartButtonWithBaseTone();
+        
+        this.log('✅ 再開始完了 - スタートボタンを押して開始してください');
+    }
+    
+    // トレーニング状態をリセット
+    resetTrainingState() {
+        this.currentNoteIndex = 0;
+        this.results = [];
+        this.isRunning = false;
+        this.detectionLoopActive = false;
+        this.trainingPhase = 'waiting';
+        this.frameCount = 0;
+        
+        // ガイドボタンをリセット
+        const allGuides = document.querySelectorAll('.guide-note');
+        allGuides.forEach(guide => {
+            guide.classList.remove('current', 'completed', 'animate');
+        });
+    }
+    
+    // トレーニングインターフェースを表示
+    showTrainingInterface() {
+        const trainingLayout = document.getElementById('training-layout');
+        const frequencyDisplay = document.getElementById('frequency-display');
+        const mainStartBtn = document.getElementById('main-start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        
+        if (trainingLayout) trainingLayout.style.display = 'block';
+        if (frequencyDisplay) frequencyDisplay.style.display = 'block';
+        
+        if (mainStartBtn) {
+            mainStartBtn.disabled = false;
+            mainStartBtn.style.opacity = '1';
+            mainStartBtn.style.animation = 'pulse 2s infinite';
+            mainStartBtn.style.display = 'inline-block';
+        }
+        
+        if (stopBtn) {
+            stopBtn.style.display = 'none';
+            stopBtn.textContent = '中断';
+            stopBtn.style.background = 'linear-gradient(145deg, #f44336, #d32f2f)';
+        }
     }
     
     
