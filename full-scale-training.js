@@ -684,10 +684,10 @@ class FullScaleTraining {
         this.playReferenceNote();
         
         
-        // 基音終了と同時にアニメーション開始
+        // 基音終了後すぐにアニメーション開始（0.2秒早める）
         setTimeout(() => {
             this.startGuideAnimation();
-        }, this.baseToneDuration);
+        }, this.baseToneDuration - 200);
     }
     
     async playReferenceNote() {
