@@ -69,36 +69,85 @@
             border: 1px solid rgba(255,255,255,0.3);
         }
 
-        .buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
+        .mode-selection {
+            margin: 30px 0;
         }
 
-        .start-btn {
-            padding: 20px 60px;
-            font-size: 1.6rem;
-            font-weight: bold;
-            background: linear-gradient(145deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 30px;
+        .mode-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .mode-card {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
-            text-decoration: none;
-            display: inline-block;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
         }
 
-        .start-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px rgba(76, 175, 80, 0.4);
+        .mode-card.primary {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
         }
 
-        .start-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
+        .mode-card.coming-soon {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .mode-card:not(.coming-soon):hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mode-card.primary:hover {
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4);
+            border-color: #4CAF50;
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .mode-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .mode-description {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .mode-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.3);
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .mode-card.primary .mode-status {
+            background: #4CAF50;
+            color: white;
         }
 
         .about-link {
@@ -148,19 +197,14 @@
             opacity: 0.9;
         }
 
-        .auto-redirect {
+        .quick-start-info {
             margin-top: 30px;
-            padding: 15px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
+            padding: 20px;
+            background: rgba(76, 175, 80, 0.15);
+            border-radius: 15px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
             backdrop-filter: blur(5px);
-        }
-
-        .countdown {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #FFD700;
+            text-align: center;
         }
 
         .footer-info {
@@ -221,9 +265,21 @@
                 font-size: 1.6rem;
             }
             
-            .start-btn {
-                padding: 15px 40px;
-                font-size: 1.4rem;
+            .mode-cards {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .mode-card {
+                padding: 25px 15px;
+            }
+            
+            .mode-icon {
+                font-size: 2.5rem;
+            }
+            
+            .mode-title {
+                font-size: 1.2rem;
             }
             
             .features {
@@ -237,12 +293,31 @@
         <div class="container">
         <div class="logo">🎵</div>
         <h1 class="title" id="main-title">相対音感トレーニング</h1>
-        <p class="subtitle">高精度音程トレーニング</p>
+        <p class="subtitle">モードを選択してください</p>
 
-        <div class="buttons">
-            <a href="full-scale-training.html" class="start-btn">
-                🎹 トレーニング開始
-            </a>
+        <div class="mode-selection">
+            <div class="mode-cards">
+                <div class="mode-card primary" onclick="selectMode('random')">
+                    <div class="mode-icon">🎲</div>
+                    <div class="mode-title">ランダム基音モード</div>
+                    <div class="mode-description">毎回異なる基音でトレーニング<br>10種類の基音から自動選択</div>
+                    <div class="mode-status">推奨</div>
+                </div>
+                
+                <div class="mode-card coming-soon">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-title">連続5回モード</div>
+                    <div class="mode-description">5回連続トレーニング<br>総合成績表示</div>
+                    <div class="mode-status">開発中</div>
+                </div>
+                
+                <div class="mode-card coming-soon">
+                    <div class="mode-icon">⚙️</div>
+                    <div class="mode-title">カスタム設定</div>
+                    <div class="mode-description">お好みの基音・設定<br>個人最適化</div>
+                    <div class="mode-status">開発中</div>
+                </div>
+            </div>
         </div>
 
         <div class="features">
@@ -263,18 +338,15 @@
             </div>
         </div>
 
-        <div class="auto-redirect">
-            <p>📱 モバイルユーザー向け自動リダイレクト</p>
-            <p class="countdown" id="countdown">5秒後に自動でアプリが開始されます...</p>
-            <button onclick="clearAutoRedirect()" style="background: none; border: 1px solid rgba(255,255,255,0.5); color: white; padding: 5px 15px; border-radius: 15px; cursor: pointer; margin-top: 10px;">
-                自動開始を停止
-            </button>
+        <div class="quick-start-info">
+            <p>💡 <strong>ランダム基音モード</strong>が一番効果的な練習方法です</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 8px;">異なる基音での練習で相対音感が向上します</p>
         </div>
         </div>
 
         <div class="footer-info">
             <div style="margin-bottom: 10px; font-size: 0.8rem; opacity: 0.8;">
-                <span>v1.0.1 Mobile-Fix | Build 2025-07-11</span>
+                <span>v1.0.8 Mode-Selection | Build 2025-07-12</span>
             </div>
             <div class="about-link-info">
                 <a href="about.html" class="footer-about-link">
@@ -288,34 +360,49 @@
     </div>
 
     <script>
-        // モバイルデバイス判定
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        // 自動リダイレクト機能
-        let countdownTimer;
-        let countdown = 5;
-
-        function startAutoRedirect() {
-            const countdownElement = document.getElementById('countdown');
+        // モード選択機能
+        function selectMode(mode) {
+            console.log(`🎯 モード選択: ${mode}`);
             
-            countdownTimer = setInterval(() => {
-                countdown--;
-                countdownElement.textContent = `${countdown}秒後に自動でアプリが開始されます...`;
-                
-                if (countdown <= 0) {
-                    clearInterval(countdownTimer);
+            switch(mode) {
+                case 'random':
+                    // ランダム基音モードを開始
                     window.location.href = 'full-scale-training.html';
-                }
-            }, 1000);
-        }
-
-        function clearAutoRedirect() {
-            if (countdownTimer) {
-                clearInterval(countdownTimer);
-                document.getElementById('countdown').textContent = '自動開始を停止しました';
+                    break;
+                case 'continuous':
+                    // 将来実装: 連続5回モード
+                    alert('🚧 連続5回モードは開発中です。しばらくお待ちください。');
+                    break;
+                case 'custom':
+                    // 将来実装: カスタム設定
+                    alert('🚧 カスタム設定は開発中です。しばらくお待ちください。');
+                    break;
+                default:
+                    console.warn('⚠️ 未知のモード:', mode);
             }
+        }
+        
+        // ランダムボタンテキスト機能
+        const randomButtonTexts = [
+            'ランダム基音モード',
+            '基音変更トレーニング',
+            '多様基音練習',
+            '相対音感強化',
+            '移調感覚トレーニング'
+        ];
+        
+        function updateRandomButtonText() {
+            const modeCard = document.querySelector('.mode-card.primary');
+            const titleElement = modeCard.querySelector('.mode-title');
+            
+            // ランダムテキストを選択（現在のテキストと異なるもの）
+            let newText;
+            do {
+                newText = randomButtonTexts[Math.floor(Math.random() * randomButtonTexts.length)];
+            } while (newText === titleElement.textContent);
+            
+            titleElement.textContent = newText;
+            console.log(`🎲 ボタンテキスト変更: ${newText}`);
         }
 
         // モバイル版のタイトル調整
@@ -337,17 +424,31 @@
         adjustMobileTitle();
         window.addEventListener('resize', adjustMobileTitle);
         
-        // モバイルデバイスの場合のみ自動リダイレクトを開始
-        if (isMobile()) {
-            startAutoRedirect();
-        } else {
-            document.querySelector('.auto-redirect').style.display = 'none';
-        }
+        // 初期化処理
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎵 モード選択ページ初期化完了');
+            
+            // 5秒後に最初のランダムテキスト変更
+            setTimeout(updateRandomButtonText, 5000);
+            
+            // 15秒毎にランダムテキスト変更
+            setInterval(updateRandomButtonText, 15000);
+        });
 
         // キーボードショートカット
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
-                window.location.href = 'full-scale-training.html';
+                // Enterまたはスペースでランダム基音モードを開始
+                selectMode('random');
+            }
+            if (e.key === '1') {
+                selectMode('random');
+            }
+            if (e.key === '2') {
+                selectMode('continuous');
+            }
+            if (e.key === '3') {
+                selectMode('custom');
             }
         });
     </script>

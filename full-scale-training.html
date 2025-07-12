@@ -39,12 +39,53 @@
             text-align: center;
             color: white;
             margin-bottom: 30px;
+            position: relative;
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .navigation-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .back-to-mode-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-to-mode-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255,255,255,0.2);
+        }
+
+        .current-mode-info {
+            background: rgba(76, 175, 80, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            backdrop-filter: blur(5px);
         }
 
         .main-panel {
@@ -577,6 +618,22 @@
                 font-size: 1.6rem;
             }
             
+            .navigation-bar {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .back-to-mode-btn {
+                font-size: 0.8rem;
+                padding: 8px 16px;
+            }
+            
+            .current-mode-info {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+            
             .header h1:before {
                 content: '';
             }
@@ -648,6 +705,15 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="navigation-bar">
+                <a href="index.html" class="back-to-mode-btn">
+                    <span>←</span>
+                    <span>モード選択に戻る</span>
+                </a>
+                <div class="current-mode-info">
+                    現在のモード: ランダム基音モード
+                </div>
+            </div>
             <h1 id="app-title">🎵 相対音感トレーニング</h1>
             <p>基音を聞いて基音に合わせてドレミファソラシドを発声しましょう</p>
         </div>
@@ -769,7 +835,7 @@
 
         <div class="footer-info">
             <div class="version-info">
-                <span id="version-display">Full Scale Training v1.0.7 SmartMicrophone</span>
+                <span id="version-display">Full Scale Training v1.0.8 Mode-Selection</span>
                 <span style="font-size: 0.7rem; opacity: 0.8; margin-left: 8px;" id="build-info">Build 2025-07-12</span>
             </div>
             <div class="about-link-info">
