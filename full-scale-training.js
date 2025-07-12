@@ -677,8 +677,8 @@ class FullScaleTraining {
             startButton.textContent = '🎵 基音再生中...'; // テキスト変更
         }
         
-        // タイミングガイド開始
-        this.timingGuide.startTiming();
+        // タイミングガイド開始（一旦非表示）
+        // this.timingGuide.startTiming();
         
         // 基音再生
         this.playReferenceNote();
