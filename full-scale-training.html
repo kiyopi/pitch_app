@@ -553,25 +553,6 @@
             text-align: center;
         }
 
-        .completion-button-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .completion-btn {
-            background: linear-gradient(145deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            opacity: 0.7;
-            cursor: default;
-        }
 
         .restart-buttons-inline {
             display: flex;
@@ -778,11 +759,6 @@
                 padding: 15px 30px;
             }
             
-            .completion-button-container {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
             .restart-buttons-inline {
                 width: 100%;
                 justify-content: center;
@@ -801,11 +777,6 @@
             
             .restart-btn-inline .restart-text {
                 font-size: 0.8rem;
-            }
-            
-            .completion-btn {
-                font-size: 1rem;
-                padding: 12px 25px;
             }
         }
     </style>
@@ -936,22 +907,17 @@
             <div class="results-section" id="results-section">
                 <div class="overall-grade" id="overall-grade">🎊 完了！</div>
                 
-                <!-- トレーニング完了ボタンと再開始オプション -->
+                <!-- 再開始オプション -->
                 <div class="completion-section">
-                    <div class="completion-button-container">
-                        <button class="completion-btn" id="completion-btn" disabled>
-                            🎉 トレーニング完了！
+                    <div class="restart-buttons-inline">
+                        <button class="restart-btn-inline same-tone" id="same-tone-btn">
+                            <span class="restart-icon">🔄</span>
+                            <span class="restart-text">もう一回</span>
                         </button>
-                        <div class="restart-buttons-inline">
-                            <button class="restart-btn-inline same-tone" id="same-tone-btn">
-                                <span class="restart-icon">🔄</span>
-                                <span class="restart-text">もう一回</span>
-                            </button>
-                            <button class="restart-btn-inline new-tone" id="new-tone-btn">
-                                <span class="restart-icon">🎲</span>
-                                <span class="restart-text">次の音</span>
-                            </button>
-                        </div>
+                        <button class="restart-btn-inline new-tone" id="new-tone-btn">
+                            <span class="restart-icon">🎲</span>
+                            <span class="restart-text">次の音</span>
+                        </button>
                     </div>
                 </div>
                 

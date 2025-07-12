@@ -1508,7 +1508,7 @@ class FullScaleTraining {
         const stopBtn = document.getElementById('stop-btn');
         
         if (trainingLayout) trainingLayout.style.display = 'block';
-        if (frequencyDisplay) frequencyDisplay.style.display = 'block';
+        if (frequencyDisplay) frequencyDisplay.style.display = 'none'; // レガシー要素は非表示
         
         if (mainStartBtn) {
             mainStartBtn.disabled = false;
