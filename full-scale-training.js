@@ -517,10 +517,10 @@ class FullScaleTraining {
         const baseTone = this.baseToneManager.currentBaseTone;
         
         if (this.trainingMode === 'single') {
-            // 短音モード：ボタンに基音表示
-            startBtn.innerHTML = `🎹 スタート<br><small>(基音: ${baseTone.note})</small>`;
-            startBtn.style.lineHeight = '1.2';
-            startBtn.style.fontSize = '1.3rem';
+            // 短音モード：ボタンに基音表示（改行なし・同じスタイル）
+            startBtn.textContent = `🎹 スタート (${baseTone.note})`;
+            startBtn.style.lineHeight = '';  // デフォルトに戻す
+            startBtn.style.fontSize = '';    // デフォルトに戻す
             
             this.log(`🎵 スタートボタン更新: 基音 ${baseTone.note} (${baseTone.frequency}Hz)`);
         } else {
