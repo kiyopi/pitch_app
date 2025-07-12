@@ -1626,9 +1626,16 @@ class FullScaleTraining {
         
         // モバイル版でヘッダーが非表示の場合は再表示
         const header = document.querySelector('.header');
-        if (header && header.style.display === 'none') {
+        if (header) {
             header.style.display = 'block';
-            this.log('📱 モバイル版: ヘッダー再表示');
+            this.log('📱 ヘッダー再表示');
+            
+            // モバイル版の navigation-bar も確実に表示されるように設定
+            const navigationBar = header.querySelector('.navigation-bar');
+            if (navigationBar) {
+                navigationBar.style.display = 'flex';
+                this.log('📱 navigation-bar も再表示');
+            }
         }
         
         document.getElementById('training-layout').style.display = 'none';
