@@ -407,25 +407,34 @@ class FullScaleTraining {
     async initAudioContext() {
         this.log('🎛️ AudioContext初期化中...');
         
-        // 既存のAudioContextがある場合は再利用
-        if (this.audioContext && this.audioContext.state !== 'closed') {
-            this.log('🔄 既存のAudioContextを再利用');
-            if (this.audioContext.state === 'suspended') {
-                await this.audioContext.resume();
-                this.log('✅ AudioContext再開完了');
+        try {
+            // 既存のAudioContextがある場合は再利用
+            if (this.audioContext && this.audioContext.state !== 'closed') {
+                this.log('🔄 既存のAudioContextを再利用');
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                    this.log('✅ AudioContext再開完了');
+                }
+            } else {
+                // 新規作成
+                this.log('🆕 新規AudioContext作成');
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.log('🎛️ AudioContext作成完了');
+                
+                if (this.audioContext.state === 'suspended') {
+                    this.log('🔄 AudioContext再開を試行...');
+                    await this.audioContext.resume();
+                    this.log('✅ AudioContext再開完了');
+                }
             }
-        } else {
-            // 新規作成
-            this.log('🆕 新規AudioContext作成');
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
-            if (this.audioContext.state === 'suspended') {
-                await this.audioContext.resume();
-                this.log('🔄 AudioContext再開完了');
-            }
+            this.log(`✅ AudioContext状態: ${this.audioContext.state}`);
+            
+        } catch (error) {
+            this.log(`❌ AudioContext初期化エラー: ${error.message}`);
+            // AudioContextが作成できない場合は、後でユーザーインタラクション時に作成
+            throw error;
         }
-        
-        this.log(`✅ AudioContext: ${this.audioContext.state}`);
     }
     
     initPitchDetector() {
@@ -1684,8 +1693,16 @@ function initializeApp() {
     if (document.referrer.includes('index.html') || document.referrer.endsWith('/')) {
         console.log('🎯 モード選択からの直接遷移を検出 - 自動でトレーニング開始状態に移行');
         // 少し遅延させてDOMの準備を待つ
-        setTimeout(() => {
-            app.startTraining();
+        setTimeout(async () => {
+            try {
+                await app.startTraining();
+            } catch (error) {
+                console.error('❌ 自動トレーニング開始エラー:', error);
+                console.log('🔄 手動開始モードに切り替え');
+                // エラーの場合は手動開始モードに戻す
+                app.resetUI();
+                document.getElementById('start-btn').style.display = 'inline-block';
+            }
         }, 500);
     }
 }
