@@ -622,7 +622,7 @@ class FullScaleTraining {
         
         // メインスタートボタンをアニメーション中状態に変更
         const mainStartBtn = document.getElementById('main-start-btn');
-        mainStartBtn.textContent = '🎵 ガイドに合わせて発声してください';
+        mainStartBtn.textContent = '🎵 測定中';
         mainStartBtn.disabled = true;
         mainStartBtn.style.opacity = '0.5';
         mainStartBtn.style.animation = 'none';
