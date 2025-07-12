@@ -218,7 +218,7 @@ class FullScaleTraining {
             mainStartBtn.style.animation = 'none';
             
             
-            // AudioContext初期化
+            // AudioContext初期化（再利用または新規作成）
             this.log('🎵 AudioContext初期化開始');
             await this.initAudioContext();
             this.log('✅ AudioContext初期化完了');
@@ -254,11 +254,22 @@ class FullScaleTraining {
     async initAudioContext() {
         this.log('🎛️ AudioContext初期化中...');
         
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        if (this.audioContext.state === 'suspended') {
-            await this.audioContext.resume();
-            this.log('🔄 AudioContext再開完了');
+        // 既存のAudioContextがある場合は再利用
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+            this.log('🔄 既存のAudioContextを再利用');
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+                this.log('✅ AudioContext再開完了');
+            }
+        } else {
+            // 新規作成
+            this.log('🆕 新規AudioContext作成');
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+                this.log('🔄 AudioContext再開完了');
+            }
         }
         
         this.log(`✅ AudioContext: ${this.audioContext.state}`);
@@ -1202,9 +1213,10 @@ class FullScaleTraining {
             this.mediaStream = null;
         }
         
+        // AudioContextは再利用のためクローズしない（サスペンドのみ）
         if (this.audioContext && this.audioContext.state !== 'closed') {
-            this.audioContext.close();
-            this.audioContext = null;
+            this.audioContext.suspend();
+            this.log('🔄 AudioContext をサスペンド（再利用のため）');
         }
         
         this.resetUI();
