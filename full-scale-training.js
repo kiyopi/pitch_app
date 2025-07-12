@@ -2,10 +2,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.0.5',
-            codename: 'MobileFirst',
+            app: 'v1.0.6',
+            codename: 'MobileOptimized',
             build: '2025-07-12',
-            commit: 'mobile-responsive'
+            commit: 'layout-optimization'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
