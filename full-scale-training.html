@@ -360,32 +360,34 @@
 
         }
 
-        /* モバイル用の余白調整 - 画面収まり最適化 */
+        /* モバイル用の余白調整 - 上部マージン完全削除 */
         @media (max-width: 768px) {
             body {
-                padding: 10px; /* 20px → 10px (-10px) */
+                padding: 5px 10px 10px 10px; /* 上部パディング最小限 */
             }
             
             .header {
-                margin-bottom: 15px; /* 30px → 15px (-15px) */
+                margin-bottom: 0; /* 30px → 0 (-30px) */
             }
             
             .main-panel {
-                padding-top: 8px; /* 25px → 8px (-17px) */
+                padding-top: 0; /* 25px → 0 (-25px) */
+                margin-top: 0; /* 確実に0 */
             }
             
             .training-layout {
-                margin: 2px 0; /* 5px → 2px (-3px) */
+                margin: 0; /* 5px → 0 (-5px) */
             }
             
             .frequency-display-mobile {
-                margin-bottom: 3px; /* 6px → 3px (-3px) */
+                margin-bottom: 0; /* 6px → 0 (-6px) */
+                margin-top: 0; /* 確実に0 */
             }
             
             .control-section {
-                padding: 5px 0; /* 15px → 5px (-10px) */
-                margin-bottom: 2px; /* 5px → 2px (-3px) */
-                min-height: 60px; /* 80px → 60px (-20px) */
+                padding: 0; /* 15px → 0 (-15px) */
+                margin: 0; /* 5px → 0 (-5px) */
+                min-height: 50px; /* 80px → 50px (-30px) */
             }
         }
 
