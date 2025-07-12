@@ -18,6 +18,7 @@ class FullScaleTraining {
         this.mediaStream = null;
         this.isRunning = false;
         this.frameCount = 0;
+        this.detectionLoopActive = false;
         
         
         // 8音階データ
@@ -390,6 +391,8 @@ class FullScaleTraining {
         this.log('🔊 基音再生とアニメーション準備');
         this.trainingPhase = 'playing';
         
+        // 基音再生前にマイクを一時停止（雑音回避）
+        this.pauseMicrophone();
         
         // ボタンを無効化（重複クリック防止）、アニメーション停止
         const startButton = document.getElementById('main-start-btn');
@@ -672,6 +675,9 @@ class FullScaleTraining {
         
         this.log('🎼 ドレミファソラシド ガイドアニメーション開始');
         
+        // ドレミアニメーション開始時にマイクを再開（発声検知のため）
+        this.resumeMicrophone();
+        
         // メインスタートボタンをアニメーション中状態に変更
         const mainStartBtn = document.getElementById('main-start-btn');
         mainStartBtn.textContent = '🎵 測定中...';
@@ -753,11 +759,19 @@ class FullScaleTraining {
     }
     
     startFrequencyDetection() {
+        // 重複実行防止
+        if (this.detectionLoopActive) {
+            this.log('⚠️ 周波数検出ループは既に実行中です');
+            return;
+        }
+        
         this.log('📊 周波数検出ループ開始');
+        this.detectionLoopActive = true;
         
         const detectLoop = () => {
             if (!this.isRunning) {
                 this.log('⚠️ 周波数検出停止: isRunning=false');
+                this.detectionLoopActive = false;
                 return;
             }
             
@@ -1116,11 +1130,36 @@ class FullScaleTraining {
     }
     
     
+    pauseMicrophone() {
+        this.log('⏸️ マイクを一時停止中（基音再生のため）...');
+        
+        // 周波数検出を一時停止
+        this.isRunning = false;
+        this.detectionLoopActive = false;
+        
+        // マイクストリームは保持、検出ループのみ停止
+        this.log('✅ マイク一時停止完了（ストリーム保持）');
+    }
+    
+    resumeMicrophone() {
+        this.log('▶️ マイクを再開中（発声検知のため）...');
+        
+        // マイクストリームが存在する場合のみ再開
+        if (this.mediaStream && this.analyzer) {
+            this.isRunning = true;
+            this.startFrequencyDetection();
+            this.log('✅ マイク再開完了');
+        } else {
+            this.log('⚠️ マイクストリームが存在しません。再開をスキップ。');
+        }
+    }
+
     stopMicrophone() {
-        this.log('🔇 マイクを自動停止中...');
+        this.log('🔇 マイクを完全停止中...');
         
         // 周波数検出を停止
         this.isRunning = false;
+        this.detectionLoopActive = false;
         
         // マイクストリームを停止
         if (this.mediaStream) {
