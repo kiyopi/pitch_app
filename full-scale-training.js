@@ -153,9 +153,7 @@ class FullScaleTraining {
             this.log('📱 UI要素の表示を更新中...');
             document.getElementById('start-btn').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'inline-block';
-            document.getElementById('progress-section').style.display = 'block';
-            document.getElementById('guide-section').style.display = 'block';
-            document.getElementById('frequency-display').style.display = 'block';
+            document.getElementById('training-layout').style.display = 'block';
             this.log('✅ UI要素表示更新完了');
             
             // メインスタートボタンを準備中状態で表示
@@ -268,17 +266,10 @@ class FullScaleTraining {
     }
     
     updateProgress() {
-        const progressElement = document.getElementById('progress-display');
-        const noteElement = document.getElementById('current-note');
-        const freqElement = document.getElementById('target-freq');
-        
+        // 現在の目標をログに記録（ガイドアニメーションで視覚的に表示）
         if (this.currentNoteIndex < this.targetNotes.length) {
             const currentNote = this.targetNotes[this.currentNoteIndex];
             const currentFreq = this.targetFrequencies[this.currentNoteIndex];
-            
-            progressElement.textContent = `${this.currentNoteIndex + 1}/8`;
-            noteElement.textContent = `♪ ${currentNote} ♪`;
-            freqElement.textContent = `目標: ${Math.round(currentFreq)} Hz`;
             
             this.log(`🎵 現在の目標: ${currentNote} (${Math.round(currentFreq)}Hz)`);
         }
@@ -636,7 +627,27 @@ class FullScaleTraining {
         mainStartBtn.style.opacity = '0.5';
         mainStartBtn.style.animation = 'none';
         
-        const guideNotes = document.querySelectorAll('.guide-note');
+        // 現在表示されているレイアウトのguide-noteのみを取得
+        let guideNotes;
+        if (window.innerWidth >= 769) {
+            // PC用デスクトップレイアウト
+            guideNotes = document.querySelectorAll('#note-guide-desktop .guide-note');
+        } else {
+            // モバイルレイアウト
+            guideNotes = document.querySelectorAll('#note-guide-mobile .guide-note');
+        }
+        
+        this.log(`🎯 アニメーション対象: ${guideNotes.length}個のガイドノート (${window.innerWidth >= 769 ? 'デスクトップ' : 'モバイル'})`);
+        
+        if (guideNotes.length === 0) {
+            this.log('⚠️ ガイドノートが見つかりません！アニメーションを中止します。');
+            return;
+        }
+        
+        // 要素の詳細をログ出力
+        guideNotes.forEach((note, i) => {
+            this.log(`📋 ガイド${i}: ${note.textContent.trim()} [data-note="${note.getAttribute('data-note')}"]`);
+        });
         
         // すべてのガイドをリセット
         guideNotes.forEach(note => {
@@ -655,7 +666,10 @@ class FullScaleTraining {
                     this.currentNoteIndex = index;
                     this.updateProgress();
                     
-                    this.log(`🎼 ガイド表示: ${noteName} (音声なし)`);
+                    this.log(`🎼 ガイド表示: ${noteName} (音声なし) - 要素${index}にanimateクラス追加`);
+                    this.log(`🔍 要素確認: ${guideNotes[index].textContent.trim()}`);
+                } else {
+                    this.log(`⚠️ インデックス${index}のガイドノートが存在しません`);
                 }
                 
                 // 最後の音程の場合はアニメーション終了
@@ -674,8 +688,13 @@ class FullScaleTraining {
         
         this.log('🎼 ガイドアニメーション完了');
         
-        // ガイドリセット
-        const guideNotes = document.querySelectorAll('.guide-note');
+        // ガイドリセット（現在表示されているレイアウトのみ）
+        let guideNotes;
+        if (window.innerWidth >= 769) {
+            guideNotes = document.querySelectorAll('#note-guide-desktop .guide-note');
+        } else {
+            guideNotes = document.querySelectorAll('#note-guide-mobile .guide-note');
+        }
         guideNotes.forEach(note => {
             note.classList.remove('animate');
         });
@@ -720,7 +739,7 @@ class FullScaleTraining {
             const frequency = this.detectPitch(freqData);
             
             // 周波数表示更新
-            this.updateFrequencyDisplay(frequency);
+            this.updateFrequencyDisplay(frequency, volume);
             
             // アニメーション中の判定（内部処理のみ）
             if (this.trainingPhase === 'animating' && frequency > 0) {
@@ -828,17 +847,46 @@ class FullScaleTraining {
         return frequency;
     }
     
-    updateFrequencyDisplay(frequency) {
+    updateFrequencyDisplay(frequency, volume = 0) {
+        // PCレイアウトの周波数表示を更新
         const element = document.getElementById('frequency-main');
+        // 後方互換性のためのレガシー要素
+        const legacyElement = document.getElementById('frequency-main-legacy');
+        
+        const displayText = frequency > 0 ? `${Math.round(frequency)} Hz` : '--- Hz';
+        const color = frequency > 0 ? '#333' : '#999';
+        const borderColor = frequency > 0 ? '#4CAF50' : '#e0e0e0';
+        
+        // 音量を0-100%に正規化（最大値を調整）
+        const volumePercent = Math.min(Math.max(volume / 30 * 100, 0), 100);
+        
+        // PC用（デスクトップレイアウト）
         if (element) {
-            if (frequency > 0) {
-                element.textContent = `${Math.round(frequency)} Hz`;
-                element.style.color = '#4CAF50';
-                element.style.borderColor = '#4CAF50';
+            element.textContent = displayText;
+            element.style.color = color;
+            element.style.borderColor = borderColor;
+            
+            // 音量バー背景の更新
+            if (frequency > 0 && volume > 1) {
+                // 音を検出している時は緑のグラデーション
+                element.style.backgroundImage = `linear-gradient(to top, #4CAF50 ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
-                element.textContent = '--- Hz';
-                element.style.color = '#999';
-                element.style.borderColor = '#e0e0e0';
+                // 音を検出していない時は薄いグレー
+                element.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
+            }
+        }
+        
+        // 後方互換性用（レガシー要素もボリューム対応）
+        if (legacyElement) {
+            legacyElement.textContent = displayText;
+            legacyElement.style.color = color;
+            legacyElement.style.borderColor = borderColor;
+            
+            // レガシー要素にも音量バー適用
+            if (frequency > 0 && volume > 1) {
+                legacyElement.style.backgroundImage = `linear-gradient(to top, #4CAF50 ${volumePercent}%, transparent ${volumePercent}%)`;
+            } else {
+                legacyElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
         }
     }
@@ -892,11 +940,14 @@ class FullScaleTraining {
         // マイクを自動でオフにする
         this.stopMicrophone();
         
-        // UI切り替え
-        document.getElementById('progress-section').style.display = 'none';
-        document.getElementById('guide-section').style.display = 'none';
-        document.getElementById('frequency-display').style.display = 'none'; // 周波数表示を非表示
-        document.getElementById('results-section').style.display = 'block';
+        // UI切り替え（新しいレイアウトに対応）
+        const trainingLayout = document.getElementById('training-layout');
+        const frequencyDisplay = document.getElementById('frequency-display');
+        const resultsSection = document.getElementById('results-section');
+        
+        if (trainingLayout) trainingLayout.style.display = 'none';
+        if (frequencyDisplay) frequencyDisplay.style.display = 'none';
+        if (resultsSection) resultsSection.style.display = 'block';
         
         // メインスタートボタンを結果表示状態に変更
         const mainStartBtn = document.getElementById('main-start-btn');
@@ -1084,20 +1135,27 @@ class FullScaleTraining {
         mainStartBtn.textContent = '🎹 基音を聞いてスタート！'; // テキストをデフォルトに戻す
         mainStartBtn.style.animation = 'none'; // アニメーションもリセット
         
-        document.getElementById('progress-section').style.display = 'none';
-        document.getElementById('guide-section').style.display = 'none';
+        document.getElementById('training-layout').style.display = 'none';
         document.getElementById('results-section').style.display = 'none';
         document.getElementById('frequency-display').style.display = 'none';
         
         // 周波数表示をリセット（再試行時に備えて）
-        document.getElementById('frequency-main').textContent = '--- Hz';
-        document.getElementById('frequency-main').style.color = '#999';
-        document.getElementById('frequency-main').style.borderColor = '#e0e0e0';
+        const frequencyMain = document.getElementById('frequency-main');
+        if (frequencyMain) {
+            frequencyMain.textContent = '--- Hz';
+            frequencyMain.style.color = '#999';
+            frequencyMain.style.borderColor = '#e0e0e0';
+            frequencyMain.style.backgroundImage = 'linear-gradient(to top, #4CAF50 0%, transparent 0%)';
+        }
         
-        // 表示リセット
-        document.getElementById('frequency-main').textContent = '--- Hz';
-        document.getElementById('frequency-main').style.color = '#999';
-        document.getElementById('frequency-main').style.borderColor = '#e0e0e0';
+        // レガシー要素もリセット
+        const legacyElement = document.getElementById('frequency-main-legacy');
+        if (legacyElement) {
+            legacyElement.textContent = '--- Hz';
+            legacyElement.style.color = '#999';
+            legacyElement.style.borderColor = '#e0e0e0';
+            legacyElement.style.backgroundImage = 'linear-gradient(to top, #4CAF50 0%, transparent 0%)';
+        }
         
         
         // 設定リセット
