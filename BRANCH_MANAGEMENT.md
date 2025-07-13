@@ -67,6 +67,7 @@ git push -u origin scoring-adjustment-backup
 - 外れ値ペナルティ制の改善
 - 採点精度の向上
 - UI/UX改善
+- **🔧 周波数検出システム修正** (詳細: [PITCH_DETECTION_FIX.md](./PITCH_DETECTION_FIX.md))
 
 #### マイク修正 (`microphone-hang-fix`) 
 - AudioContext初期化の最適化

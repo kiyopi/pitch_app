@@ -233,13 +233,13 @@ class FullScaleTraining {
             // ハイパスフィルター: 低周波ノイズ（エアコン、ファンなど）をカット
             this.noiseReduction.highPassFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.highPassFilter.type = 'highpass';
-            this.noiseReduction.highPassFilter.frequency.setValueAtTime(80, this.audioContext.currentTime); // 80Hz以下カット
+            this.noiseReduction.highPassFilter.frequency.setValueAtTime(40, this.audioContext.currentTime); // 40Hz以下カット
             this.noiseReduction.highPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
             
             // ローパスフィルター: 高周波ノイズをカット
             this.noiseReduction.lowPassFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.lowPassFilter.type = 'lowpass';
-            this.noiseReduction.lowPassFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime); // 2kHz以上カット
+            this.noiseReduction.lowPassFilter.frequency.setValueAtTime(4000, this.audioContext.currentTime); // 4kHz以上カット
             this.noiseReduction.lowPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
             
             // ノッチフィルター: 60Hz電源ノイズをカット
@@ -253,8 +253,8 @@ class FullScaleTraining {
             this.noiseReduction.gainNode.gain.setValueAtTime(1.2, this.audioContext.currentTime); // 少し音量を上げる
             
             this.log('✅ ノイズリダクションフィルター初期化完了');
-            this.log(`  - ハイパス: 80Hz以下カット`);
-            this.log(`  - ローパス: 2kHz以上カット`);
+            this.log(`  - ハイパス: 40Hz以下カット`);
+            this.log(`  - ローパス: 4kHz以上カット`);
             this.log(`  - ノッチ: 60Hz電源ノイズカット`);
             this.log(`  - ゲイン: 1.2倍`);
             
@@ -450,7 +450,7 @@ class FullScaleTraining {
         
         // アナライザー設定（フィルター後用）
         this.analyzer = this.audioContext.createAnalyser();
-        this.analyzer.fftSize = 2048;
+        this.analyzer.fftSize = 4096;
         this.analyzer.smoothingTimeConstant = 0.1;
         this.analyzer.minDecibels = -100;
         this.analyzer.maxDecibels = -10;
@@ -1072,24 +1072,40 @@ class FullScaleTraining {
                     
                     // オクターブエラー検出：周波数が半分の場合は2倍して修正（動的）
                     let correctedPitch = pitch;
-                    if (pitch && pitch >= 80 && pitch <= 1200 && clarity > 0.1) {
-                        // 現在の目標周波数範囲に基づく動的補正
+                    if (pitch && pitch >= 40 && pitch <= 1200 && clarity > 0.3) {
+                        // 現在の目標周波数範囲に基づく動的補正（多段階対応）
                         const minTargetFreq = Math.min(...this.targetFrequencies); // 最低目標周波数
                         const maxTargetFreq = Math.max(...this.targetFrequencies); // 最高目標周波数
+                        const currentTargetFreq = this.targetFrequencies[this.currentNoteIndex]; // 現在の目標周波数
                         
-                        // 補正しきい値：最高目標周波数の半分＋余裕(10%)
-                        const correctionThreshold = maxTargetFreq * 0.55;
+                        // 多段階オクターブ補正（3倍、2倍、1.5倍の順で試行）
+                        let bestCorrection = pitch;
+                        let correctionFactor = 1;
                         
-                        // 補正後の範囲：最低目標の80%〜最高目標の120%
-                        const correctedMin = minTargetFreq * 0.8;
-                        const correctedMax = maxTargetFreq * 1.2;
+                        // 目標周波数との最小誤差を探す
+                        const candidates = [
+                            { factor: 3, freq: pitch * 3 },    // 1.5オクターブ上
+                            { factor: 2, freq: pitch * 2 },    // 1オクターブ上
+                            { factor: 1.5, freq: pitch * 1.5 }, // 0.5オクターブ上
+                            { factor: 1, freq: pitch }         // 補正なし
+                        ];
                         
-                        if (pitch < correctionThreshold && pitch * 2 >= correctedMin && pitch * 2 <= correctedMax) {
-                            correctedPitch = pitch * 2;
-                            
-                            if (this.frameCount % 60 === 0) {
-                                this.log(`🔧 動的オクターブ補正: ${pitch.toFixed(1)}Hz → ${correctedPitch.toFixed(1)}Hz (閾値: ${correctionThreshold.toFixed(1)}Hz)`);
+                        let minError = Infinity;
+                        for (const candidate of candidates) {
+                            if (candidate.freq >= minTargetFreq * 0.8 && candidate.freq <= maxTargetFreq * 1.2) {
+                                const error = Math.abs(candidate.freq - currentTargetFreq);
+                                if (error < minError) {
+                                    minError = error;
+                                    bestCorrection = candidate.freq;
+                                    correctionFactor = candidate.factor;
+                                }
                             }
+                        }
+                        
+                        correctedPitch = bestCorrection;
+                        
+                        if (correctionFactor > 1 && this.frameCount % 60 === 0) {
+                            this.log(`🔧 多段階オクターブ補正: ${pitch.toFixed(1)}Hz → ${correctedPitch.toFixed(1)}Hz (×${correctionFactor})`);
                         }
                         
                         return correctedPitch;
