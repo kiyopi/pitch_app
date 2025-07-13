@@ -111,7 +111,7 @@ class FullScaleTraining {
             perfect: 20,    // ±20セント以内で優秀（15→20に緩和）
             good: 35,       // ±35セント以内で良好（25→35に緩和）
             acceptable: 50, // ±50セント以内で合格（40→50に緩和）
-            outlier: 70     // ±70セント超で外れ値と判定（50→70に緩和）
+            outlier: 80     // ±80セント超で外れ値と判定（70→80に緩和）
         };
         this.accuracyThreshold = this.thresholds.good; // 互換性のため保持
         this.results = []; // 各音程の結果を記録
@@ -2086,7 +2086,7 @@ class FullScaleTraining {
                 • 👍 <strong>合格</strong>: ±50セント以内（合格レベル）<br>
                 • 😭 <strong>要練習</strong>: ±51セント超（練習が必要）<br>
                 • <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分<br>
-                • <strong>外れ値ペナルティ</strong>: ±70セント超の大きな外れがあると評価が下がります
+                • <strong>外れ値ペナルティ</strong>: ±80セント超の大きな外れがあると評価が下がります
             </div>
         `;
     }
