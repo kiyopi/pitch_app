@@ -1405,7 +1405,7 @@ class FullScaleTraining {
                         <div class="score-progress-percentage">${(needsPracticeCount/8*100).toFixed(0)}%</div>
                     </div>
                 </div>
-                <div style="text-align: center; margin-top: 15px; font-size: 1rem; color: #666;">
+                <div class="average-error" style="text-align: center; margin-top: 15px;">
                     平均誤差: ${avgError}¢
                 </div>
             `;
