@@ -77,10 +77,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.0.7',
-            codename: 'SmartMicrophone',
-            build: '2025-07-12',
-            commit: 'mic-optimization'
+            app: 'v1.2.0',
+            codename: 'OutlierPenalty',
+            build: '2025-07-13',
+            commit: 'scoring-enhancement'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
