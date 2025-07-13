@@ -104,8 +104,14 @@ class FullScaleTraining {
         this.targetFrequencies = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
         this.currentNoteIndex = 0;
         
-        // 判定設定
-        this.accuracyThreshold = 20; // ±20セント以内で正解
+        // 判定設定（新しい闾値システム）
+        this.thresholds = {
+            perfect: 15,    // ±15セント以内で優秀
+            good: 25,       // ±25セント以内で良好
+            acceptable: 40, // ±40セント以内で合格
+            outlier: 50     // ±50セント超で外れ値と判定
+        };
+        this.accuracyThreshold = this.thresholds.good; // 互換性のため保持
         this.results = []; // 各音程の結果を記録
         
         // アニメーション設定
@@ -1218,14 +1224,18 @@ class FullScaleTraining {
         const cents = 1200 * Math.log2(frequency / targetFreq);
         const centRounded = Math.round(cents);
         
-        // 判定
+        // 判定（新しい闾値システム）
         let accuracy = '';
-        if (Math.abs(cents) <= 10) {
-            accuracy = '完璧';
-        } else if (Math.abs(cents) <= this.accuracyThreshold) {
-            accuracy = '良い';
+        const absCents = Math.abs(cents);
+        
+        if (absCents <= this.thresholds.perfect) {
+            accuracy = '優秀';
+        } else if (absCents <= this.thresholds.good) {
+            accuracy = '良好';
+        } else if (absCents <= this.thresholds.acceptable) {
+            accuracy = '合格';
         } else {
-            accuracy = '要調整';
+            accuracy = '要練習';
         }
         
         // 結果を記録（同じ音程の複数回記録を避けるため、最後の記録のみ保持）
@@ -1277,27 +1287,49 @@ class FullScaleTraining {
         const stopBtn = document.getElementById('stop-btn');
         stopBtn.style.display = 'none';
         
-        // 統計計算
-        const perfectCount = this.results.filter(r => r.accuracy === '完璧').length;
-        const goodCount = this.results.filter(r => r.accuracy === '良い').length;
-        const needsWorkCount = this.results.filter(r => r.accuracy === '要調整').length;
+        // 統計計算（新しい判定基準）
+        const excellentCount = this.results.filter(r => r.accuracy === '優秀').length;
+        const goodCount = this.results.filter(r => r.accuracy === '良好').length;
+        const acceptableCount = this.results.filter(r => r.accuracy === '合格').length;
+        const needsPracticeCount = this.results.filter(r => r.accuracy === '要練習').length;
         const totalCount = this.results.length;
         
         // 平均誤差計算
         const avgError = totalCount > 0 ? 
             Math.round(this.results.reduce((sum, r) => sum + Math.abs(r.cents), 0) / totalCount) : 0;
         
-        // 総合評価
+        // 総合評価（新しい判定基準）
         let overallGrade = '';
         let gradeClass = '';
-        if (perfectCount >= 6) {
+        
+        // 合格以上（優秀+良好+合格）で判定
+        const passableCount = excellentCount + goodCount + acceptableCount;
+        
+        if (excellentCount >= 6) {
             overallGrade = '🏆 優秀！';
             gradeClass = 'grade-excellent';
-        } else if (perfectCount + goodCount >= 6) {
+        } else if (passableCount >= 6) {
             overallGrade = '🎉 良好！';
             gradeClass = 'grade-good';
         } else {
             overallGrade = '😭 要練習';
+            gradeClass = 'grade-practice';
+        }
+        
+        // 外れ値分析とペナルティ適用
+        const outlierAnalyzer = this.createOutlierAnalyzer();
+        const penaltySystem = this.createPenaltySystem();
+        
+        const outlierAnalysis = outlierAnalyzer.analyzeOutliers(this.results);
+        const penaltyResult = penaltySystem.applyPenalty(overallGrade, outlierAnalysis);
+        
+        // 最終評価を更新
+        overallGrade = penaltyResult.finalGrade;
+        if (penaltyResult.finalGrade.includes('優秀')) {
+            gradeClass = 'grade-excellent';
+        } else if (penaltyResult.finalGrade.includes('良好')) {
+            gradeClass = 'grade-good';
+        } else {
             gradeClass = 'grade-practice';
         }
         
@@ -1316,9 +1348,10 @@ class FullScaleTraining {
             `;
         } else {
             summaryElement.innerHTML = `
-                完璧: ${perfectCount}/8<br>
-                良い: ${goodCount}/8<br>
-                要調整: ${needsWorkCount}/8<br>
+                🏆 優秀: ${excellentCount}/8<br>
+                🎉 良好: ${goodCount}/8<br>
+                👍 合格: ${acceptableCount}/8<br>
+                😭 要練習: ${needsPracticeCount}/8<br>
                 平均誤差: ${avgError}¢
             `;
         }
@@ -1329,8 +1362,9 @@ class FullScaleTraining {
         detailHtml += '<div style="display: grid; gap: 10px;">';
         
         this.results.forEach((result) => {
-            const statusIcon = result.accuracy === '完璧' ? '🎉' : 
-                             result.accuracy === '良い' ? '👍' : '😭';
+            const statusIcon = result.accuracy === '優秀' ? '🏆' : 
+                             result.accuracy === '良好' ? '🎉' :
+                             result.accuracy === '合格' ? '👍' : '😭';
             
             // 周波数比較の視覚的表示
             const targetHz = Math.round(result.targetFreq);
@@ -1339,8 +1373,8 @@ class FullScaleTraining {
             const freqDiffText = freqDiff > 0 ? `+${freqDiff}Hz` : `${freqDiff}Hz`;
             
             detailHtml += `
-                <div style="background: ${result.accuracy === '完璧' ? '#f0fff0' : result.accuracy === '良い' ? '#fff8f0' : '#fff0f0'}; 
-                            padding: 12px; border-radius: 8px; border-left: 4px solid ${result.accuracy === '完璧' ? '#4CAF50' : result.accuracy === '良い' ? '#FF9800' : '#f44336'};">
+                <div style="background: ${result.accuracy === '優秀' ? '#f0fff0' : result.accuracy === '良好' ? '#f8fff8' : result.accuracy === '合格' ? '#fff8f0' : '#fff0f0'}; 
+                            padding: 12px; border-radius: 8px; border-left: 4px solid ${result.accuracy === '優秀' ? '#4CAF50' : result.accuracy === '良好' ? '#8BC34A' : result.accuracy === '合格' ? '#FF9800' : '#f44336'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="font-weight: bold; font-size: 1.1rem;">${statusIcon} ${result.note}</span>
                         <span style="font-weight: bold; color: ${result.accuracy === '完璧' ? '#4CAF50' : result.accuracy === '良い' ? '#FF9800' : '#f44336'};">
@@ -1361,9 +1395,10 @@ class FullScaleTraining {
         let legendHtml = '<div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px; border: 2px solid #2196F3;">';
         legendHtml += '<h4 style="margin-bottom: 10px; color: #2196F3;">📊 判定結果の見方</h4>';
         legendHtml += '<div style="font-size: 0.9rem; line-height: 1.6;">';
-        legendHtml += '• 🎉 <strong>完璧</strong>: ±10セント以内（非常に正確）<br>';
-        legendHtml += '• 👍 <strong>良い</strong>: ±20セント以内（良好な精度）<br>';
-        legendHtml += '• 😭 <strong>要調整</strong>: ±20セント超（練習が必要）<br>';
+        legendHtml += '• 🏆 <strong>優秀</strong>: ±15セント以内（非常に正確）<br>';
+        legendHtml += '• 🎉 <strong>良好</strong>: ±25セント以内（良好な精度）<br>';
+        legendHtml += '• 👍 <strong>合格</strong>: ±40セント以内（合格レベル）<br>';
+        legendHtml += '• 😭 <strong>要練習</strong>: ±41セント超（練習が必要）<br>';
         legendHtml += '• <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分';
         legendHtml += '</div></div>';
         
@@ -1372,12 +1407,129 @@ class FullScaleTraining {
         
         detailElement.innerHTML = finalDetailHtml;
         
-        this.log(`📊 総合結果: ${overallGrade} (完璧:${perfectCount}, 良い:${goodCount}, 要調整:${needsWorkCount})`);
+        // 外れ値分析と改善アドバイスを表示
+        this.displayOutlierAnalysis(outlierAnalysis, penaltyResult);
+        this.displayImprovementAdvice(outlierAnalysis);
+        
+        // ログ出力（外れ値分析情報を含む）
+        this.log(`📊 総合結果: ${overallGrade} (優秀:${excellentCount}, 良好:${goodCount}, 合格:${acceptableCount}, 要練習:${needsPracticeCount})`);
+        if (outlierAnalysis.totalCount > 0) {
+            this.log(`⚠️ 外れ値検出: ${outlierAnalysis.totalCount}個 (最高レベル: ${outlierAnalysis.maxSeverity})`);
+            if (penaltyResult.penaltyApplied) {
+                this.log(`📊 ペナルティ適用: ${penaltyResult.originalGrade} → ${penaltyResult.finalGrade}`);
+            }
+        }
         
         // 再開始オプションを初期化
         this.initializeRestartOptions();
         
         // 自動停止を削除 - ユーザーが停止ボタンを押すまで結果を表示し続ける
+    }
+    
+    // 外れ値分析クラス
+    createOutlierAnalyzer() {
+        return {
+            levels: {
+                level1: { min: 50, max: 80, label: '注意', color: '🟡', impact: 'minor' },
+                level2: { min: 80, max: 120, label: '警告', color: '🟠', impact: 'major' },
+                level3: { min: 120, max: Infinity, label: '重大', color: '🔴', impact: 'severe' }
+            },
+            
+            // 外れ値を分析してレベル分類
+            analyzeOutliers: function(results) {
+                const outliers = [];
+                const summary = { level1: 0, level2: 0, level3: 0 };
+                
+                results.forEach((result, index) => {
+                    const absCents = Math.abs(result.cents);
+                    
+                    for (const [levelKey, config] of Object.entries(this.levels)) {
+                        if (absCents >= config.min && absCents < config.max) {
+                            outliers.push({
+                                index: index,
+                                interval: result.note,
+                                cents: result.cents,
+                                level: levelKey,
+                                severity: config.label,
+                                color: config.color,
+                                impact: config.impact
+                            });
+                            summary[levelKey]++;
+                            break;
+                        }
+                    }
+                });
+                
+                return {
+                    outliers: outliers,
+                    summary: summary,
+                    totalCount: outliers.length,
+                    maxSeverity: this.getMaxSeverity(outliers)
+                };
+            },
+            
+            // 最高レベルの外れ値を特定
+            getMaxSeverity: function(outliers) {
+                if (outliers.some(o => o.level === 'level3')) return 'level3';
+                if (outliers.some(o => o.level === 'level2')) return 'level2';
+                if (outliers.some(o => o.level === 'level1')) return 'level1';
+                return 'none';
+            }
+        };
+    }
+    
+    // ペナルティシステム
+    createPenaltySystem() {
+        return {
+            rules: {
+                // 優秀→良好への降格条件
+                excellentDowngrade: {
+                    condition: (outlierAnalysis) => outlierAnalysis.totalCount > 0,
+                    newGrade: '良好',
+                    message: (count) => `※${count}音に外れあり（安定性向上が必要）`
+                },
+                
+                // 良好→要練習への降格条件  
+                goodDowngrade: {
+                    condition: (outlierAnalysis) => {
+                        return outlierAnalysis.summary.level1 >= 2 || 
+                               outlierAnalysis.summary.level2 >= 1 ||
+                               outlierAnalysis.summary.level3 >= 1;
+                    },
+                    newGrade: '要練習',
+                    message: () => '※複数の大きな外れあり（基礎練習推奨）'
+                }
+            },
+            
+            // ペナルティを適用して最終評価を決定
+            applyPenalty: function(originalGrade, outlierAnalysis) {
+                let finalGrade = originalGrade;
+                let penaltyMessage = '';
+                let penaltyApplied = false;
+                
+                // 元の評価が「優秀」の場合
+                if (originalGrade === '🏆 優秀！' && this.rules.excellentDowngrade.condition(outlierAnalysis)) {
+                    finalGrade = '🎉 良好！';
+                    penaltyMessage = this.rules.excellentDowngrade.message(outlierAnalysis.totalCount);
+                    penaltyApplied = true;
+                }
+                // 元の評価が「良好」の場合（または優秀→良好に降格後）
+                else if ((originalGrade === '🎉 良好！' || finalGrade === '🎉 良好！') && 
+                         this.rules.goodDowngrade.condition(outlierAnalysis)) {
+                    finalGrade = '😭 要練習';
+                    penaltyMessage = this.rules.goodDowngrade.message();
+                    penaltyApplied = true;
+                }
+                
+                return {
+                    originalGrade: originalGrade,
+                    finalGrade: finalGrade,
+                    penaltyApplied: penaltyApplied,
+                    penaltyMessage: penaltyMessage,
+                    outlierImpact: outlierAnalysis.maxSeverity
+                };
+            }
+        };
     }
     
     // 再開始オプションの初期化
@@ -1734,6 +1886,89 @@ class FullScaleTraining {
         const timestamp = new Date().toLocaleTimeString();
         const logLine = `[${timestamp}] ${message}`;
         console.log(logLine);
+    }
+    
+    // 外れ値分析表示メソッド
+    displayOutlierAnalysis(outlierAnalysis, penaltyResult) {
+        const analysisElement = document.getElementById('outlier-analysis');
+        
+        if (outlierAnalysis.totalCount > 0) {
+            analysisElement.style.display = 'block';
+            
+            const messageElement = document.getElementById('outlier-message');
+            messageElement.textContent = penaltyResult.penaltyMessage;
+            
+            const detailsElement = document.getElementById('outlier-details');
+            detailsElement.innerHTML = this.generateOutlierDetailsHTML(outlierAnalysis);
+        } else {
+            analysisElement.style.display = 'none';
+        }
+    }
+    
+    // 外れ値詳細HTML生成
+    generateOutlierDetailsHTML(outlierAnalysis) {
+        if (outlierAnalysis.outliers.length === 0) return '';
+        
+        let html = '<div style="margin-top: 10px;">';
+        html += '<strong>外れ値詳細:</strong><br>';
+        
+        outlierAnalysis.outliers.forEach(outlier => {
+            html += `<span style="margin-right: 15px;">${outlier.color} ${outlier.interval}: ${outlier.cents > 0 ? '+' : ''}${outlier.cents}¢ (${outlier.severity})</span>`;
+        });
+        
+        html += '</div>';
+        return html;
+    }
+    
+    // 改善アドバイス表示メソッド
+    displayImprovementAdvice(outlierAnalysis) {
+        const adviceElement = document.getElementById('improvement-advice');
+        const contentElement = document.getElementById('advice-content');
+        
+        const advice = this.generateImprovementAdvice(outlierAnalysis);
+        
+        if (advice && advice.trim() !== '') {
+            adviceElement.style.display = 'block';
+            contentElement.innerHTML = advice;
+        } else {
+            adviceElement.style.display = 'none';
+        }
+    }
+    
+    // 改善アドバイス生成
+    generateImprovementAdvice(outlierAnalysis) {
+        if (outlierAnalysis.totalCount === 0) {
+            return '🎉 安定した演奏です！この調子で練習を続けてください。';
+        }
+        
+        const advices = [];
+        
+        // 外れ値の傾向分析
+        const frequentIntervals = this.analyzeFrequentOutliers(outlierAnalysis.outliers);
+        if (frequentIntervals.length > 0) {
+            advices.push(`🎯 重点練習: ${frequentIntervals.join('、')}の精度向上`);
+        }
+        
+        // レベル別アドバイス
+        if (outlierAnalysis.summary.level3 > 0) {
+            advices.push('🔥 基礎練習: 音程感覚の根本的な見直しが必要');
+        } else if (outlierAnalysis.summary.level2 > 0) {
+            advices.push('⚡ 集中練習: 特定音程の反復練習を推奨');
+        } else {
+            advices.push('✨ 微調整: 僅かな調整で大幅な改善が期待');
+        }
+        
+        return advices.join('<br>');
+    }
+    
+    // 頻繁な外れ値音程の分析
+    analyzeFrequentOutliers(outliers) {
+        const intervalCount = {};
+        outliers.forEach(outlier => {
+            intervalCount[outlier.interval] = (intervalCount[outlier.interval] || 0) + 1;
+        });
+        
+        return Object.keys(intervalCount).filter(interval => intervalCount[interval] >= 1);
     }
     
 }

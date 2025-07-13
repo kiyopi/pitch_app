@@ -520,6 +520,51 @@
             display: none;
             overflow-y: auto;
         }
+        
+        /* 外れ値分析表示スタイル */
+        .outlier-analysis {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .outlier-message {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .outlier-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        /* 外れ値レベル別色分け */
+        .outlier-level1 { background: rgba(255, 235, 59, 0.2); }  /* 黄色 */
+        .outlier-level2 { background: rgba(255, 152, 0, 0.2); }   /* オレンジ */
+        .outlier-level3 { background: rgba(244, 67, 54, 0.2); }   /* 赤 */
+        
+        /* 改善アドバイススタイル */
+        .improvement-advice {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        /* 詳細結果の外れ値ハイライト */
+        .result-item.has-outlier {
+            border-left: 4px solid;
+        }
+        
+        .result-item.outlier-level1 { border-left-color: #ffeb3b; }
+        .result-item.outlier-level2 { border-left-color: #ff9800; }
+        .result-item.outlier-level3 { border-left-color: #f44336; }
 
         .overall-grade {
             font-size: 3rem;
@@ -949,8 +994,23 @@
                 
                 <div class="overall-grade" id="overall-grade">🎊 完了！</div>
                 
+                <!-- 新規：外れ値分析表示 -->
+                <div id="outlier-analysis" class="outlier-analysis" style="display: none;">
+                    <div class="outlier-summary">
+                        <h4>🔍 安定性分析</h4>
+                        <div id="outlier-message" class="outlier-message"></div>
+                        <div id="outlier-details" class="outlier-details"></div>
+                    </div>
+                </div>
+                
                 <div class="results-summary" id="results-summary"></div>
                 <div class="results-detail" id="results-detail"></div>
+                
+                <!-- 新規：改善アドバイス -->
+                <div id="improvement-advice" class="improvement-advice" style="display: none;">
+                    <h4>💡 改善アドバイス</h4>
+                    <div id="advice-content"></div>
+                </div>
             </div>
 
         </div>
