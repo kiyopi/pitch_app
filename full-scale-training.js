@@ -1133,7 +1133,9 @@ class FullScaleTraining {
         
         // マイク状態アイコンを取得
         const micIcon = this.getMicrophoneStateIcon();
-        const spacing = micIcon ? '    ' : ''; // アイコンがある時のみスペース追加
+        // モバイル版は間隔をより広く
+        const isMobile = window.innerWidth <= 768;
+        const spacing = micIcon ? (isMobile ? '        ' : '    ') : ''; // アイコンがある時のみスペース追加
         
         // マイクアイコンのサイズを調整
         const micIconStyled = micIcon ? `<span style="font-size: 0.8em;">${micIcon}</span>` : '';
