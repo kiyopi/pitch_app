@@ -1137,8 +1137,8 @@ class FullScaleTraining {
         const isMobile = window.innerWidth <= 768;
         const spacing = ''; // スペースは使用しない
         
-        // マイクアイコンのサイズと間隔をCSSで調整
-        const micIconStyled = micIcon ? `<span style="font-size: 0.8em; margin-left: ${isMobile ? '15px' : '10px'};">${micIcon}</span>` : '';
+        // マイクアイコンのサイズと間隔をCSSで調整（PC版もモバイル版と同じ15pxに統一）
+        const micIconStyled = micIcon ? `<span style="font-size: 0.8em; margin-left: 15px;">${micIcon}</span>` : '';
         
         const displayText = frequency > 0 
             ? `${Math.round(frequency)} Hz${spacing}${micIconStyled}`
