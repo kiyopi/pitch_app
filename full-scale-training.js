@@ -1391,25 +1391,12 @@ class FullScaleTraining {
         
         detailHtml += '</div></div>';
         
-        // アイコンの意味説明
-        let legendHtml = '<div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 10px; border: 2px solid #2196F3;">';
-        legendHtml += '<h4 style="margin-bottom: 10px; color: #2196F3;">📊 判定結果の見方</h4>';
-        legendHtml += '<div style="font-size: 0.9rem; line-height: 1.6;">';
-        legendHtml += '• 🏆 <strong>優秀</strong>: ±15セント以内（非常に正確）<br>';
-        legendHtml += '• 🎉 <strong>良好</strong>: ±25セント以内（良好な精度）<br>';
-        legendHtml += '• 👍 <strong>合格</strong>: ±40セント以内（合格レベル）<br>';
-        legendHtml += '• 😭 <strong>要練習</strong>: ±41セント超（練習が必要）<br>';
-        legendHtml += '• <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分';
-        legendHtml += '</div></div>';
+        detailElement.innerHTML = detailHtml;
         
-        // 詳細結果と凡例を組み合わせ
-        const finalDetailHtml = detailHtml + legendHtml;
-        
-        detailElement.innerHTML = finalDetailHtml;
-        
-        // 外れ値分析と改善アドバイスを表示
+        // 外れ値分析、改善アドバイス、判定結果の見方を表示
         this.displayOutlierAnalysis(outlierAnalysis, penaltyResult);
         this.displayImprovementAdvice(outlierAnalysis);
+        this.displayScoringLegend();
         
         // ログ出力（外れ値分析情報を含む）
         this.log(`📊 総合結果: ${overallGrade} (優秀:${excellentCount}, 良好:${goodCount}, 合格:${acceptableCount}, 要練習:${needsPracticeCount})`);
@@ -1969,6 +1956,32 @@ class FullScaleTraining {
         });
         
         return Object.keys(intervalCount).filter(interval => intervalCount[interval] >= 1);
+    }
+    
+    // 判定結果の見方表示メソッド
+    displayScoringLegend() {
+        const legendElement = document.getElementById('scoring-legend');
+        const contentElement = document.getElementById('legend-content');
+        
+        if (legendElement && contentElement) {
+            const legendContent = this.generateScoringLegendHTML();
+            contentElement.innerHTML = legendContent;
+            legendElement.style.display = 'block';
+        }
+    }
+    
+    // 判定結果の見方HTML生成
+    generateScoringLegendHTML() {
+        return `
+            <div style="font-size: 0.9rem; line-height: 1.6;">
+                • 🏆 <strong>優秀</strong>: ±15セント以内（非常に正確）<br>
+                • 🎉 <strong>良好</strong>: ±25セント以内（良好な精度）<br>
+                • 👍 <strong>合格</strong>: ±40セント以内（合格レベル）<br>
+                • 😭 <strong>要練習</strong>: ±41セント超（練習が必要）<br>
+                • <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分<br>
+                • <strong>外れ値ペナルティ</strong>: ±50セント超の大きな外れがあると評価が下がります
+            </div>
+        `;
     }
     
 }

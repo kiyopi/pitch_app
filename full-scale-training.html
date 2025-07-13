@@ -557,6 +557,21 @@
             text-align: left;
         }
         
+        /* 判定結果の見方スタイル */
+        .scoring-legend {
+            background: rgba(108, 117, 125, 0.1);
+            border: 1px solid rgba(108, 117, 125, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .scoring-legend h4 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
         /* 詳細結果の外れ値ハイライト */
         .result-item.has-outlier {
             border-left: 4px solid;
@@ -994,22 +1009,28 @@
                 
                 <div class="overall-grade" id="overall-grade">🎊 完了！</div>
                 
-                <!-- 新規：外れ値分析表示 -->
+                <div class="results-summary" id="results-summary"></div>
+                <div class="results-detail" id="results-detail"></div>
+                
+                <!-- 新規：安定性分析表示 -->
                 <div id="outlier-analysis" class="outlier-analysis" style="display: none;">
                     <div class="outlier-summary">
-                        <h4>🔍 安定性分析</h4>
+                        <h4>📊 安定性分析</h4>
                         <div id="outlier-message" class="outlier-message"></div>
                         <div id="outlier-details" class="outlier-details"></div>
                     </div>
                 </div>
                 
-                <div class="results-summary" id="results-summary"></div>
-                <div class="results-detail" id="results-detail"></div>
-                
                 <!-- 新規：改善アドバイス -->
                 <div id="improvement-advice" class="improvement-advice" style="display: none;">
                     <h4>💡 改善アドバイス</h4>
                     <div id="advice-content"></div>
+                </div>
+                
+                <!-- 新規：判定結果の見方 -->
+                <div id="scoring-legend" class="scoring-legend">
+                    <h4>📊 判定結果の見方</h4>
+                    <div id="legend-content"></div>
                 </div>
             </div>
 
