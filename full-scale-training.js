@@ -77,10 +77,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.2.1',
-            codename: 'BackgroundAware',
+            app: 'v1.3.0',
+            codename: 'ScoringEnhanced',
             build: '2025-07-13',
-            commit: 'background-detection'
+            commit: 'scoring-adjustment'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
