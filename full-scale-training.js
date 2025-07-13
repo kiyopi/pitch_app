@@ -1662,25 +1662,36 @@ class FullScaleTraining {
     async directRestart(option) {
         this.log(`🚀 直接再開始実行: ${option} モード`);
         
-        // ページトップにスクロール
-        if (this.isDesktopLayout()) {
-            // PC版: スムーススクロール（フォールバック付き）
-            try {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            } catch (error) {
-                // フォールバック: 瞬間移動
-                window.scrollTo(0, 0);
-            }
-        } else {
-            // モバイル版: 瞬間移動
-            window.scrollTo(0, 0);
-        }
-        
         // まず既存のマイクを完全停止
         this.stopMicrophone();
+        
+        // 少し遅延してからスクロール（UI更新との競合を避ける）
+        setTimeout(() => {
+            const isDesktop = this.isDesktopLayout();
+            this.log(`🖥️ レイアウト判定: ${isDesktop ? 'デスクトップ' : 'モバイル'}`);
+            
+            if (isDesktop) {
+                // PC版: スムーススクロール（フォールバック付き）
+                this.log('🖥️ PC版: スムーススクロール実行');
+                try {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                    this.log('✅ スムーススクロール成功');
+                } catch (error) {
+                    this.log(`❌ スムーススクロール失敗: ${error.message}`);
+                    // フォールバック: 瞬間移動
+                    window.scrollTo(0, 0);
+                    this.log('✅ フォールバック瞬間移動完了');
+                }
+            } else {
+                // モバイル版: 瞬間移動
+                this.log('📱 モバイル版: 瞬間移動実行');
+                window.scrollTo(0, 0);
+                this.log('✅ 瞬間移動完了');
+            }
+        }, 50);
         
         // 基音を選択（sameの場合は現在の基音を維持、newの場合は新しい基音を選択）
         if (option === 'new') {
