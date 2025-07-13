@@ -605,6 +605,73 @@
             font-weight: bold;
             color: #FF5722;
         }
+        
+        /* ペナルティ表示スタイル */
+        .penalty-warning {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #fff3e0, #ffebcc);
+            border: 2px solid #ff9800;
+            border-radius: 15px;
+            animation: penaltyPulse 1s ease-in-out infinite alternate;
+        }
+        
+        .penalty-icon {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff9800;
+            margin-bottom: 8px;
+        }
+        
+        .penalty-details {
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .penalty-action {
+            font-size: 1rem;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .grade-transition {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .grade-before {
+            font-size: 2rem;
+            font-weight: bold;
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        
+        .grade-arrow {
+            font-size: 2rem;
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        .grade-after {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        
+        .penalty-summary {
+            font-size: 1.1rem;
+            color: #ff9800;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        @keyframes penaltyPulse {
+            0% { box-shadow: 0 0 5px rgba(255, 152, 0, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(255, 152, 0, 0.8); }
+        }
 
         .grade-excellent {
             color: #4CAF50;

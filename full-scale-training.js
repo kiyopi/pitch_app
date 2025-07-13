@@ -1360,12 +1360,8 @@ class FullScaleTraining {
         const baseToneInfo = this.baseToneManager.getCurrentBaseToneInfo();
         const baseToneText = `🎲 基音: ${baseToneInfo.note} (${Math.round(baseToneInfo.frequency)}Hz)`;
         
-        // 基音 + 総合評価を表示
-        gradeElement.innerHTML = `
-            <div class="base-tone-info">${baseToneText}</div>
-            <div class="overall-grade-text">${overallGrade}</div>
-        `;
-        gradeElement.className = `overall-grade ${gradeClass}`;
+        // 段階的評価表示を開始
+        this.displayGradualResults(gradeElement, baseToneText, penaltyResult, gradeClass);
         
         if (totalCount === 0) {
             summaryElement.innerHTML = `
@@ -2186,6 +2182,70 @@ class FullScaleTraining {
         this.log('🧹 バックグラウンド状態をクリアしました');
     }
     
+    // 📊 段階的評価表示システム
+    displayGradualResults(gradeElement, baseToneText, penaltyResult, finalGradeClass) {
+        // ステップ1: 基音と基本評価を表示
+        const originalGrade = penaltyResult.originalGrade || penaltyResult.finalGrade;
+        const originalClass = this.getGradeClass(originalGrade);
+        
+        gradeElement.innerHTML = `
+            <div class="base-tone-info">${baseToneText}</div>
+            <div class="overall-grade-text">${originalGrade}</div>
+        `;
+        gradeElement.className = `overall-grade ${originalClass}`;
+        
+        this.log(`📊 基本評価表示: ${originalGrade}`);
+        
+        // ペナルティがある場合の段階的処理
+        if (penaltyResult.penaltyApplied) {
+            setTimeout(() => {
+                this.showPenaltyWarning(gradeElement, baseToneText, penaltyResult, finalGradeClass);
+            }, 2000); // 2秒後にペナルティ表示
+        }
+    }
+    
+    showPenaltyWarning(gradeElement, baseToneText, penaltyResult, finalGradeClass) {
+        // ステップ2: ペナルティ警告表示
+        gradeElement.innerHTML = `
+            <div class="base-tone-info">${baseToneText}</div>
+            <div class="overall-grade-text">${penaltyResult.originalGrade}</div>
+            <div class="penalty-warning">
+                <div class="penalty-icon">⚠️ 外れ値ペナルティ検出</div>
+                <div class="penalty-details">${penaltyResult.reason}</div>
+                <div class="penalty-action">評価を降格します...</div>
+            </div>
+        `;
+        
+        this.log(`⚠️ ペナルティ警告表示: ${penaltyResult.reason}`);
+        
+        setTimeout(() => {
+            this.showFinalResult(gradeElement, baseToneText, penaltyResult, finalGradeClass);
+        }, 3000); // 3秒後に最終結果
+    }
+    
+    showFinalResult(gradeElement, baseToneText, penaltyResult, finalGradeClass) {
+        // ステップ3: 最終結果表示
+        gradeElement.innerHTML = `
+            <div class="base-tone-info">${baseToneText}</div>
+            <div class="grade-transition">
+                <div class="grade-before">${penaltyResult.originalGrade}</div>
+                <div class="grade-arrow">→</div>
+                <div class="grade-after">${penaltyResult.finalGrade}</div>
+            </div>
+            <div class="penalty-summary">外れ値ペナルティにより降格</div>
+        `;
+        gradeElement.className = `overall-grade ${finalGradeClass}`;
+        
+        this.log(`📊 最終結果表示: ${penaltyResult.originalGrade} → ${penaltyResult.finalGrade}`);
+    }
+    
+    getGradeClass(grade) {
+        if (grade.includes('優秀')) return 'grade-excellent';
+        if (grade.includes('良好')) return 'grade-good';
+        if (grade.includes('合格')) return 'grade-acceptable';
+        return 'grade-practice';
+    }
+
     // 📊 プログレスバーアニメーション実行
     animateProgressBars() {
         const progressFills = document.querySelectorAll('.score-progress-fill');
