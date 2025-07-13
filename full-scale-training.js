@@ -2196,8 +2196,8 @@ class FullScaleTraining {
         
         this.log(`📊 基本評価表示: ${originalGrade}`);
         
-        // ペナルティがある場合の段階的処理
-        if (penaltyResult.penaltyApplied) {
+        // ペナルティがある場合の段階的処理（デバッグ用：ペナルティなしでも動作）
+        if (penaltyResult.penaltyApplied || true) {
             setTimeout(() => {
                 this.showPenaltyWarning(gradeElement, baseToneText, penaltyResult, finalGradeClass);
             }, 2000); // 2秒後にペナルティ表示
