@@ -108,10 +108,10 @@ class FullScaleTraining {
         
         // 判定設定（新しい闾値システム）
         this.thresholds = {
-            perfect: 15,    // ±15セント以内で優秀
-            good: 25,       // ±25セント以内で良好
-            acceptable: 40, // ±40セント以内で合格
-            outlier: 50     // ±50セント超で外れ値と判定
+            perfect: 20,    // ±20セント以内で優秀（15→20に緩和）
+            good: 35,       // ±35セント以内で良好（25→35に緩和）
+            acceptable: 50, // ±50セント以内で合格（40→50に緩和）
+            outlier: 70     // ±70セント超で外れ値と判定（50→70に緩和）
         };
         this.accuracyThreshold = this.thresholds.good; // 互換性のため保持
         this.results = []; // 各音程の結果を記録
@@ -1324,10 +1324,10 @@ class FullScaleTraining {
         const passableCount = excellentCount + goodCount + acceptableCount;
         
         if (excellentCount >= 6) {
-            overallGrade = '🏆 優秀！';
+            overallGrade = '🏆 優秀！';  // 8音中6音（75%）維持
             gradeClass = 'grade-excellent';
-        } else if (passableCount >= 6) {
-            overallGrade = '🎉 良好！';
+        } else if (passableCount >= 5) {
+            overallGrade = '🎉 良好！';  // 8音中5音（62.5%）に緩和
             gradeClass = 'grade-good';
         } else {
             overallGrade = '😭 要練習';
@@ -1532,12 +1532,12 @@ class FullScaleTraining {
                     message: (count) => `※${count}音に外れあり（安定性向上が必要）`
                 },
                 
-                // 良好→要練習への降格条件  
+                // 良好→要練習への降格条件（緩和版）
                 goodDowngrade: {
                     condition: (outlierAnalysis) => {
-                        return outlierAnalysis.summary.level1 >= 2 || 
-                               outlierAnalysis.summary.level2 >= 1 ||
-                               outlierAnalysis.summary.level3 >= 1;
+                        return outlierAnalysis.summary.level1 >= 3 ||  // Level1: 3個以上（2→3に緩和）
+                               outlierAnalysis.summary.level2 >= 2 ||  // Level2: 2個以上（1→2に緩和）
+                               outlierAnalysis.summary.level3 >= 2;    // Level3: 2個以上（1→2に緩和）
                     },
                     newGrade: '要練習',
                     message: () => '※複数の大きな外れあり（基礎練習推奨）'
