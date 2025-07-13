@@ -1182,7 +1182,7 @@ class FullScaleTraining {
             // 音量バー背景の更新
             if (frequency > 0 && volume > 1) {
                 // 音を検出している時は緑のグラデーション
-                element.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
+                element.style.backgroundImage = `linear-gradient(to top, rgba(33, 150, 243, 0.5) 0%, rgba(100, 181, 246, 0.4) ${volumePercent/2}%, rgba(144, 202, 249, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
                 // 音を検出していない時は薄いグレー
                 element.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
@@ -1197,7 +1197,7 @@ class FullScaleTraining {
             
             // モバイルにも音量バー適用
             if (frequency > 0 && volume > 1) {
-                mobileElement.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
+                mobileElement.style.backgroundImage = `linear-gradient(to top, rgba(33, 150, 243, 0.5) 0%, rgba(100, 181, 246, 0.4) ${volumePercent/2}%, rgba(144, 202, 249, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
                 mobileElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
@@ -1211,7 +1211,7 @@ class FullScaleTraining {
             
             // レガシー要素にも音量バー適用
             if (frequency > 0 && volume > 1) {
-                legacyElement.style.backgroundImage = `linear-gradient(to top, rgba(76, 175, 80, 0.5) 0%, rgba(129, 199, 132, 0.4) ${volumePercent/2}%, rgba(165, 214, 167, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
+                legacyElement.style.backgroundImage = `linear-gradient(to top, rgba(33, 150, 243, 0.5) 0%, rgba(100, 181, 246, 0.4) ${volumePercent/2}%, rgba(144, 202, 249, 0.3) ${volumePercent}%, transparent ${volumePercent}%)`;
             } else {
                 legacyElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
