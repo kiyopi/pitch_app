@@ -1664,28 +1664,34 @@ class FullScaleTraining {
         
         // 最初にスクロール処理を実行（他の処理による中断を防ぐ）
         const isDesktop = this.isDesktopLayout();
+        const currentScrollY = window.scrollY || window.pageYOffset;
         this.log(`🖥️ レイアウト判定: ${isDesktop ? 'デスクトップ' : 'モバイル'}`);
+        this.log(`📍 現在のスクロール位置: ${currentScrollY}px`);
         
-        if (isDesktop) {
-            // PC版: スムーススクロール（フォールバック付き）
-            this.log('🖥️ PC版: スムーススクロール実行');
-            try {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-                this.log('✅ スムーススクロール成功');
-            } catch (error) {
-                this.log(`❌ スムーススクロール失敗: ${error.message}`);
-                // フォールバック: 瞬間移動
+        if (currentScrollY > 100) {  // 100px以上スクロールしている場合のみ実行
+            if (isDesktop) {
+                // PC版: スムーススクロール（フォールバック付き）
+                this.log('🖥️ PC版: スムーススクロール実行');
+                try {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                    this.log('✅ スムーススクロール成功');
+                } catch (error) {
+                    this.log(`❌ スムーススクロール失敗: ${error.message}`);
+                    // フォールバック: 瞬間移動
+                    window.scrollTo(0, 0);
+                    this.log('✅ フォールバック瞬間移動完了');
+                }
+            } else {
+                // モバイル版: 瞬間移動
+                this.log('📱 モバイル版: 瞬間移動実行');
                 window.scrollTo(0, 0);
-                this.log('✅ フォールバック瞬間移動完了');
+                this.log('✅ 瞬間移動完了');
             }
         } else {
-            // モバイル版: 瞬間移動
-            this.log('📱 モバイル版: 瞬間移動実行');
-            window.scrollTo(0, 0);
-            this.log('✅ 瞬間移動完了');
+            this.log('ℹ️ スクロール位置が既にトップ付近のため、スクロール処理をスキップ');
         }
         
         // マイクを完全停止
