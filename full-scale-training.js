@@ -2081,12 +2081,12 @@ class FullScaleTraining {
     generateScoringLegendHTML() {
         return `
             <div style="font-size: 0.9rem; line-height: 1.6;">
-                • 🏆 <strong>優秀</strong>: ±15セント以内（非常に正確）<br>
-                • 🎉 <strong>良好</strong>: ±25セント以内（良好な精度）<br>
-                • 👍 <strong>合格</strong>: ±40セント以内（合格レベル）<br>
-                • 😭 <strong>要練習</strong>: ±41セント超（練習が必要）<br>
+                • 🏆 <strong>優秀</strong>: ±20セント以内（非常に正確）<br>
+                • 🎉 <strong>良好</strong>: ±35セント以内（良好な精度）<br>
+                • 👍 <strong>合格</strong>: ±50セント以内（合格レベル）<br>
+                • 😭 <strong>要練習</strong>: ±51セント超（練習が必要）<br>
                 • <strong>¢（セント）</strong>: 音程の精度単位。100¢ = 半音1つ分<br>
-                • <strong>外れ値ペナルティ</strong>: ±50セント超の大きな外れがあると評価が下がります
+                • <strong>外れ値ペナルティ</strong>: ±70セント超の大きな外れがあると評価が下がります
             </div>
         `;
     }
