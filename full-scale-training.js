@@ -1356,7 +1356,15 @@ class FullScaleTraining {
         const summaryElement = document.getElementById('results-summary');
         const detailElement = document.getElementById('results-detail');
         
-        gradeElement.textContent = overallGrade;
+        // 基音情報を取得
+        const baseToneInfo = this.baseToneManager.getCurrentBaseToneInfo();
+        const baseToneText = `🎲 基音: ${baseToneInfo.note} (${Math.round(baseToneInfo.frequency)}Hz)`;
+        
+        // 基音 + 総合評価を表示
+        gradeElement.innerHTML = `
+            <div class="base-tone-info">${baseToneText}</div>
+            <div class="overall-grade-text">${overallGrade}</div>
+        `;
         gradeElement.className = `overall-grade ${gradeClass}`;
         
         if (totalCount === 0) {
