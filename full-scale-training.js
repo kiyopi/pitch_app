@@ -1516,19 +1516,9 @@ class FullScaleTraining {
             mainStartBtn.textContent = '🔍 Loading...';
             mainStartBtn.style.animation = 'none';
             
-            // AudioContext初期化（既に初期化済みの場合は再利用）
+            // AudioContext初期化のみ（マイクアクセスは後でボタン押下時に実行）
             this.log('🎵 AudioContext確認...');
             await this.initAudioContext();
-            
-            // マイクアクセス
-            this.log('🎤 マイクアクセス開始...');
-            await this.initMicrophone();
-            
-            // isRunningを設定
-            this.isRunning = true;
-            
-            // 周波数検出開始
-            this.startFrequencyDetection();
             
             // 初期表示更新
             this.updateProgress();
