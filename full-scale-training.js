@@ -77,10 +77,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.2.0',
-            codename: 'OutlierPenalty',
+            app: 'v1.2.1',
+            codename: 'BackgroundAware',
             build: '2025-07-13',
-            commit: 'scoring-enhancement'
+            commit: 'background-detection'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
@@ -97,6 +97,8 @@ class FullScaleTraining {
         
         // マイク状態管理
         this.microphoneState = 'off'; // 'off', 'on', 'recording', 'paused'
+        this.backgroundPaused = false; // バックグラウンド一時停止状態
+        this.wasActiveBeforeBackground = false; // バックグラウンド前の状態保持
         
         
         // 8音階データ
@@ -1982,6 +1984,111 @@ class FullScaleTraining {
                 • <strong>外れ値ペナルティ</strong>: ±50セント超の大きな外れがあると評価が下がります
             </div>
         `;
+    }
+    
+    // バックグラウンド検知機能の初期化
+    initializeBackgroundDetection() {
+        this.log('🌍 バックグラウンド検知機能を初期化中...');
+        
+        // Page Visibility API でタブの可視性変更を検知
+        document.addEventListener('visibilitychange', () => {
+            this.handleVisibilityChange();
+        });
+        
+        // ページのフォーカス/ブラー検知（補完的な検知）
+        window.addEventListener('focus', () => {
+            this.handleWindowFocus();
+        });
+        
+        window.addEventListener('blur', () => {
+            this.handleWindowBlur();
+        });
+        
+        this.log('✅ バックグラウンド検知機能初期化完了');
+    }
+    
+    // ページ可視性変更ハンドラー
+    handleVisibilityChange() {
+        if (document.hidden) {
+            // タブが非アクティブになった
+            this.handleBackgroundTransition();
+        } else {
+            // タブがアクティブに戻った
+            this.handleForegroundTransition();
+        }
+    }
+    
+    // ウィンドウフォーカスハンドラー
+    handleWindowFocus() {
+        if (!document.hidden) {
+            this.handleForegroundTransition();
+        }
+    }
+    
+    // ウィンドウブラーハンドラー
+    handleWindowBlur() {
+        // visibilitychangeと重複する場合があるため、より慎重に処理
+        setTimeout(() => {
+            if (document.hidden) {
+                this.handleBackgroundTransition();
+            }
+        }, 100);
+    }
+    
+    // バックグラウンド移行処理
+    handleBackgroundTransition() {
+        this.log('🌙 バックグラウンド移行を検知');
+        
+        // マイクが動作中の場合のみ一時停止
+        if (this.microphoneState === 'on' || this.microphoneState === 'recording') {
+            this.log('🎤 マイクをバックグラウンド一時停止');
+            
+            // 現在の状態を保存
+            this.wasActiveBeforeBackground = true;
+            this.backgroundPaused = true;
+            
+            // マイクを一時停止
+            this.pauseMicrophone();
+            
+            // ユーザーに通知（オプション）
+            this.showBackgroundNotification('🌙 タブが非アクティブのためマイクを一時停止しました');
+        }
+    }
+    
+    // フォアグラウンド復帰処理
+    handleForegroundTransition() {
+        this.log('☀️ フォアグラウンド復帰を検知');
+        
+        // バックグラウンドで一時停止していた場合のみ再開
+        if (this.backgroundPaused && this.wasActiveBeforeBackground) {
+            this.log('🎤 マイクをバックグラウンドから再開');
+            
+            // 状態をリセット
+            this.backgroundPaused = false;
+            this.wasActiveBeforeBackground = false;
+            
+            // マイクを再開
+            this.resumeMicrophone();
+            
+            // ユーザーに通知（オプション）
+            this.showBackgroundNotification('☀️ タブがアクティブになったためマイクを再開しました');
+        }
+    }
+    
+    // バックグラウンド状態通知表示
+    showBackgroundNotification(message) {
+        // コンソールログのみ（UI通知は控えめに）
+        this.log(`📢 ${message}`);
+        
+        // 必要に応じてトースト通知なども追加可能
+        // this.showToastNotification(message);
+    }
+    
+    // バックグラウンド状態のクリーンアップ
+    clearBackgroundState() {
+        this.backgroundPaused = false;
+        this.wasActiveBeforeBackground = false;
+        this.log('🧹 バックグラウンド状態をクリアしました');
     }
     
 }
