@@ -1571,12 +1571,25 @@ class FullScaleTraining {
         const newToneBtn = document.getElementById('new-tone-btn');
         const restartMainStartBtn = document.getElementById('restart-main-start-btn');
         
+        // 下部ボタンも取得
+        const sameToneBtnBottom = document.getElementById('same-tone-btn-bottom');
+        const newToneBtnBottom = document.getElementById('new-tone-btn-bottom');
+        
         if (sameToneBtn) {
             sameToneBtn.onclick = () => this.directRestart('same');
         }
         
         if (newToneBtn) {
             newToneBtn.onclick = () => this.directRestart('new');
+        }
+        
+        // 下部ボタンのイベント設定
+        if (sameToneBtnBottom) {
+            sameToneBtnBottom.onclick = () => this.directRestart('same');
+        }
+        
+        if (newToneBtnBottom) {
+            newToneBtnBottom.onclick = () => this.directRestart('new');
         }
         
         if (restartMainStartBtn) {
