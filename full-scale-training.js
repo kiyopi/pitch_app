@@ -1547,28 +1547,42 @@ class FullScaleTraining {
             // ペナルティを適用して最終評価を決定
             applyPenalty: function(originalGrade, outlierAnalysis) {
                 let finalGrade = originalGrade;
-                let penaltyMessage = '';
+                let penaltyMessages = [];
                 let penaltyApplied = false;
+                let downgradeSteps = [];
                 
-                // 元の評価が「優秀」の場合
+                // ステップ1: 優秀→良好への降格判定
                 if (originalGrade === '🏆 優秀！' && this.rules.excellentDowngrade.condition(outlierAnalysis)) {
                     finalGrade = '🎉 良好！';
-                    penaltyMessage = this.rules.excellentDowngrade.message(outlierAnalysis.totalCount);
+                    penaltyMessages.push(this.rules.excellentDowngrade.message(outlierAnalysis.totalCount));
+                    downgradeSteps.push('優秀→良好');
                     penaltyApplied = true;
                 }
-                // 元の評価が「良好」の場合（または優秀→良好に降格後）
-                else if ((originalGrade === '🎉 良好！' || finalGrade === '🎉 良好！') && 
-                         this.rules.goodDowngrade.condition(outlierAnalysis)) {
+                
+                // ステップ2: 良好→要練習への降格判定（元が良好 または 優秀→良好に降格後）
+                if ((originalGrade === '🎉 良好！' || finalGrade === '🎉 良好！') && 
+                    this.rules.goodDowngrade.condition(outlierAnalysis)) {
                     finalGrade = '😭 要練習';
-                    penaltyMessage = this.rules.goodDowngrade.message();
+                    penaltyMessages.push(this.rules.goodDowngrade.message());
+                    downgradeSteps.push('良好→要練習');
                     penaltyApplied = true;
+                }
+                
+                // ペナルティメッセージの統合
+                let combinedMessage = '';
+                let reason = '';
+                if (penaltyMessages.length > 0) {
+                    combinedMessage = penaltyMessages[penaltyMessages.length - 1]; // 最終メッセージを採用
+                    reason = downgradeSteps.join('、');
                 }
                 
                 return {
                     originalGrade: originalGrade,
                     finalGrade: finalGrade,
                     penaltyApplied: penaltyApplied,
-                    penaltyMessage: penaltyMessage,
+                    penaltyMessage: combinedMessage,
+                    reason: reason,
+                    downgradeSteps: downgradeSteps,
                     outlierImpact: outlierAnalysis.maxSeverity
                 };
             }
@@ -2196,8 +2210,8 @@ class FullScaleTraining {
         
         this.log(`📊 基本評価表示: ${originalGrade}`);
         
-        // ペナルティがある場合の段階的処理（デバッグ用：ペナルティなしでも動作）
-        if (penaltyResult.penaltyApplied || true) {
+        // ペナルティがある場合の段階的処理
+        if (penaltyResult.penaltyApplied) {
             setTimeout(() => {
                 this.showPenaltyWarning(gradeElement, baseToneText, penaltyResult, finalGradeClass);
             }, 2000); // 2秒後にペナルティ表示
