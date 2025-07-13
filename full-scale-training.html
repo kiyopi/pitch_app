@@ -416,7 +416,7 @@
             }
             
             .training-layout {
-                margin: 5px 0; /* 5px */
+                margin: 0; /* マージンを削除 */
             }
             
             .frequency-display-mobile {
@@ -694,7 +694,8 @@
             }
             
             .current-mode-info {
-                font-size: 0.9rem;
+                font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+                white-space: nowrap;
                 padding: 6px 12px;
             }
             
