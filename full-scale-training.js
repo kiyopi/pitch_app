@@ -1956,7 +1956,7 @@ class FullScaleTraining {
             frequencyMain.textContent = '--- Hz';
             frequencyMain.style.color = '#999';
             frequencyMain.style.borderColor = '#e0e0e0';
-            frequencyMain.style.backgroundImage = 'linear-gradient(to top, #4CAF50 0%, transparent 0%)';
+            frequencyMain.style.backgroundImage = 'linear-gradient(to top, #2196F3 0%, transparent 0%)';
         }
         
         // レガシー要素もリセット
@@ -1965,7 +1965,7 @@ class FullScaleTraining {
             legacyElement.textContent = '--- Hz';
             legacyElement.style.color = '#999';
             legacyElement.style.borderColor = '#e0e0e0';
-            legacyElement.style.backgroundImage = 'linear-gradient(to top, #4CAF50 0%, transparent 0%)';
+            legacyElement.style.backgroundImage = 'linear-gradient(to top, #2196F3 0%, transparent 0%)';
         }
         
         
