@@ -77,10 +77,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.2.1',
-            codename: 'BackgroundAware',
+            app: 'v1.2.2',
+            codename: 'InstantResponse',
             build: '2025-07-13',
-            commit: 'background-detection'
+            commit: 'microphone-preload'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
@@ -99,6 +99,8 @@ class FullScaleTraining {
         this.microphoneState = 'off'; // 'off', 'on', 'recording', 'paused'
         this.backgroundPaused = false; // バックグラウンド一時停止状態
         this.wasActiveBeforeBackground = false; // バックグラウンド前の状態保持
+        this.deferredMicrophoneInit = false; // フォールバック時の遅延初期化フラグ
+        this.microphoneInitialized = false; // マイク初期化完了フラグ
         
         
         // 8音階データ
@@ -370,18 +372,53 @@ class FullScaleTraining {
             // 新しいセッション用に基音を再選択
             this.selectNewBaseTone();
             
-            // メインスタートボタンを表示（ユーザーインタラクション待ち）
+            // 🆕 マイク初期化を前倒し（即座音再生のため）
             const mainStartBtn = document.getElementById('main-start-btn');
             mainStartBtn.style.display = 'inline-block';
-            mainStartBtn.disabled = false;
-            mainStartBtn.style.opacity = '1';
-            mainStartBtn.style.animation = 'pulse 2s infinite';
             
-            // 基音情報をボタンに表示
-            this.updateStartButtonWithBaseTone(mainStartBtn);
-            
-            this.trainingPhase = 'waiting';
-            this.log('✅ トレーニング準備完了 - スタートボタンを押してください');
+            try {
+                this.log('🎤 マイク初期化を開始（即座音再生のため）');
+                this.updateMainStartButton('🎤 マイク準備中...');
+                
+                // AudioContext初期化
+                if (!this.audioContext) {
+                    await this.initAudioContext();
+                }
+                
+                // マイク初期化
+                if (!this.microphoneInitialized) {
+                    await this.initMicrophone();
+                    this.microphoneInitialized = true;
+                    this.log('✅ マイク初期化完了');
+                }
+                
+                // 準備完了状態
+                this.updateMainStartButton('🎹 スタート');
+                mainStartBtn.disabled = false;
+                mainStartBtn.style.opacity = '1';
+                mainStartBtn.style.animation = 'pulse 2s infinite';
+                
+                // 基音情報をボタンに表示
+                this.updateStartButtonWithBaseTone(mainStartBtn);
+                
+                this.trainingPhase = 'waiting';
+                this.log('✅ トレーニング準備完了 - スタートボタンで即座音再生可能');
+                
+            } catch (error) {
+                this.log(`⚠️ マイク初期化失敗 - フォールバックモードに切り替え: ${error.message}`);
+                
+                // フォールバック: スタート時初期化
+                this.deferredMicrophoneInit = true;
+                this.updateMainStartButton('🎹 スタート (要権限)');
+                mainStartBtn.disabled = false;
+                mainStartBtn.style.opacity = '1';
+                mainStartBtn.style.animation = 'pulse 2s infinite';
+                
+                this.updateStartButtonWithBaseTone(mainStartBtn);
+                this.trainingPhase = 'waiting';
+                
+                this.log('⚠️ フォールバックモード準備完了 - スタート時にマイク初期化実行');
+            }
             
         } catch (error) {
             console.error('❌ startTraining()でエラーが発生:', error);
@@ -518,7 +555,13 @@ class FullScaleTraining {
         
         if (this.trainingMode === 'single') {
             // 短音モード：ボタンに基音表示（改行なし・同じスタイル）
-            startBtn.textContent = `🎹 スタート (${baseTone.note})`;
+            const currentText = startBtn.textContent;
+            
+            // 既存のテキストが準備中・エラー系でない場合のみ基音表示を更新
+            if (!currentText.includes('準備中') && !currentText.includes('要権限') && !currentText.includes('初期化中')) {
+                startBtn.textContent = `🎹 スタート (${baseTone.note})`;
+            }
+            
             startBtn.style.lineHeight = '';  // デフォルトに戻す
             startBtn.style.fontSize = '';    // デフォルトに戻す
             
@@ -526,6 +569,23 @@ class FullScaleTraining {
         } else {
             // 将来の連続モード：シンプルなボタン
             startBtn.textContent = '🎹 次のセッション開始';
+        }
+    }
+    
+    // 🆕 メインスタートボタンの状態更新メソッド
+    updateMainStartButton(text, disabled = true, opacity = '0.6') {
+        const mainStartBtn = document.getElementById('main-start-btn');
+        if (mainStartBtn) {
+            mainStartBtn.textContent = text;
+            mainStartBtn.disabled = disabled;
+            mainStartBtn.style.opacity = opacity;
+            
+            // 準備中は点滅アニメーション停止
+            if (text.includes('準備中') || text.includes('初期化中')) {
+                mainStartBtn.style.animation = 'none';
+            }
+            
+            this.log(`🔄 スタートボタン更新: ${text}`);
         }
     }
     
@@ -582,24 +642,33 @@ class FullScaleTraining {
         }
         
         try {
-            // ユーザーインタラクション後にマイクアクセスを実行
-            if (!this.audioContext) {
-                this.log('🎵 AudioContext初期化開始');
-                await this.initAudioContext();
-                this.log('✅ AudioContext初期化完了');
+            // 🆕 フォールバック処理（マイク初期化が失敗していた場合のみ）
+            if (this.deferredMicrophoneInit) {
+                this.log('🔄 フォールバック: スタート時マイク初期化実行');
+                this.updateMainStartButton('🎤 マイク初期化中...');
+                
+                // AudioContext初期化
+                if (!this.audioContext) {
+                    await this.initAudioContext();
+                }
+                
+                // マイク初期化
+                await this.initMicrophone();
+                this.microphoneInitialized = true;
+                this.deferredMicrophoneInit = false;
+                
+                this.log('✅ フォールバック初期化完了');
             }
             
-            if (!this.mediaStream) {
-                this.log('🎤 マイクアクセス開始');
-                await this.initMicrophone();
-                this.log('✅ マイクアクセス完了');
-                
-                // isRunningを設定
+            // 🆕 マイク初期化済みの確認
+            if (!this.microphoneInitialized) {
+                throw new Error('マイクが初期化されていません');
+            }
+            
+            // 既存の周波数検出開始
+            if (!this.isRunning) {
                 this.isRunning = true;
-                
-                // 周波数検出開始
                 this.startFrequencyDetection();
-                
                 this.log('📊 周波数検出開始');
             }
             
