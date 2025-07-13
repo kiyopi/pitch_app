@@ -1133,8 +1133,14 @@ class FullScaleTraining {
         
         // マイク状態アイコンを取得
         const micIcon = this.getMicrophoneStateIcon();
+        const spacing = micIcon ? '    ' : ''; // アイコンがある時のみスペース追加
         
-        const displayText = frequency > 0 ? `${micIcon} ${Math.round(frequency)} Hz` : `${micIcon} --- Hz`;
+        // マイクアイコンのサイズを調整
+        const micIconStyled = micIcon ? `<span style="font-size: 0.8em;">${micIcon}</span>` : '';
+        
+        const displayText = frequency > 0 
+            ? `${Math.round(frequency)} Hz${spacing}${micIconStyled}`
+            : `--- Hz${spacing}${micIconStyled}`;
         const color = frequency > 0 ? '#4CAF50' : '#999';
         const borderColor = '#4CAF50'; // 常に緑で固定
         
@@ -1143,7 +1149,7 @@ class FullScaleTraining {
         
         // PC用（デスクトップレイアウト）
         if (element) {
-            element.textContent = displayText;
+            element.innerHTML = displayText;
             element.style.color = color;
             element.style.borderColor = borderColor;
             
@@ -1159,7 +1165,7 @@ class FullScaleTraining {
         
         // モバイル用（上部表示）
         if (mobileElement) {
-            mobileElement.textContent = displayText;
+            mobileElement.innerHTML = displayText;
             mobileElement.style.color = color;
             mobileElement.style.borderColor = borderColor;
             
@@ -1173,7 +1179,7 @@ class FullScaleTraining {
         
         // 後方互換性用（レガシー要素もボリューム対応）
         if (legacyElement) {
-            legacyElement.textContent = displayText;
+            legacyElement.innerHTML = displayText;
             legacyElement.style.color = color;
             legacyElement.style.borderColor = borderColor;
             
@@ -1190,15 +1196,13 @@ class FullScaleTraining {
     getMicrophoneStateIcon() {
         switch (this.microphoneState) {
             case 'off':
-                return '🎙️❌';     // マイクOFF
+                return '';         // 非表示
             case 'on':
-                return '🎙️✅';     // マイクON・待機中
             case 'recording':
-                return '🎙️🔴';    // 音声検知中
             case 'paused':
-                return '🎙️⏸️';     // 一時停止中（基音再生時）
+                return '🎙️';      // 同一アイコン
             default:
-                return '🎙️';      // デフォルト
+                return '';         // デフォルト
         }
     }
     
