@@ -95,6 +95,9 @@ class FullScaleTraining {
         this.frameCount = 0;
         this.detectionLoopActive = false;
         
+        // マイク状態管理
+        this.microphoneState = 'off'; // 'off', 'on', 'recording', 'paused'
+        
         
         // 8音階データ
         this.targetNotes = ['ド4', 'レ4', 'ミ4', 'ファ4', 'ソ4', 'ラ4', 'シ4', 'ド5'];
@@ -465,6 +468,9 @@ class FullScaleTraining {
         outputGain.connect(this.audioContext.destination);
         
         this.log('🔌 ノイズリダクション付きマイク接続完了');
+        
+        // マイク状態を初期化完了に設定
+        this.microphoneState = 'on';
     }
     
     updateProgress() {
@@ -1001,6 +1007,13 @@ class FullScaleTraining {
             // 周波数検出
             const frequency = this.detectPitch(freqData);
             
+            // マイク状態を動的に更新（音声検知に基づく）
+            if (frequency > 0 && volume > 1) {
+                this.microphoneState = 'recording';
+            } else if (this.isRunning) {
+                this.microphoneState = 'on';
+            }
+            
             // 周波数表示更新
             this.updateFrequencyDisplay(frequency, volume);
             
@@ -1118,7 +1131,10 @@ class FullScaleTraining {
         // 後方互換性のためのレガシー要素
         const legacyElement = document.getElementById('frequency-main-legacy');
         
-        const displayText = frequency > 0 ? `${Math.round(frequency)} Hz` : '--- Hz';
+        // マイク状態アイコンを取得
+        const micIcon = this.getMicrophoneStateIcon();
+        
+        const displayText = frequency > 0 ? `${micIcon} ${Math.round(frequency)} Hz` : `${micIcon} --- Hz`;
         const color = frequency > 0 ? '#4CAF50' : '#999';
         const borderColor = '#4CAF50'; // 常に緑で固定
         
@@ -1167,6 +1183,22 @@ class FullScaleTraining {
             } else {
                 legacyElement.style.backgroundImage = `linear-gradient(to top, #e0e0e0 ${Math.min(volumePercent, 5)}%, transparent ${Math.min(volumePercent, 5)}%)`;
             }
+        }
+    }
+    
+    // マイク状態アイコンを取得
+    getMicrophoneStateIcon() {
+        switch (this.microphoneState) {
+            case 'off':
+                return '🎙️❌';     // マイクOFF
+            case 'on':
+                return '🎙️✅';     // マイクON・待機中
+            case 'recording':
+                return '🎙️🔴';    // 音声検知中
+            case 'paused':
+                return '🎙️⏸️';     // 一時停止中（基音再生時）
+            default:
+                return '🎙️';      // デフォルト
         }
     }
     
@@ -1436,6 +1468,9 @@ class FullScaleTraining {
     async directRestart(option) {
         this.log(`🚀 直接再開始実行: ${option} モード`);
         
+        // まず既存のマイクを完全停止
+        this.stopMicrophone();
+        
         // 基音を選択（sameの場合は現在の基音を維持、newの場合は新しい基音を選択）
         if (option === 'new') {
             this.selectNewBaseTone(); // 新しい基音を選択
@@ -1553,6 +1588,9 @@ class FullScaleTraining {
         this.isRunning = false;
         this.detectionLoopActive = false;
         
+        // マイク状態を更新
+        this.microphoneState = 'paused';
+        
         // マイクストリームは保持、検出ループのみ停止
         this.log('✅ マイク一時停止完了（ストリーム保持）');
     }
@@ -1563,6 +1601,7 @@ class FullScaleTraining {
         // マイクストリームが存在する場合のみ再開
         if (this.mediaStream && this.analyzer) {
             this.isRunning = true;
+            this.microphoneState = 'on';
             this.startFrequencyDetection();
             this.log('✅ マイク再開完了');
         } else {
@@ -1576,6 +1615,9 @@ class FullScaleTraining {
         // 周波数検出を停止
         this.isRunning = false;
         this.detectionLoopActive = false;
+        
+        // マイク状態を更新
+        this.microphoneState = 'off';
         
         // マイクストリームを停止
         if (this.mediaStream) {
