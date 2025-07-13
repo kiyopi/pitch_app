@@ -1349,13 +1349,47 @@ class FullScaleTraining {
                 再度トレーニングをお試しください。
             `;
         } else {
+            // プログレスバー付き結果表示
             summaryElement.innerHTML = `
-                🏆 優秀: ${excellentCount}/8<br>
-                🎉 良好: ${goodCount}/8<br>
-                👍 合格: ${acceptableCount}/8<br>
-                😭 要練習: ${needsPracticeCount}/8<br>
-                平均誤差: ${avgError}¢
+                <div class="score-progress-container">
+                    <div class="score-progress-item">
+                        <div class="score-progress-label">🏆 優秀: ${excellentCount}/8</div>
+                        <div class="score-progress-bar">
+                            <div class="score-progress-fill excellent" data-percentage="${(excellentCount/8*100).toFixed(0)}"></div>
+                        </div>
+                        <div class="score-progress-percentage">${(excellentCount/8*100).toFixed(0)}%</div>
+                    </div>
+                    <div class="score-progress-item">
+                        <div class="score-progress-label">🎉 良好: ${goodCount}/8</div>
+                        <div class="score-progress-bar">
+                            <div class="score-progress-fill good" data-percentage="${(goodCount/8*100).toFixed(0)}"></div>
+                        </div>
+                        <div class="score-progress-percentage">${(goodCount/8*100).toFixed(0)}%</div>
+                    </div>
+                    <div class="score-progress-item">
+                        <div class="score-progress-label">👍 合格: ${acceptableCount}/8</div>
+                        <div class="score-progress-bar">
+                            <div class="score-progress-fill acceptable" data-percentage="${(acceptableCount/8*100).toFixed(0)}"></div>
+                        </div>
+                        <div class="score-progress-percentage">${(acceptableCount/8*100).toFixed(0)}%</div>
+                    </div>
+                    <div class="score-progress-item">
+                        <div class="score-progress-label">😭 要練習: ${needsPracticeCount}/8</div>
+                        <div class="score-progress-bar">
+                            <div class="score-progress-fill practice" data-percentage="${(needsPracticeCount/8*100).toFixed(0)}"></div>
+                        </div>
+                        <div class="score-progress-percentage">${(needsPracticeCount/8*100).toFixed(0)}%</div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 15px; font-size: 1rem; color: #666;">
+                    平均誤差: ${avgError}¢
+                </div>
             `;
+            
+            // プログレスバーアニメーション実行
+            setTimeout(() => {
+                this.animateProgressBars();
+            }, 100);
         }
         
         // 詳細結果表示
@@ -2089,6 +2123,22 @@ class FullScaleTraining {
         this.backgroundPaused = false;
         this.wasActiveBeforeBackground = false;
         this.log('🧹 バックグラウンド状態をクリアしました');
+    }
+    
+    // 📊 プログレスバーアニメーション実行
+    animateProgressBars() {
+        const progressFills = document.querySelectorAll('.score-progress-fill');
+        
+        progressFills.forEach((fill, index) => {
+            const percentage = fill.getAttribute('data-percentage');
+            
+            // 少しずつ遅延させてアニメーションを順番に実行
+            setTimeout(() => {
+                fill.style.width = percentage + '%';
+            }, index * 150);
+        });
+        
+        this.log('📊 プログレスバーアニメーション実行完了');
     }
     
 }
