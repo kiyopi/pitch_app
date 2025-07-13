@@ -1662,6 +1662,12 @@ class FullScaleTraining {
     async directRestart(option) {
         this.log(`🚀 直接再開始実行: ${option} モード`);
         
+        // ページトップにスクロール（PC版・モバイル版両方の問題解決）
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+        
         // まず既存のマイクを完全停止
         this.stopMicrophone();
         
@@ -1681,14 +1687,23 @@ class FullScaleTraining {
         // トレーニングインターフェースを表示
         this.showTrainingInterface();
         
+        // 少し遅延を入れてUI表示を確実にする（モバイル版対応）
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // 直接トレーニング開始（startTraining相当の処理）
         try {
             this.log('🔄 直接トレーニング開始処理...');
             
-            // UI更新
-            document.getElementById('start-btn').style.display = 'none';
-            document.getElementById('stop-btn').style.display = 'inline-block';
-            document.getElementById('training-layout').style.display = 'block';
+            // UI更新（確実に表示されるよう明示的に設定）
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const trainingLayout = document.getElementById('training-layout');
+            const mainContainer = document.querySelector('.container');
+            
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'inline-block';
+            if (trainingLayout) trainingLayout.style.display = 'block';
+            if (mainContainer) mainContainer.style.display = 'block';
             
             // モバイル版でのヘッダー処理（現在は表示維持）
             if (!this.isDesktopLayout()) {
