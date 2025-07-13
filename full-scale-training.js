@@ -1662,11 +1662,22 @@ class FullScaleTraining {
     async directRestart(option) {
         this.log(`🚀 直接再開始実行: ${option} モード`);
         
-        // ページトップにスクロール（PC版・モバイル版両方の問題解決）
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+        // ページトップにスクロール
+        if (this.isDesktopLayout()) {
+            // PC版: スムーススクロール（フォールバック付き）
+            try {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            } catch (error) {
+                // フォールバック: 瞬間移動
+                window.scrollTo(0, 0);
+            }
+        } else {
+            // モバイル版: 瞬間移動
+            window.scrollTo(0, 0);
+        }
         
         // まず既存のマイクを完全停止
         this.stopMicrophone();
