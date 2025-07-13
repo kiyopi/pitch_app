@@ -1636,6 +1636,9 @@ class FullScaleTraining {
             this.analyzer = null;
         }
         
+        // 表示を強制更新（マイクアイコンを非表示にする）
+        this.updateFrequencyDisplay(0, 0);
+        
         this.log('✅ マイク自動停止完了');
     }
     
