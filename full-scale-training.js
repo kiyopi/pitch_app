@@ -610,7 +610,7 @@ class FullScaleTraining {
             }
             
             if (!this.mediaStream) {
-                this.log('🎤 マイクアクセス開始');
+                this.log('🎤 マイクアクセス開始（初回）');
                 await this.initMicrophone();
                 this.log('✅ マイクアクセス完了');
                 
@@ -621,6 +621,14 @@ class FullScaleTraining {
                 this.startFrequencyDetection();
                 
                 this.log('📊 周波数検出開始');
+            } else {
+                this.log('🔄 既存のマイクストリームを再利用');
+                
+                // 既存ストリームを再利用：検出ループのみ再開
+                this.isRunning = true;
+                this.startFrequencyDetection();
+                
+                this.log('📊 周波数検出再開（ストリーム再利用）');
             }
             
             // マイクを一時停止（基音再生のため）
@@ -1286,8 +1294,8 @@ class FullScaleTraining {
         this.log('🎊 全ての音程完了！結果を表示します');
         this.log(`📊 結果データ数: ${this.results.length}`);
         
-        // マイクを自動でオフにする
-        this.stopMicrophone();
+        // マイクを一時停止（ストリーム保持）
+        this.pauseMicrophone();
         
         // UI切り替え（新しいレイアウトに対応）
         const trainingLayout = document.getElementById('training-layout');
@@ -1635,8 +1643,8 @@ class FullScaleTraining {
     async directRestart(option) {
         this.log(`🚀 直接再開始実行: ${option} モード`);
         
-        // まず既存のマイクを完全停止
-        this.stopMicrophone();
+        // ストリーム保持方式：検出ループのみ停止、MediaStreamは保持
+        this.pauseMicrophone();
         
         // 基音を選択（sameの場合は現在の基音を維持、newの場合は新しい基音を選択）
         if (option === 'new') {
@@ -1807,6 +1815,12 @@ class FullScaleTraining {
         this.updateFrequencyDisplay(0, 0);
         
         this.log('✅ マイク自動停止完了');
+    }
+    
+    // アプリケーション終了時の完全停止
+    forceStopMicrophone() {
+        this.log('🚫 アプリケーション終了: マイクを完全停止');
+        this.stopMicrophone();
     }
     
     stopTraining() {
