@@ -441,42 +441,64 @@ class FullScaleTraining {
     async initMicrophone() {
         this.log('🎤 マイクアクセス要求中...');
         
-        // simple-pitch-test成功手法
-        const constraints = { audio: true };
-        this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        this.log(`📡 マイクストリーム取得成功 (ID: ${this.mediaStream.id})`);
-        
-        // アナライザー設定（フィルター後用）
-        this.analyzer = this.audioContext.createAnalyser();
-        this.analyzer.fftSize = 2048;
-        this.analyzer.smoothingTimeConstant = 0.1;
-        this.analyzer.minDecibels = -100;
-        this.analyzer.maxDecibels = -10;
-        
-        
-        // マイク接続（ノイズリダクション経由）
-        this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
-        
-        
-        // ノイズリダクションフィルター初期化
-        this.initNoiseReductionFilters();
-        
-        // ノイズリダクションチェーンでマイクとアナライザーを接続
-        this.connectNoiseReductionChain(this.microphone, this.analyzer);
-        
-        // PitchDetector初期化（analyzerが作成された後）
-        this.initPitchDetector();
-        
-        // 出力先接続（Safari対応）
-        const outputGain = this.audioContext.createGain();
-        outputGain.gain.value = 0;
-        this.analyzer.connect(outputGain);
-        outputGain.connect(this.audioContext.destination);
-        
-        this.log('🔌 ノイズリダクション付きマイク接続完了');
-        
-        // マイク状態を初期化完了に設定
-        this.microphoneState = 'on';
+        try {
+            // AudioContextを確実に初期化
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.log('🔊 AudioContext初期化完了');
+            }
+            
+            // AudioContextの状態を確認・再開
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+                this.log('🔊 AudioContext再開完了');
+            }
+            
+            // マイクストリーム取得
+            const constraints = { 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            };
+            this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.log(`📡 マイクストリーム取得成功 (ID: ${this.mediaStream.id})`);
+            
+            // アナライザー設定
+            this.analyzer = this.audioContext.createAnalyser();
+            this.analyzer.fftSize = 2048;
+            this.analyzer.smoothingTimeConstant = 0.1;
+            this.analyzer.minDecibels = -100;
+            this.analyzer.maxDecibels = -10;
+            
+            // マイク接続
+            this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
+            
+            // ノイズリダクションフィルター初期化
+            this.initNoiseReductionFilters();
+            
+            // ノイズリダクションチェーンでマイクとアナライザーを接続
+            this.connectNoiseReductionChain(this.microphone, this.analyzer);
+            
+            // PitchDetector初期化（analyzerが作成された後）
+            this.initPitchDetector();
+            
+            // 出力先接続（Safari対応）
+            const outputGain = this.audioContext.createGain();
+            outputGain.gain.value = 0;
+            this.analyzer.connect(outputGain);
+            outputGain.connect(this.audioContext.destination);
+            
+            this.log('🔌 ノイズリダクション付きマイク接続完了');
+            
+            // マイク状態を初期化完了に設定
+            this.microphoneState = 'on';
+            
+        } catch (error) {
+            this.log(`❌ マイク初期化エラー: ${error.message}`);
+            throw error;
+        }
     }
     
     updateProgress() {
@@ -1737,8 +1759,14 @@ class FullScaleTraining {
         if (this.mediaStream && this.analyzer) {
             this.isRunning = true;
             this.microphoneState = 'on';
-            this.startFrequencyDetection();
-            this.log('✅ マイク再開完了');
+            
+            // 検出ループが停止している場合のみ再開
+            if (!this.detectionLoopActive) {
+                this.startFrequencyDetection();
+                this.log('✅ マイク再開完了 - 検出ループ再開');
+            } else {
+                this.log('✅ マイク再開完了 - 検出ループは継続中');
+            }
         } else {
             this.log('⚠️ マイクストリームが存在しません。再開をスキップ。');
         }
