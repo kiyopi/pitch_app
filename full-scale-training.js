@@ -1085,19 +1085,6 @@ class FullScaleTraining {
                 if (result && Array.isArray(result) && result.length >= 2) {
                     const [pitch, clarity] = result;
                     
-                    // 品質フィルタリング：clarity閾値を厳しくして異常値を除去
-                    if (!pitch || clarity < 0.3) {
-                        return 0; // 信頼度が低い場合は無視
-                    }
-                    
-                    // 周波数範囲フィルタリング：人声範囲外の異常値を除去
-                    if (pitch < 70 || pitch > 1100) {
-                        if (this.frameCount % 60 === 0) {
-                            this.log(`🚫 範囲外周波数除去: ${pitch.toFixed(1)}Hz (clarity=${clarity.toFixed(3)})`);
-                        }
-                        return 0;
-                    }
-                    
                     // デバッグ: 検出結果をログ出力（フレームが多すぎるので条件付き）
                     if (this.frameCount % 60 === 0) { // 1秒に1回程度
                         this.log(`🔍 Pitchy検出: pitch=${pitch?.toFixed(1)}Hz, clarity=${clarity?.toFixed(3)}`);
@@ -1105,7 +1092,7 @@ class FullScaleTraining {
                     
                     // オクターブエラー検出：周波数が半分の場合は2倍して修正（動的）
                     let correctedPitch = pitch;
-                    if (pitch >= 80 && pitch <= 600 && clarity > 0.5) {
+                    if (pitch && pitch >= 80 && pitch <= 1200 && clarity > 0.1) {
                         // 現在の目標周波数範囲に基づく動的補正
                         const minTargetFreq = Math.min(...this.targetFrequencies); // 最低目標周波数
                         const maxTargetFreq = Math.max(...this.targetFrequencies); // 最高目標周波数
@@ -1127,8 +1114,6 @@ class FullScaleTraining {
                         
                         return correctedPitch;
                     }
-                    
-                    return pitch;
                 }
                 
                 return 0;
