@@ -636,6 +636,14 @@ class FullScaleTraining {
             } else {
                 this.log('🔄 既存のマイクストリームを再利用');
                 
+                // 自動許可済みの場合はAnalyzer接続を確認
+                if (this.microphonePermissionGranted && !this.microphone) {
+                    this.log('🔧 自動許可済みストリーム用のAnalyzer接続を確認');
+                    this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
+                    this.microphone.connect(this.analyzer);
+                    this.log('✅ 自動許可済みストリームのAnalyzer接続完了');
+                }
+                
                 // 既存ストリームを再利用：検出ループのみ再開
                 this.isRunning = true;
                 this.startFrequencyDetection();
@@ -2105,12 +2113,20 @@ async function initializeMicrophoneComponents(app, stream) {
         await app.initAudioContext();
     }
     
-    // AnalyzerNodeの設定
-    app.microphone = app.audioContext.createMediaStreamSource(stream);
-    app.analyzer = app.audioContext.createAnalyser();
-    app.analyzer.fftSize = 2048; // 固定値を使用
-    app.analyzer.smoothingTimeConstant = 0.1; // 固定値を使用
-    app.microphone.connect(app.analyzer);
+    // AnalyzerNodeの設定（重複作成を防ぐ）
+    if (!app.analyzer) {
+        app.analyzer = app.audioContext.createAnalyser();
+        app.analyzer.fftSize = 2048; // 固定値を使用
+        app.analyzer.smoothingTimeConstant = 0.1; // 固定値を使用
+        console.log('🎵 新規Analyzer作成完了');
+    }
+    
+    // MediaStreamSourceの設定（重複作成を防ぐ）
+    if (!app.microphone) {
+        app.microphone = app.audioContext.createMediaStreamSource(stream);
+        app.microphone.connect(app.analyzer);
+        console.log('🎵 新規MediaStreamSource作成・接続完了');
+    }
     
     console.log('🎵 マイクコンポーネント初期化完了');
 }
