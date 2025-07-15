@@ -102,9 +102,15 @@ git push origin microphone-v2-impl-001
 ### 更新確認デバッグ機能
 
 **タイムスタンプ表示**: 
-- index.html, full-scale-training.html の右上に青い時刻表示
+- index.html, full-scale-training.html の右上に時刻表示
 - ページ読み込み時刻でGitHub Pages更新を確認
 - iPhoneキャッシュ問題の解決
+
+**8色ループシステム**:
+- 修正のたびにタイムスタンプの色を変更（GitHub Pages更新確認用）
+- 色順序: 青→緑→オレンジ→紫→赤→シアン→茶→グレー→（ループ）
+- 場所: full-scale-training.html 1194行目 `colorIndex` 値
+- ⚠️ **重要**: バージョンアップ時は必ずcolorIndexを次の番号に更新
 
 ## 🔒 メインブランチ保護
 
@@ -138,6 +144,7 @@ echo "⚠️ ユーザー承認なしにマージ禁止"
 2. full-scale-training.html フッター
 3. full-scale-training.js constructor
 4. about.html（存在する場合）
+5. **タイムスタンプ色更新** (full-scale-training.html 1194行目 colorIndex)
 
 ---
 
