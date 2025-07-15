@@ -25,7 +25,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
             min-height: 100vh;
             color: #333;
             padding: 20px;
@@ -255,6 +255,20 @@
             font-size: 0.9rem;
         }
 
+        .timestamp {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
         /* モバイル対応 */
         @media (max-width: 480px) {
             .app {
@@ -280,6 +294,11 @@
     </style>
 </head>
 <body>
+    <!-- 更新確認用タイムスタンプ -->
+    <div class="timestamp" id="timestamp">
+        📱 --:--:--
+    </div>
+    
     <div class="app">
         <h1>🎵 相対音感トレーニング</h1>
         
@@ -320,6 +339,21 @@
         </div>
     </div>
 
+    <!-- タイムスタンプ更新スクリプト -->
+    <script>
+        // ページ読み込み時刻を表示
+        document.addEventListener('DOMContentLoaded', () => {
+            const timestamp = document.getElementById('timestamp');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ja-JP', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            timestamp.textContent = `📱 ${timeString}`;
+        });
+    </script>
+    
     <!-- Tone.js ライブラリ -->
     <script src="tone.js" onload="console.log('✅ Tone.js読み込み完了')" onerror="console.error('❌ Tone.js読み込み失敗')"></script>
     
