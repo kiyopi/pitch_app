@@ -76,7 +76,7 @@ alias verify-stable="git log --oneline -1 && echo '期待値: 1e44e2e バージ�
 ### 🚨 実装前承認（厳守）
 
 1. **設計原則確認**: `SIMPLE_PITCH_TRAINING_DESIGN_PRINCIPLES.md`を必ず確認
-2. **エラーダイアログ方針確認**: 設計原則書のエラーダイアログ設計方針を確認
+2. **エラーダイアログ仕様確認**: `ERROR_DIALOG_SPECIFICATION.md`を必ず確認
 3. **仕様書作成**: 詳細な技術仕様書を作成
 4. **ユーザー承認**: 実装開始の明示的承認を取得
 5. **使い捨てブランチ作成**: 安定版から新ブランチ
@@ -84,7 +84,7 @@ alias verify-stable="git log --oneline -1 && echo '期待値: 1e44e2e バージ�
 
 ⚠️ **絶対禁止**: ユーザー承認なしの実装開始
 ⚠️ **必須参照**: 修正時は必ず設計原則書を参照
-⚠️ **エラー処理**: 標準ダイアログ + 自動リロードを使用
+⚠️ **エラー処理**: `ERROR_DIALOG_SPECIFICATION.md`の仕様に従う
 
 ## 📱 GitHub Pages確認フロー
 
