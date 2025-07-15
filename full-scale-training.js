@@ -1148,18 +1148,12 @@ class FullScaleTraining {
         // 後方互換性のためのレガシー要素
         const legacyElement = document.getElementById('frequency-main-legacy');
         
-        // マイク状態アイコンを取得
-        const micIcon = this.getMicrophoneStateIcon();
-        // モバイル版はCSSのmargin-leftで間隔調整
-        const isMobile = window.innerWidth <= 768;
+        // v2.0: マイクアイコンを削除（シンプル化）
         const spacing = ''; // スペースは使用しない
         
-        // マイクアイコンのサイズと間隔をCSSで調整（PC版もモバイル版と同じ15pxに統一）
-        const micIconStyled = micIcon ? `<span style="font-size: 0.8em; margin-left: 15px;">${micIcon}</span>` : '';
-        
         const displayText = frequency > 0 
-            ? `${Math.round(frequency)} Hz${spacing}${micIconStyled}`
-            : `--- Hz${spacing}${micIconStyled}`;
+            ? `${Math.round(frequency)} Hz${spacing}`
+            : `--- Hz${spacing}`;
         const color = frequency > 0 ? '#4CAF50' : '#999';
         const borderColor = '#4CAF50'; // 常に緑で固定
         
@@ -1211,19 +1205,10 @@ class FullScaleTraining {
         }
     }
     
-    // マイク状態アイコンを取得
-    getMicrophoneStateIcon() {
-        switch (this.microphoneState) {
-            case 'off':
-                return '';         // 非表示
-            case 'on':
-            case 'recording':
-            case 'paused':
-                return '🎙️';      // 同一アイコン
-            default:
-                return '';         // デフォルト
-        }
-    }
+    // v2.0: マイク状態アイコン削除（シンプル化のため）
+    // getMicrophoneStateIcon() {
+    //     // この関数は使用されなくなりました - UI簡素化
+    // }
     
     recordAccuracy(frequency) {
         if (this.currentNoteIndex >= this.targetNotes.length) return;
