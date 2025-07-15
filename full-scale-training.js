@@ -355,6 +355,13 @@ class FullScaleTraining {
             // 自動許可済みかチェック
             if (this.microphonePermissionGranted && this.mediaStream) {
                 console.log('✅ 自動許可済みストリーム使用 - ダイアログスキップ');
+                
+                // 全コンポーネントの準備完了を確認
+                if (!this.analyzer || !this.microphone || !this.pitchDetector) {
+                    console.log('⚠️ 自動許可済みだがコンポーネント未完成 - 再初期化');
+                    await this.reinitializeComponents();
+                }
+                
                 // 既存の初期化処理をスキップして直接開始
                 this.isRunning = true;
                 this.startFrequencyDetection();
@@ -592,6 +599,43 @@ class FullScaleTraining {
             }
         } catch (error) {
             this.log(`⚠️ ピアノサンプラー事前読み込みエラー: ${error.message}`);
+        }
+    }
+    
+    async reinitializeComponents() {
+        try {
+            console.log('🔧 コンポーネント再初期化開始');
+            
+            // AudioContext確認
+            if (!this.audioContext) {
+                await this.initAudioContext();
+            }
+            
+            // Analyzer確認・作成
+            if (!this.analyzer) {
+                this.analyzer = this.audioContext.createAnalyser();
+                this.analyzer.fftSize = 2048;
+                this.analyzer.smoothingTimeConstant = 0.1;
+                console.log('🎵 Analyzer再作成完了');
+            }
+            
+            // MediaStreamSource確認・作成
+            if (!this.microphone && this.mediaStream) {
+                this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
+                this.microphone.connect(this.analyzer);
+                console.log('🎵 MediaStreamSource再作成・接続完了');
+            }
+            
+            // PitchDetector確認・作成
+            if (!this.pitchDetector) {
+                this.initPitchDetector();
+                console.log('🎯 PitchDetector再作成完了');
+            }
+            
+            console.log('✅ コンポーネント再初期化完了');
+        } catch (error) {
+            console.error('❌ コンポーネント再初期化エラー:', error);
+            throw error;
         }
     }
     
@@ -2065,10 +2109,11 @@ async function initializeApp() {
     if (isFromModeSelection) {
         console.log('🎤 モード選択からの遷移 - 自動マイク許可開始');
         await handleAutoMicrophonePermission(app);
+        console.log('✅ 自動マイク許可処理完了 - UI初期化開始');
     }
     
     // 既存の初期化処理継続
-    initializeAppUI(app);
+    initializeAppUI(app, isFromModeSelection);
 }
 
 async function handleAutoMicrophonePermission(app) {
@@ -2172,7 +2217,7 @@ function showMessage(message, type = 'info') {
     document.body.appendChild(messageElement);
 }
 
-function initializeAppUI(app) {
+function initializeAppUI(app, isFromModeSelection = false) {
     // 従来のUIロジック
     const isFromIndex = document.referrer.includes('index.html') || 
                        document.referrer.endsWith('/') || 
@@ -2184,6 +2229,11 @@ function initializeAppUI(app) {
     
     if (isFromIndex) {
         console.log('🎯 モード選択からの直接遷移を検出 - 自動でトレーニング開始状態に移行');
+        
+        // 自動マイク許可処理が完了している場合は追加の遅延を入れる
+        const delay = isFromModeSelection ? 800 : 500;
+        console.log(`⏱️ UI初期化遅延: ${delay}ms (自動許可処理: ${isFromModeSelection ? '完了済み' : 'なし'})`);
+        
         // 少し遅延させてDOMの準備を待つ
         setTimeout(async () => {
             try {
@@ -2195,7 +2245,7 @@ function initializeAppUI(app) {
                 app.resetUI();
                 document.getElementById('start-btn').style.display = 'inline-block';
             }
-        }, 500);
+        }, delay);
     } else {
         console.log('🎯 手動アクセス - 通常の開始ボタンを表示');
         // 手動アクセスの場合は通常の開始ボタンを表示
