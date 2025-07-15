@@ -2133,6 +2133,28 @@ async function initializeAutoMicrophone(app) {
 }
 
 // 初期化
+// モード別フロー制御システム
+const MODE_CONFIG = {
+    'random': {
+        autoMicrophone: true,      // 自動マイク許可
+        autoStart: false,          // 手動スタート ★重要
+        displayStartButton: true,  // スタートボタン表示
+        description: 'ランダム基音モード'
+    },
+    'continuous': {               // 将来実装
+        autoMicrophone: true,      // 自動マイク許可
+        autoStart: true,           // 自動開始
+        displayStartButton: false, // ボタン不要
+        description: '連続5回モード'
+    },
+    'custom': {                   // 将来実装
+        autoMicrophone: true,      // 自動マイク許可
+        autoStart: false,          // 手動スタート
+        displayStartButton: true,  // スタートボタン表示
+        description: 'カスタム設定モード'
+    }
+};
+
 async function initializeApp() {
     const app = new FullScaleTraining();
     
@@ -2140,65 +2162,91 @@ async function initializeApp() {
     console.log('🔍 リファラー情報:', document.referrer);
     console.log('🔍 URL情報:', window.location.href);
     
-    // v2.0: ?mode=random パラメータ判定
+    // v2.1: モード別フロー制御システム
     const urlParams = new URLSearchParams(window.location.search);
-    const isFromModeSelection = urlParams.get('mode') === 'random';
+    const currentMode = urlParams.get('mode');
+    const config = MODE_CONFIG[currentMode];
     
-    console.log('🔍 モード判定:', isFromModeSelection);
-    
-    if (isFromModeSelection) {
-        console.log('🎤 モード選択からの遷移 - 自動マイク許可開始');
+    if (config) {
+        // v2.0+: 新モードシステム
+        console.log(`🎯 モード: ${currentMode} (${config.description})`);
         
-        // スタートボタンを初期化中状態に
-        const mainStartBtn = document.getElementById('main-start-btn');
-        if (mainStartBtn) {
-            mainStartBtn.style.background = 'linear-gradient(145deg, #9E9E9E, #757575)';
-            mainStartBtn.textContent = '🔄 マイク準備中...';
-            mainStartBtn.disabled = true;
-        }
-        
-        // 自動マイク初期化実行
-        const success = await initializeAutoMicrophone(app);
-        
-        if (success) {
-            // 成功時: スタートボタンを準備完了状態に
+        if (config.autoMicrophone) {
+            console.log('🎤 自動マイク許可開始');
+            
+            // スタートボタンを初期化中状態に
+            const mainStartBtn = document.getElementById('main-start-btn');
             if (mainStartBtn) {
-                mainStartBtn.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
-                mainStartBtn.style.cursor = 'pointer';
-                mainStartBtn.disabled = false;
-                console.log('✅ スタートボタン準備完了状態に更新');
+                mainStartBtn.style.background = 'linear-gradient(145deg, #9E9E9E, #757575)';
+                mainStartBtn.textContent = '🔄 マイク準備中...';
+                mainStartBtn.disabled = true;
             }
+            
+            // 自動マイク初期化実行
+            const success = await initializeAutoMicrophone(app);
+            
+            if (success) {
+                // 成功時: スタートボタンを準備完了状態に
+                if (mainStartBtn) {
+                    mainStartBtn.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
+                    mainStartBtn.style.cursor = 'pointer';
+                    mainStartBtn.disabled = false;
+                    console.log('✅ スタートボタン準備完了状態に更新');
+                }
+            }
+            // 失敗時: スタートボタンは通常状態のまま（既存フロー）
         }
-        // 失敗時: スタートボタンは通常状態のまま（既存フロー）
-    }
-    
-    // 既存の初期化処理継続（auto=true対応維持）
-    const isFromIndex = document.referrer.includes('index.html') || 
-                       document.referrer.endsWith('/') || 
-                       document.referrer === '' ||
-                       window.location.search.includes('auto=true') ||
-                       isFromModeSelection;
-    
-    console.log('🔍 自動開始判定:', isFromIndex);
-    
-    if (isFromIndex) {
-        console.log('🎯 モード選択からの直接遷移を検出 - 自動でトレーニング開始状態に移行');
-        // 少し遅延させてDOMの準備を待つ
-        setTimeout(async () => {
-            try {
-                await app.startTraining();
-            } catch (error) {
-                console.error('❌ 自動トレーニング開始エラー:', error);
-                console.log('🔄 手動開始モードに切り替え');
-                // エラーの場合は手動開始モードに戻す
-                app.resetUI();
-                document.getElementById('start-btn').style.display = 'inline-block';
-            }
-        }, 500);
+        
+        if (config.autoStart) {
+            // 連続5回モード等: 自動開始
+            console.log('🚀 自動開始モード - トレーニング開始');
+            setTimeout(() => {
+                app.setupTraining();
+                app.startTraining();
+            }, 500);
+        } else if (config.displayStartButton) {
+            // ランダム基音・カスタム: スタートボタン表示・待機
+            console.log('🎯 手動開始モード - スタートボタン待機');
+            // 既存のトレーニング準備のみ実行
+            setTimeout(() => {
+                app.setupTraining();
+            }, 300);
+        }
+        
+        // ★重要: 既存の自動開始ロジックを無効化
+        console.log('🔄 新モードシステム適用 - 既存の自動開始ロジックをスキップ');
+        return; // 既存処理をスキップ
     } else {
-        console.log('🎯 手動アクセス - 通常の開始ボタンを表示');
-        // 手動アクセスの場合は通常の開始ボタンを表示
-        document.getElementById('start-btn').style.display = 'inline-block';
+        // 従来システム (auto=true等) 継続
+        console.log('🔄 従来システム適用');
+        
+        // 既存の初期化処理継続（auto=true対応維持）
+        const isFromIndex = document.referrer.includes('index.html') || 
+                           document.referrer.endsWith('/') || 
+                           document.referrer === '' ||
+                           window.location.search.includes('auto=true');
+        
+        console.log('🔍 自動開始判定:', isFromIndex);
+        
+        if (isFromIndex) {
+            console.log('🎯 従来の自動開始システム - 自動でトレーニング開始状態に移行');
+            // 少し遅延させてDOMの準備を待つ
+            setTimeout(async () => {
+                try {
+                    await app.startTraining();
+                } catch (error) {
+                    console.error('❌ 自動トレーニング開始エラー:', error);
+                    console.log('🔄 手動開始モードに切り替え');
+                    // エラーの場合は手動開始モードに戻す
+                    app.resetUI();
+                    document.getElementById('start-btn').style.display = 'inline-block';
+                }
+            }, 500);
+        } else {
+            console.log('🎯 手動アクセス - 通常の開始ボタンを表示');
+            // 手動アクセスの場合は通常の開始ボタンを表示
+            document.getElementById('start-btn').style.display = 'inline-block';
+        }
     }
 }
 
