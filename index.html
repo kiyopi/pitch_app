@@ -428,6 +428,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎵 モード選択ページ初期化完了');
             
+            // GitHub Pages更新確認用タイムスタンプ
+            document.body.insertAdjacentHTML('beforeend', 
+                `<div style="position:fixed;top:10px;right:10px;background:blue;color:white;padding:5px;font-size:12px;z-index:9999;border-radius:3px;">
+                    📱 ${new Date().toLocaleTimeString()}
+                </div>`
+            );
+            
             // 5秒後に最初のランダムテキスト変更
             setTimeout(updateRandomButtonText, 5000);
             
