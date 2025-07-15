@@ -77,10 +77,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.2.0',
-            codename: 'OutlierPenalty',
-            build: '2025-07-13',
-            commit: 'scoring-enhancement'
+            app: 'v1.2.1',
+            codename: 'UIFixes',
+            build: '2025-07-15',
+            commit: 'ui-display-optimization'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
