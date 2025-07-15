@@ -2194,7 +2194,7 @@ async function initializeApp() {
                     mainStartBtn.disabled = false;
                     mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
                     // 緑色ボタンの影を緑系に修正
-                    mainStartBtn.style.boxShadow = '0 4px 8px rgba(76, 175, 80, 0.3)';
+                    mainStartBtn.style.boxShadow = '0 4px 8px rgba(76, 175, 80, 0.3) !important';
                     console.log('✅ スタートボタン準備完了状態に更新');
                 }
             }
@@ -2236,7 +2236,7 @@ async function initializeApp() {
                 mainStartBtn.style.animation = 'pulse 2s infinite';
                 mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
                 // 緑色ボタンの影を緑系に修正
-                mainStartBtn.style.boxShadow = '0 4px 8px rgba(76, 175, 80, 0.3)';
+                mainStartBtn.style.boxShadow = '0 4px 8px rgba(76, 175, 80, 0.3) !important';
             }
         }
         
