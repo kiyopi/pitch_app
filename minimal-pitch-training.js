@@ -402,7 +402,7 @@ class SimplePitchTraining {
 }
 
 // アプリケーション開始
-document.addEventListener('DOMContentLoaded', () => {
+const initializeApp = () => {
     console.log('🎵 Simple Pitch Training v1.0.0 開始');
     console.log('📱 DOM読み込み完了');
     
@@ -437,4 +437,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     checkLibraries();
-});
+};
+
+// DOMの状態に関係なく実行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    // DOMが既に読み込まれている場合は即座に実行
+    initializeApp();
+}
