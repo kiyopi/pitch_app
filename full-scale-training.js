@@ -2201,7 +2201,14 @@ async function initializeApp() {
             // 連続5回モード等: 自動開始
             console.log('🚀 自動開始モード - トレーニング開始');
             setTimeout(() => {
-                app.setupTraining();
+                // 基音選択とUI準備
+                app.selectNewBaseTone();
+                
+                // UI表示
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('training-layout').style.display = 'block';
+                
+                // 自動でトレーニング開始
                 app.startTraining();
             }, 500);
         } else if (config.displayStartButton) {
@@ -2209,7 +2216,21 @@ async function initializeApp() {
             console.log('🎯 手動開始モード - スタートボタン待機');
             // 既存のトレーニング準備のみ実行
             setTimeout(() => {
-                app.setupTraining();
+                // 基音選択とUI準備
+                app.selectNewBaseTone();
+                
+                // UI表示
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('training-layout').style.display = 'block';
+                
+                // メインスタートボタンを表示
+                const mainStartBtn = document.getElementById('main-start-btn');
+                if (mainStartBtn) {
+                    mainStartBtn.style.display = 'inline-block';
+                    mainStartBtn.disabled = false;
+                    mainStartBtn.style.opacity = '1';
+                    mainStartBtn.style.animation = 'pulse 2s infinite';
+                }
             }, 300);
         }
         
