@@ -240,8 +240,7 @@ class SimplePitchTraining {
             
             // 設計原則: 基音再生専用処理
             console.log('🎲 基音選択開始');
-            const baseTone = this.baseToneManager.selectRandomBaseTone();
-            this.elements.baseTone.textContent = `基音: ${baseTone.note}`;
+            this.baseToneManager.selectRandomBaseTone();
             
             console.log('🔊 基音再生開始');
             await this.baseToneManager.playBaseTone();
