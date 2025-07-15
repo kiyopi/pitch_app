@@ -97,6 +97,7 @@ class FullScaleTraining {
         
         // マイク状態管理
         this.microphoneState = 'off'; // 'off', 'on', 'recording', 'paused'
+        this.autoMicrophoneReady = false; // v2.0: 自動マイク初期化完了フラグ
         
         
         // 8音階データ
@@ -350,6 +351,16 @@ class FullScaleTraining {
         try {
             this.log('🚀 フルスケールトレーニング準備開始...');
             console.log('🚀 startTraining() メソッド実行開始');
+            
+            // v2.0: 自動許可済みかチェック
+            if (this.autoMicrophoneReady && this.mediaStream) {
+                console.log('✅ 自動許可済みストリーム使用 - ダイアログスキップ');
+                this.isRunning = true;
+                this.startFrequencyDetection();
+            } else {
+                console.log('🎤 通常のマイク許可フロー実行');
+                // 既存の処理を継続（後でplayReferenceAndStartAnimationが呼ばれる）
+            }
             
             // UI更新
             this.log('📱 UI要素の表示を更新中...');
@@ -1986,19 +1997,42 @@ class FullScaleTraining {
     
 }
 
-// 初期化
-function initializeApp() {
+// 初期化（v2.0 改良版）
+async function initializeApp() {
     const app = new FullScaleTraining();
     
     // リファラー情報をデバッグ出力
     console.log('🔍 リファラー情報:', document.referrer);
     console.log('🔍 URL情報:', window.location.href);
     
-    // モード選択から直接遷移した場合は、自動でトレーニング開始状態にする
+    // v2.0: ?mode=random パラメータ判定
+    const urlParams = new URLSearchParams(window.location.search);
+    const isFromModeSelection = urlParams.get('mode') === 'random';
+    
+    console.log('🔍 モード判定:', isFromModeSelection);
+    
+    if (isFromModeSelection) {
+        console.log('🎤 モード選択からの遷移 - 自動マイク許可開始');
+        
+        // スタートボタンを初期化中状態に
+        updateStartButtonState(false);
+        
+        // 自動マイク初期化実行
+        const success = await initializeAutoMicrophone(app);
+        
+        if (success) {
+            // 成功時: スタートボタンを準備完了状態に
+            updateStartButtonState(true);
+        }
+        // 失敗時: スタートボタンは通常状態のまま（青色）
+    }
+    
+    // 既存の初期化処理継続（auto=true対応維持）
     const isFromIndex = document.referrer.includes('index.html') || 
                        document.referrer.endsWith('/') || 
                        document.referrer === '' ||
-                       window.location.search.includes('auto=true');
+                       window.location.search.includes('auto=true') ||
+                       isFromModeSelection;
     
     console.log('🔍 自動開始判定:', isFromIndex);
     
@@ -2020,6 +2054,75 @@ function initializeApp() {
         console.log('🎯 手動アクセス - 通常の開始ボタンを表示');
         // 手動アクセスの場合は通常の開始ボタンを表示
         document.getElementById('start-btn').style.display = 'inline-block';
+    }
+}
+
+// 自動マイク初期化関数（v2.0 新機能）
+async function initializeAutoMicrophone(app) {
+    try {
+        console.log('🎤 自動マイク許可処理開始');
+        
+        // Step 1: MediaStream取得
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+        
+        console.log('✅ マイク許可取得成功');
+        
+        // Step 2: AudioContext初期化
+        if (!app.audioContext) {
+            await app.initAudioContext();
+        }
+        
+        // Step 3: Analyzer作成
+        if (!app.analyzer) {
+            app.analyzer = app.audioContext.createAnalyser();
+            app.analyzer.fftSize = 2048;
+            app.analyzer.smoothingTimeConstant = 0.1;
+        }
+        
+        // Step 4: MediaStreamSource作成・接続
+        app.microphone = app.audioContext.createMediaStreamSource(stream);
+        app.microphone.connect(app.analyzer);
+        
+        // Step 5: PitchDetector初期化
+        app.initPitchDetector();
+        
+        // Step 6: ストリーム保存・フラグ設定
+        app.mediaStream = stream;
+        app.autoMicrophoneReady = true;
+        
+        console.log('🎉 自動マイク許可完了 - 準備完了');
+        return true;
+        
+    } catch (error) {
+        console.log('🔄 通常のスタートボタンフローに切り替え');
+        console.log('Error details:', error.name || error.message);
+        return false;
+    }
+}
+
+// スタートボタンUI更新関数
+function updateStartButtonState(ready = false) {
+    const startBtn = document.getElementById('main-start-btn');
+    if (!startBtn) return;
+    
+    if (ready) {
+        // 準備完了状態（緑色）
+        startBtn.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
+        startBtn.style.cursor = 'pointer';
+        startBtn.disabled = false;
+        console.log('✅ スタートボタン準備完了状態に更新');
+    } else {
+        // 初期化中状態（グレー）
+        startBtn.textContent = '🔄 マイク準備中...';
+        startBtn.style.background = 'linear-gradient(145deg, #9E9E9E, #757575)';
+        startBtn.disabled = true;
+        console.log('🔄 スタートボタン初期化中状態に更新');
     }
 }
 
