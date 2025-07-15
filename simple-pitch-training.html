@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 シンプル相対音感トレーニング</title>
+    
+    <!-- キャッシュ制御 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="cache-version" content="v2.0.0-simple-clean">
+    
+    <!-- PWA対応 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app {
+            background: white;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .app h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .frequency {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(to top, #4CAF50 0%, transparent 0%);
+            background-size: 100% 0%;
+            padding: 20px;
+            border-radius: 15px;
+            border: 4px solid #4CAF50;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-size 0.1s ease;
+        }
+
+        .progress {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 10px;
+        }
+
+        .current-note {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 15px;
+        }
+
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
+
+        .start-btn:active {
+            transform: scale(0.98);
+        }
+
+        .start-btn:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .note-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .note-result:last-child {
+            border-bottom: none;
+        }
+
+        .note-result .note-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .note-result .result-status {
+            font-size: 1.2rem;
+        }
+
+        .result-status.correct {
+            color: #4CAF50;
+        }
+
+        .final-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .final-score.excellent {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .final-score.good {
+            background: #fff3e0;
+            color: #FF9800;
+        }
+
+        .final-score.practice {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .retry-btn {
+            background: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(33, 150, 243, 0.3);
+            margin-top: 15px;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        .timestamp {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* モバイル対応 */
+        @media (max-width: 480px) {
+            .app {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .app h1 {
+                font-size: 1.5rem;
+            }
+            
+            .frequency {
+                font-size: 1.5rem;
+                padding: 15px;
+            }
+            
+            .start-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 更新確認用タイムスタンプ -->
+    <div class="timestamp" id="timestamp">
+        📱 --:--:--
+    </div>
+    
+    <div class="app">
+        <h1>🎵 相対音感トレーニング</h1>
+        
+        <div class="frequency" id="frequency">
+            --- Hz
+        </div>
+        
+        <div class="progress" id="progress">
+            スタートボタンを押してください
+        </div>
+        
+        <div class="current-note" id="current-note">
+            ---
+        </div>
+        
+        <button id="start-btn" class="start-btn">🎹 スタート</button>
+        
+        <div class="results" id="results" style="display: none;">
+            <h2>結果</h2>
+            <div id="note-results"></div>
+            <div id="final-score"></div>
+            <button id="retry-btn" class="retry-btn">もう一度挑戦</button>
+        </div>
+        
+        <div class="footer">
+            <p>🎯 Powered by Pitchy (McLeod Pitch Method)</p>
+            <p>Simple Pitch Training v2.0.0</p>
+        </div>
+    </div>
+
+    <!-- タイムスタンプ更新スクリプト -->
+    <script>
+        // ページ読み込み時刻を表示（8色ループシステム）
+        document.addEventListener('DOMContentLoaded', () => {
+            const timestamp = document.getElementById('timestamp');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ja-JP', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            timestamp.textContent = `📱 ${timeString}`;
+            
+            // 8色ループシステム: 青→緑→オレンジ→紫→赤→シアン→茶→グレー
+            const backgroundColors = [
+                'rgba(33, 150, 243, 0.9)',   // 青
+                'rgba(76, 175, 80, 0.9)',    // 緑
+                'rgba(255, 152, 0, 0.9)',    // オレンジ
+                'rgba(156, 39, 176, 0.9)',   // 紫
+                'rgba(244, 67, 54, 0.9)',    // 赤
+                'rgba(0, 188, 212, 0.9)',    // シアン
+                'rgba(141, 110, 99, 0.9)',   // 茶
+                'rgba(158, 158, 158, 0.9)'   // グレー
+            ];
+            const colorIndex = 0; // 青色（新しい実装）
+            timestamp.style.background = backgroundColors[colorIndex];
+            timestamp.style.color = 'white';
+            
+            console.log(`🎨 タイムスタンプ背景色設定: ${backgroundColors[colorIndex]} (colorIndex: ${colorIndex})`);
+        });
+    </script>
+    
+    <!-- Tone.js ライブラリ -->
+    <script src="tone.js" onload="console.log('✅ Tone.js読み込み完了')" onerror="console.error('❌ Tone.js読み込み失敗')"></script>
+    
+    <!-- Pitchy ライブラリ -->
+    <script type="module">
+        console.log('📚 Pitchy読み込み開始');
+        try {
+            const { PitchDetector } = await import("https://esm.sh/pitchy@4");
+            window.PitchDetector = PitchDetector;
+            console.log('✅ Pitchy読み込み完了');
+            
+            // メインスクリプト読み込み
+            const script = document.createElement('script');
+            script.src = 'simple-pitch-training.js';
+            script.onload = () => console.log('✅ メインスクリプト読み込み完了');
+            script.onerror = (error) => {
+                console.error('❌ メインスクリプト読み込み失敗:', error);
+                alert('アプリケーションの読み込みに失敗しました。ページを再読み込みしてください。');
+            };
+            document.head.appendChild(script);
+        } catch (error) {
+            console.error('❌ Pitchy読み込みエラー:', error);
+            alert('音程検出ライブラリの読み込みに失敗しました。インターネット接続を確認してください。');
+        }
+    </script>
+</body>
+</html>
