@@ -201,6 +201,9 @@ class SimplePitchTraining {
             isCompleted: false
         };
         
+        // 設計原則: 事前準備完了フラグ
+        this.isReady = false;
+        
         this.elements = {
             baseTone: document.getElementById('base-tone'),
             frequency: document.getElementById('frequency'),
@@ -234,22 +237,17 @@ class SimplePitchTraining {
         try {
             console.log('🎹 スタートボタンが押されました');
             this.hideError();
-            this.elements.startBtn.disabled = true;
-            this.elements.startBtn.textContent = '🔍 マイク初期化中...';
             
-            // マイク許可要求
-            console.log('🎤 マイク許可要求開始');
-            await this.microphone.requestAccess();
+            // 設計原則: 事前準備完了チェック
+            if (!this.isReady) {
+                this.showError('アプリケーションの準備ができていません。ページを再読み込みしてください。');
+                return;
+            }
             
-            // 音程検出初期化
-            console.log('🎵 音程検出初期化開始');
-            await this.pitchDetector.initialize(this.microphone.audioContext);
-            
-            // 基音選択と再生
+            // 設計原則: 基音再生専用処理
             console.log('🎲 基音選択開始');
             const baseTone = this.baseToneManager.selectRandomBaseTone();
             this.elements.baseTone.textContent = `基音: ${baseTone.note}`;
-            this.elements.startBtn.textContent = '🔊 基音再生中...';
             
             console.log('🔊 基音再生開始');
             await this.baseToneManager.playBaseTone();
@@ -261,8 +259,6 @@ class SimplePitchTraining {
         } catch (error) {
             console.error('❌ start()でエラー:', error);
             this.showError(error.message);
-            this.elements.startBtn.disabled = false;
-            this.elements.startBtn.textContent = '🎹 スタート';
         }
     }
 
@@ -430,10 +426,10 @@ const initializeApp = () => {
         if (window.Tone && window.PitchDetector) {
             console.log('✅ 全ライブラリ読み込み完了');
             try {
-                new SimplePitchTraining();
-                console.log('✅ SimplePitchTraining初期化完了');
+                // 設計原則に従って事前準備を実行
+                initializeWithPreparation();
             } catch (error) {
-                console.error('❌ SimplePitchTraining初期化エラー:', error);
+                console.error('❌ アプリケーション初期化エラー:', error);
                 alert('アプリケーションの初期化に失敗しました: ' + error.message);
             }
         } else {
@@ -443,6 +439,48 @@ const initializeApp = () => {
     };
     
     checkLibraries();
+};
+
+// 設計原則に従った事前準備付き初期化
+const initializeWithPreparation = async () => {
+    console.log('🚀 事前準備開始');
+    
+    try {
+        // アプリケーションインスタンス作成
+        const app = new SimplePitchTraining();
+        
+        // 事前準備: マイク初期化
+        console.log('🎤 マイク事前準備開始');
+        await app.microphone.requestAccess();
+        
+        // 事前準備: 音程検出初期化
+        console.log('🎵 音程検出事前準備開始');
+        await app.pitchDetector.initialize(app.microphone.audioContext);
+        
+        // 準備完了
+        app.isReady = true;
+        console.log('✅ 事前準備完了 - アプリケーション使用可能');
+        
+    } catch (error) {
+        console.error('❌ 事前準備失敗:', error);
+        showPreparationError(error);
+    }
+};
+
+// 事前準備エラーダイアログ
+const showPreparationError = (error) => {
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    
+    if (error.name === 'NotAllowedError') {
+        errorText.textContent = 'マイクの使用が許可されていません。ブラウザの設定でマイクアクセスを許可してから再読み込みしてください。';
+    } else if (error.name === 'NotFoundError') {
+        errorText.textContent = 'マイクが見つかりません。マイクが正しく接続されているか確認してから再読み込みしてください。';
+    } else {
+        errorText.textContent = `アプリケーションの準備に失敗しました: ${error.message}`;
+    }
+    
+    errorMessage.style.display = 'block';
 };
 
 // DOMの状態に関係なく実行
