@@ -51,15 +51,6 @@
             font-size: 1.8rem;
         }
 
-        .base-tone {
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-        }
 
         .frequency {
             font-size: 2rem;
@@ -212,40 +203,6 @@
             box-shadow: 0 5px 12px rgba(33, 150, 243, 0.4);
         }
 
-        .error-message {
-            background: #ffebee;
-            color: #f44336;
-            padding: 15px;
-            border-radius: 10px;
-            border: 2px solid #ffcdd2;
-            margin-top: 15px;
-        }
-
-        .error-message h3 {
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .error-message p {
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-        .error-retry-btn {
-            background: #f44336;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .error-retry-btn:hover {
-            background: #d32f2f;
-        }
 
         .footer {
             margin-top: 30px;
@@ -259,7 +216,7 @@
             position: fixed;
             top: 10px;
             right: 10px;
-            background: rgba(76, 175, 80, 0.9);
+            background: rgba(255, 152, 0, 0.9);
             color: white;
             padding: 5px 10px;
             border-radius: 5px;
@@ -302,9 +259,6 @@
     <div class="app">
         <h1>🎵 相対音感トレーニング</h1>
         
-        <div class="base-tone" id="base-tone">
-            基音: 準備中...
-        </div>
         
         <div class="frequency" id="frequency">
             --- Hz
@@ -327,11 +281,6 @@
             <button id="retry-btn" class="retry-btn">もう一度挑戦</button>
         </div>
         
-        <div class="error-message" id="error-message" style="display: none;">
-            <h3>エラーが発生しました</h3>
-            <p id="error-text"></p>
-            <button id="error-retry-btn" class="error-retry-btn">再試行</button>
-        </div>
         
         <div class="footer">
             <p>🎯 Powered by Pitchy (McLeod Pitch Method)</p>
@@ -363,7 +312,7 @@
                 'rgba(141, 110, 99, 0.9)',   // 茶
                 'rgba(158, 158, 158, 0.9)'   // グレー
             ];
-            const colorIndex = 1; // 緑色（設計原則修正完了）
+            const colorIndex = 2; // オレンジ色（標準エラーダイアログ実装完了）
             timestamp.style.background = backgroundColors[colorIndex];
             timestamp.style.color = 'white';
             

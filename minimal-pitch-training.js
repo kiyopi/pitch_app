@@ -205,7 +205,6 @@ class SimplePitchTraining {
         this.isReady = false;
         
         this.elements = {
-            baseTone: document.getElementById('base-tone'),
             frequency: document.getElementById('frequency'),
             progress: document.getElementById('progress'),
             currentNote: document.getElementById('current-note'),
@@ -213,10 +212,7 @@ class SimplePitchTraining {
             results: document.getElementById('results'),
             noteResults: document.getElementById('note-results'),
             finalScore: document.getElementById('final-score'),
-            retryBtn: document.getElementById('retry-btn'),
-            errorMessage: document.getElementById('error-message'),
-            errorText: document.getElementById('error-text'),
-            errorRetryBtn: document.getElementById('error-retry-btn')
+            retryBtn: document.getElementById('retry-btn')
         };
         
         this.initializeEvents();
@@ -230,17 +226,15 @@ class SimplePitchTraining {
             this.start();
         });
         this.elements.retryBtn.addEventListener('click', () => this.retry());
-        this.elements.errorRetryBtn.addEventListener('click', () => this.retry());
     }
 
     async start() {
         try {
             console.log('🎹 スタートボタンが押されました');
-            this.hideError();
             
             // 設計原則: 事前準備完了チェック
             if (!this.isReady) {
-                this.showError('アプリケーションの準備ができていません。ページを再読み込みしてください。');
+                showMicrophoneNotReadyError();
                 return;
             }
             
@@ -258,7 +252,7 @@ class SimplePitchTraining {
             
         } catch (error) {
             console.error('❌ start()でエラー:', error);
-            this.showError(error.message);
+            showPitchyInitializationError();
         }
     }
 
@@ -371,7 +365,6 @@ class SimplePitchTraining {
     }
 
     retry() {
-        this.hideError();
         this.elements.results.style.display = 'none';
         this.elements.startBtn.style.display = 'block';
         this.elements.startBtn.disabled = false;
@@ -381,7 +374,6 @@ class SimplePitchTraining {
         this.elements.frequency.style.backgroundSize = '100% 0%';
         this.elements.progress.textContent = 'スタートボタンを押してください';
         this.elements.currentNote.textContent = '---';
-        this.elements.baseTone.textContent = '基音: 準備中...';
         
         this.state = {
             currentNote: 0,
@@ -393,14 +385,6 @@ class SimplePitchTraining {
         this.microphone.stop();
     }
 
-    showError(message) {
-        this.elements.errorText.textContent = message;
-        this.elements.errorMessage.style.display = 'block';
-    }
-
-    hideError() {
-        this.elements.errorMessage.style.display = 'none';
-    }
 }
 
 // アプリケーション開始
@@ -463,24 +447,56 @@ const initializeWithPreparation = async () => {
         
     } catch (error) {
         console.error('❌ 事前準備失敗:', error);
-        showPreparationError(error);
+        handleError(error);
     }
 };
 
-// 事前準備エラーダイアログ
-const showPreparationError = (error) => {
-    const errorMessage = document.getElementById('error-message');
-    const errorText = document.getElementById('error-text');
-    
-    if (error.name === 'NotAllowedError') {
-        errorText.textContent = 'マイクの使用が許可されていません。ブラウザの設定でマイクアクセスを許可してから再読み込みしてください。';
-    } else if (error.name === 'NotFoundError') {
-        errorText.textContent = 'マイクが見つかりません。マイクが正しく接続されているか確認してから再読み込みしてください。';
-    } else {
-        errorText.textContent = `アプリケーションの準備に失敗しました: ${error.message}`;
+// 標準エラーダイアログ関数 (ERROR_DIALOG_SPECIFICATION.md準拠)
+const showMicrophonePermissionError = () => {
+    alert('マイクの使用が許可されていません。\n\nブラウザの設定でマイクアクセスを許可してから、ページを再読み込みしてください。');
+};
+
+const showMicrophoneNotFoundError = () => {
+    if (confirm('マイクが見つかりません。\n\nマイクを接続してから再読み込みしますか？')) {
+        location.reload();
     }
+};
+
+const showMicrophoneInUseError = () => {
+    if (confirm('マイクが他のアプリケーションで使用されています。\n\n他のアプリを終了してから再読み込みしますか？')) {
+        location.reload();
+    }
+};
+
+const showMicrophoneNotReadyError = () => {
+    if (confirm('マイクの準備ができていません。\n\nページを再読み込みしてマイクを許可しますか？')) {
+        location.reload();
+    }
+};
+
+const showPitchyInitializationError = () => {
+    if (confirm('音程検出の初期化に失敗しました。\n\nページを再読み込みしますか？')) {
+        location.reload();
+    }
+};
+
+// エラーハンドリング統一関数
+const handleError = (error) => {
+    console.error('❌ エラー発生:', error);
     
-    errorMessage.style.display = 'block';
+    switch (error.name) {
+        case 'NotAllowedError':
+            showMicrophonePermissionError();
+            break;
+        case 'NotFoundError':
+            showMicrophoneNotFoundError();
+            break;
+        case 'NotReadableError':
+            showMicrophoneInUseError();
+            break;
+        default:
+            showPitchyInitializationError();
+    }
 };
 
 // DOMの状態に関係なく実行
