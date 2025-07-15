@@ -2108,8 +2108,8 @@ async function initializeMicrophoneComponents(app, stream) {
     // AnalyzerNodeの設定
     app.microphone = app.audioContext.createMediaStreamSource(stream);
     app.analyzer = app.audioContext.createAnalyser();
-    app.analyzer.fftSize = app.fftSize;
-    app.analyzer.smoothingTimeConstant = app.smoothingTimeConstant;
+    app.analyzer.fftSize = 2048; // 固定値を使用
+    app.analyzer.smoothingTimeConstant = 0.1; // 固定値を使用
     app.microphone.connect(app.analyzer);
     
     console.log('🎵 マイクコンポーネント初期化完了');
