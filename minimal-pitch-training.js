@@ -404,11 +404,32 @@ class SimplePitchTraining {
 // アプリケーション開始
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🎵 Simple Pitch Training v1.0.0 開始');
+    console.log('📱 DOM読み込み完了');
+    
+    // 必要な要素の存在確認
+    const startBtn = document.getElementById('start-btn');
+    if (!startBtn) {
+        console.error('❌ スタートボタンが見つかりません');
+        alert('ページの読み込みに問題があります。再読み込みしてください。');
+        return;
+    }
+    console.log('✅ スタートボタン要素確認完了');
     
     // Tone.jsとPitchyの読み込み確認
     const checkLibraries = () => {
+        console.log('📚 ライブラリ確認中...');
+        console.log('Tone.js:', !!window.Tone);
+        console.log('PitchDetector:', !!window.PitchDetector);
+        
         if (window.Tone && window.PitchDetector) {
-            new SimplePitchTraining();
+            console.log('✅ 全ライブラリ読み込み完了');
+            try {
+                new SimplePitchTraining();
+                console.log('✅ SimplePitchTraining初期化完了');
+            } catch (error) {
+                console.error('❌ SimplePitchTraining初期化エラー:', error);
+                alert('アプリケーションの初期化に失敗しました: ' + error.message);
+            }
         } else {
             console.log('⏳ ライブラリ読み込み待機中...');
             setTimeout(checkLibraries, 100);

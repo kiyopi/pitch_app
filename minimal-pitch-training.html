@@ -321,19 +321,29 @@
     </div>
 
     <!-- Tone.js ライブラリ -->
-    <script src="tone.js"></script>
+    <script src="tone.js" onload="console.log('✅ Tone.js読み込み完了')" onerror="console.error('❌ Tone.js読み込み失敗')"></script>
     
     <!-- Pitchy ライブラリ -->
     <script type="module">
-        import { PitchDetector } from "https://esm.sh/pitchy@4";
-        window.PitchDetector = PitchDetector;
-        
-        // メインスクリプト読み込み
-        const script = document.createElement('script');
-        script.src = 'minimal-pitch-training.js';
-        script.onload = () => console.log('✅ メインスクリプト読み込み完了');
-        script.onerror = () => console.error('❌ メインスクリプト読み込み失敗');
-        document.head.appendChild(script);
+        console.log('📚 Pitchy読み込み開始');
+        try {
+            const { PitchDetector } = await import("https://esm.sh/pitchy@4");
+            window.PitchDetector = PitchDetector;
+            console.log('✅ Pitchy読み込み完了');
+            
+            // メインスクリプト読み込み
+            const script = document.createElement('script');
+            script.src = 'minimal-pitch-training.js';
+            script.onload = () => console.log('✅ メインスクリプト読み込み完了');
+            script.onerror = (error) => {
+                console.error('❌ メインスクリプト読み込み失敗:', error);
+                alert('アプリケーションの読み込みに失敗しました。ページを再読み込みしてください。');
+            };
+            document.head.appendChild(script);
+        } catch (error) {
+            console.error('❌ Pitchy読み込みエラー:', error);
+            alert('音程検出ライブラリの読み込みに失敗しました。インターネット接続を確認してください。');
+        }
     </script>
 </body>
 </html>
