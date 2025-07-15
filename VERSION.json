@@ -1,16 +1,36 @@
 {
-  "version": "1.0.2",
-  "codename": "Mobile-Enhanced",
-  "build": "2025-07-11",
-  "commit": "enhanced",
+  "version": "1.2.2",
+  "codename": "RestartOptimization",
+  "build": "2025-07-15",
+  "commit": "restart-performance-fix",
   "features": [
-    "強化されたモバイル版ユーザーガイダンス",
-    "iPhone操作性の大幅改善",
-    "段階的視覚フィードバック",
-    "UI簡素化完了",
+    "リスタート時のパフォーマンス最適化",
+    "マイクストリーム保持による高速化",
+    "UI表示の改善（停止ボタン表示、影色修正）",
+    "ページ描画の並列処理化",
     "Pitchy高精度音程検出"
   ],
   "changes": {
+    "1.2.2": {
+      "date": "2025-07-15",
+      "description": "リスタート最適化とUI改善",
+      "details": [
+        "停止ボタン表示修正（display:none削除）",
+        "directRestart()でstopMicrophone()→pauseMicrophone()変更",
+        "既存ストリーム利用で初期化スキップ最適化",
+        "動的ボタンテキスト（初回/リスタート時）",
+        "スタートボタンの影色をオレンジから緑に統一"
+      ]
+    },
+    "1.2.1": {
+      "date": "2025-07-15", 
+      "description": "UI表示問題修正",
+      "details": [
+        "画面表示ディレイの並列処理化",
+        "スタートボタンの影色修正",
+        "タイムスタンプ色更新システム確立"
+      ]
+    },
     "1.0.2": {
       "date": "2025-07-11",
       "description": "モバイル版操作性の大幅強化",

@@ -1,10 +1,10 @@
 /**
  * Service Worker - モバイルキャッシュ制御
- * バージョン: v1.0.1-mobile-fix
+ * バージョン: v1.2.2-restart-optimization
  */
 
-const CACHE_NAME = 'pitch-training-v1.0.1-mobile-fix';
-const CACHE_VERSION = '1.0.1';
+const CACHE_NAME = 'pitch-training-v1.2.2-restart-optimization';
+const CACHE_VERSION = '1.2.2';
 
 // キャッシュ対象ファイル
 const CACHE_FILES = [

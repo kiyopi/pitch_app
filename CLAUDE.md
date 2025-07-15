@@ -170,9 +170,9 @@ echo "⚠️ ユーザー承認なしにマージ禁止"
 
 ### 現在の状況
 - **安定版**: 1e44e2e (v1.2.0 OutlierPenalty-Enhanced)
-- **作業ブランチ**: microphone-v2-impl-001 (v1.2.1 UIFixes 実装済み)
-- **最新コミット**: 1fbedf2 (CLAUDE.md仕様更新)
-- **次期バージョン**: v1.3.0 MicrophoneOptimized 予定
+- **作業ブランチ**: microphone-v2-impl-001 (v1.2.2 RestartOptimization 実装済み)
+- **最新コミット**: 40f23d8 (RestartOptimization完了)
+- **次期バージョン**: v1.3.0 SimpleRedesign 予定（新仕様書による簡素実装）
 
 #### VSCodeクラッシュ対策 - 分散仕様記録システム
 - **問題**: VSCodeクラッシュ頻発（5回以上）で作業履歴消失

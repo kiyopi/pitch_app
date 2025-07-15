@@ -1,8 +1,8 @@
 {
   "name": "pitch_app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "frequency-display.js",
+  "version": "1.2.2",
+  "description": "相対音感トレーニングアプリ - ランダム基音によるドレミファソラシド音程測定",
+  "main": "full-scale-training.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/kiyopi/pitch_app.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "kiyopi",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
