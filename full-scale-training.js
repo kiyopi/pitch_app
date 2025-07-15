@@ -2193,6 +2193,8 @@ async function initializeApp() {
                     mainStartBtn.style.cursor = 'pointer';
                     mainStartBtn.disabled = false;
                     mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
+                    // 緑色ボタンの影を緑系に修正
+                    mainStartBtn.style.boxShadow = '0 4px 8px rgba(76, 175, 80, 0.3)';
                     console.log('✅ スタートボタン準備完了状態に更新');
                 }
             }
@@ -2217,25 +2219,25 @@ async function initializeApp() {
             // ランダム基音・カスタム: スタートボタン表示・待機
             console.log('🎯 手動開始モード - スタートボタン待機');
             // 既存のトレーニング準備のみ実行
-            setTimeout(() => {
-                // 基音選択とUI準備
-                app.selectNewBaseTone();
-                
-                // UI表示
-                document.getElementById('start-btn').style.display = 'none';
-                document.getElementById('training-layout').style.display = 'block';
-                
-                // メインスタートボタンを表示
-                const mainStartBtn = document.getElementById('main-start-btn');
-                if (mainStartBtn) {
-                    const baseTone = app.baseToneManager.currentBaseTone;
-                    mainStartBtn.style.display = 'inline-block';
-                    mainStartBtn.disabled = false;
-                    mainStartBtn.style.opacity = '1';
-                    mainStartBtn.style.animation = 'pulse 2s infinite';
-                    mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
-                }
-            }, 300);
+            // 基音選択とUI準備（遅延削除）
+            app.selectNewBaseTone();
+            
+            // UI表示
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('training-layout').style.display = 'block';
+            
+            // メインスタートボタンを表示
+            const mainStartBtn = document.getElementById('main-start-btn');
+            if (mainStartBtn) {
+                const baseTone = app.baseToneManager.currentBaseTone;
+                mainStartBtn.style.display = 'inline-block';
+                mainStartBtn.disabled = false;
+                mainStartBtn.style.opacity = '1';
+                mainStartBtn.style.animation = 'pulse 2s infinite';
+                mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
+                // 緑色ボタンの影を緑系に修正
+                mainStartBtn.style.boxShadow = '0 4px 8px rgba(76, 175, 80, 0.3)';
+            }
         }
         
         // ★重要: 既存の自動開始ロジックを無効化
