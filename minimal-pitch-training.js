@@ -215,34 +215,45 @@ class SimplePitchTraining {
     }
 
     initializeEvents() {
-        this.elements.startBtn.addEventListener('click', () => this.start());
+        console.log('🎮 イベントハンドラ初期化');
+        this.elements.startBtn.addEventListener('click', () => {
+            console.log('🎹 スタートボタンクリック検出');
+            this.start();
+        });
         this.elements.retryBtn.addEventListener('click', () => this.retry());
         this.elements.errorRetryBtn.addEventListener('click', () => this.retry());
     }
 
     async start() {
         try {
+            console.log('🎹 スタートボタンが押されました');
             this.hideError();
             this.elements.startBtn.disabled = true;
             this.elements.startBtn.textContent = '🔍 マイク初期化中...';
             
             // マイク許可要求
+            console.log('🎤 マイク許可要求開始');
             await this.microphone.requestAccess();
             
             // 音程検出初期化
+            console.log('🎵 音程検出初期化開始');
             await this.pitchDetector.initialize(this.microphone.audioContext);
             
             // 基音選択と再生
+            console.log('🎲 基音選択開始');
             const baseTone = this.baseToneManager.selectRandomBaseTone();
             this.elements.baseTone.textContent = `基音: ${baseTone.note}`;
             this.elements.startBtn.textContent = '🔊 基音再生中...';
             
+            console.log('🔊 基音再生開始');
             await this.baseToneManager.playBaseTone();
             
             // 測定開始
+            console.log('📊 測定開始');
             this.startMeasurement();
             
         } catch (error) {
+            console.error('❌ start()でエラー:', error);
             this.showError(error.message);
             this.elements.startBtn.disabled = false;
             this.elements.startBtn.textContent = '🎹 スタート';
