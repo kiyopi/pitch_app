@@ -2188,9 +2188,11 @@ async function initializeApp() {
             if (success) {
                 // 成功時: スタートボタンを準備完了状態に
                 if (mainStartBtn) {
+                    const baseTone = app.baseToneManager.currentBaseTone;
                     mainStartBtn.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
                     mainStartBtn.style.cursor = 'pointer';
                     mainStartBtn.disabled = false;
+                    mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
                     console.log('✅ スタートボタン準備完了状態に更新');
                 }
             }
@@ -2226,10 +2228,12 @@ async function initializeApp() {
                 // メインスタートボタンを表示
                 const mainStartBtn = document.getElementById('main-start-btn');
                 if (mainStartBtn) {
+                    const baseTone = app.baseToneManager.currentBaseTone;
                     mainStartBtn.style.display = 'inline-block';
                     mainStartBtn.disabled = false;
                     mainStartBtn.style.opacity = '1';
                     mainStartBtn.style.animation = 'pulse 2s infinite';
+                    mainStartBtn.textContent = `🎹 基音 ${baseTone.note} でスタート`;
                 }
             }, 300);
         }
