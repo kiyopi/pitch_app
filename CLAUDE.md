@@ -156,10 +156,36 @@ echo "⚠️ ユーザー承認なしにマージ禁止"
 - GitHub Pages確認フロー最適化
 - タイムスタンプデバッグ機能追加
 
+#### UI表示問題修正 (v1.2.1 UIFixes)
+- **問題1**: full-scale-training.html移動後の画面表示ディレイ
+  - 原因: DOMContentLoaded待機→キャッシュ確認→スクリプト読み込みの順次処理
+  - 解決: Promise.all()で並列処理化（1204-1221行）
+- **問題2**: スタートボタンの影がオレンジ色で不自然
+  - 原因: .main-start-btn:hover、@keyframes pulseでオレンジ色指定
+  - 解決: rgba(255,152,0,0.4) → rgba(76,175,80,0.4) 緑色に統一
+- **修正箇所**: 
+  - full-scale-training.html: 132-142行（hover、pulse）
+  - バージョン更新: v1.2.0 → v1.2.1
+  - タイムスタンプ色: colorIndex 6→7（茶→グレー）
+
 ### 現在の状況
 - **安定版**: 1e44e2e (v1.2.0 OutlierPenalty-Enhanced)
-- **作業ブランチ**: microphone-v2-impl-001
+- **作業ブランチ**: microphone-v2-impl-001 (v1.2.1 UIFixes 実装済み)
+- **最新コミット**: 1fbedf2 (CLAUDE.md仕様更新)
 - **次期バージョン**: v1.3.0 MicrophoneOptimized 予定
+
+#### VSCodeクラッシュ対策 - 分散仕様記録システム
+- **問題**: VSCodeクラッシュ頻発（5回以上）で作業履歴消失
+- **対策**: 修正内容に応じた適切な仕様書に記録
+- **記録ルール**:
+  1. **UI修正** → `docs/microphone-page-transition-v2-spec.md`
+  2. **レイアウト変更** → `layout_diagram.md`
+  3. **スコアリング修正** → `docs/scoring-system-enhancement-specification.md`
+  4. **マイク機能修正** → `docs/microphone-specification.md`
+  5. **Pitchy関連** → `PITCHY_SPECS.md`
+  6. **タイミング設定** → `TIMING_SETTINGS.md`
+  7. **開発ルール** → `CLAUDE.md`
+- **記録内容**: 問題・原因・解決策・修正箇所・コミット履歴・テスト結果
 
 ---
 
