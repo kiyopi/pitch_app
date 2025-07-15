@@ -97,6 +97,7 @@ class FullScaleTraining {
         
         // マイク状態管理
         this.microphoneState = 'off'; // 'off', 'on', 'recording', 'paused'
+        this.microphonePermissionGranted = false; // 自動許可処理のフラグ
         
         
         // 8音階データ
@@ -350,6 +351,17 @@ class FullScaleTraining {
         try {
             this.log('🚀 フルスケールトレーニング準備開始...');
             console.log('🚀 startTraining() メソッド実行開始');
+            
+            // 自動許可済みかチェック
+            if (this.microphonePermissionGranted && this.mediaStream) {
+                console.log('✅ 自動許可済みストリーム使用 - ダイアログスキップ');
+                // 既存の初期化処理をスキップして直接開始
+                this.isRunning = true;
+                this.startFrequencyDetection();
+            } else {
+                console.log('🎤 通常のマイク許可フロー実行');
+                // 既存の処理を継続（後でplayReferenceAndStartAnimationが呼ばれる）
+            }
             
             // UI更新
             this.log('📱 UI要素の表示を更新中...');
@@ -2029,18 +2041,122 @@ class FullScaleTraining {
 }
 
 // 初期化
-function initializeApp() {
+async function initializeApp() {
     const app = new FullScaleTraining();
     
     // リファラー情報をデバッグ出力
     console.log('🔍 リファラー情報:', document.referrer);
     console.log('🔍 URL情報:', window.location.href);
     
-    // モード選択から直接遷移した場合は、自動でトレーニング開始状態にする
+    // モード判定（シンプル）
+    const urlParams = new URLSearchParams(window.location.search);
+    const isFromModeSelection = urlParams.get('mode') === 'random';
+    
+    console.log('🔍 モード判定:', isFromModeSelection);
+    
+    if (isFromModeSelection) {
+        console.log('🎤 モード選択からの遷移 - 自動マイク許可開始');
+        await handleAutoMicrophonePermission(app);
+    }
+    
+    // 既存の初期化処理継続
+    initializeAppUI(app);
+}
+
+async function handleAutoMicrophonePermission(app) {
+    try {
+        console.log('🎤 自動マイク許可処理開始');
+        
+        // 直接getUserMediaで許可要求（Permission API不使用）
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+        
+        console.log('✅ マイク許可取得成功');
+        
+        // アプリに設定
+        app.mediaStream = stream;
+        app.microphonePermissionGranted = true;
+        
+        // AudioContext + Analyzer初期化
+        await initializeMicrophoneComponents(app, stream);
+        
+        console.log('🎉 自動マイク許可完了 - スタートボタン準備完了');
+        
+        // 成功時の UI 更新
+        showAutoPermissionSuccess();
+        
+    } catch (error) {
+        console.log('❌ 自動マイク許可失敗 - 手動モードに切り替え');
+        console.error('Error details:', error);
+        
+        // フォールバック: 通常フローに戻す
+        handleAutoPermissionFailure(error);
+    }
+}
+
+async function initializeMicrophoneComponents(app, stream) {
+    // AudioContext初期化
+    if (!app.audioContext) {
+        await app.initAudioContext();
+    }
+    
+    // AnalyzerNodeの設定
+    app.microphone = app.audioContext.createMediaStreamSource(stream);
+    app.analyzer = app.audioContext.createAnalyser();
+    app.analyzer.fftSize = app.fftSize;
+    app.analyzer.smoothingTimeConstant = app.smoothingTimeConstant;
+    app.microphone.connect(app.analyzer);
+    
+    console.log('🎵 マイクコンポーネント初期化完了');
+}
+
+function handleAutoPermissionFailure(error) {
+    // エラータイプに関わらず統一的に処理
+    console.log('🔄 通常のスタートボタンフローに切り替え');
+    
+    // ユーザーに簡潔な説明
+    showMessage('🎤 スタートボタンを押してトレーニングを開始してください', 'info');
+}
+
+function showAutoPermissionSuccess() {
+    showMessage('✅ マイク準備完了 - スタートボタンを押してください', 'success');
+}
+
+function showMessage(message, type = 'info') {
+    // 既存のUI表示機能を活用
+    const messageElement = document.createElement('div');
+    messageElement.className = `message message-${type}`;
+    messageElement.textContent = message;
+    messageElement.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : '#2196F3'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        font-size: 1rem;
+        z-index: 1000;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    `;
+    
+    // 3秒後に自動削除
+    setTimeout(() => messageElement.remove(), 3000);
+    document.body.appendChild(messageElement);
+}
+
+function initializeAppUI(app) {
+    // 従来のUIロジック
     const isFromIndex = document.referrer.includes('index.html') || 
                        document.referrer.endsWith('/') || 
                        document.referrer === '' ||
-                       window.location.search.includes('auto=true');
+                       window.location.search.includes('auto=true') ||
+                       window.location.search.includes('mode=random');
     
     console.log('🔍 自動開始判定:', isFromIndex);
     
