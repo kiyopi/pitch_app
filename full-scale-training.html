@@ -9,7 +9,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="cache-version" content="v1.2.1-ui-fixes">
+    <meta name="cache-version" content="v1.2.2-restart-optimization">
     
     <!-- モバイルPWA対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -146,7 +146,6 @@
             color: white;
             font-size: 1rem;
             padding: 10px 20px;
-            display: none;
         }
 
         .progress-section {
@@ -1038,7 +1037,7 @@
 
         <div class="footer-info">
             <div class="version-info">
-                <span id="version-display">Full Scale Training v1.2.1 UIFixes</span>
+                <span id="version-display">Full Scale Training v1.2.2 RestartOptimization</span>
                 <span style="font-size: 0.7rem; opacity: 0.8; margin-left: 8px;" id="build-info">Build 2025-07-15</span>
             </div>
             <div class="about-link-info">
@@ -1191,7 +1190,7 @@
             ];
             
             function getTimestampColor() {
-                const colorIndex = 7; // 現在：グレー（修正のたびに手動で変更）
+                const colorIndex = 0; // 現在：青（修正のたびに手動で変更）
                 return TIMESTAMP_COLORS[colorIndex % 8]; // 8色ループ
             }
             

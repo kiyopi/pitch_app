@@ -77,10 +77,10 @@ class FullScaleTraining {
     constructor() {
         // バージョン情報
         this.version = {
-            app: 'v1.2.1',
-            codename: 'UIFixes',
+            app: 'v1.2.2',
+            codename: 'RestartOptimization',
             build: '2025-07-15',
-            commit: 'ui-display-optimization'
+            commit: 'restart-performance-fix'
         };
         
         console.log(`🎵 FullScaleTraining ${this.version.app} ${this.version.codename} 初期化開始`);
@@ -595,7 +595,12 @@ class FullScaleTraining {
             startButton.disabled = true;
             startButton.style.opacity = '0.5';
             startButton.style.animation = 'none'; // パルスアニメーション停止
-            startButton.textContent = '🔍 マイク初期化中...'; // テキスト変更
+            // マイクストリームの状態に応じてテキストを変更
+            if (!this.mediaStream) {
+                startButton.textContent = '🔍 マイク初期化中...'; // 初回のみ
+            } else {
+                startButton.textContent = '🔊 基音再生中...'; // リスタート時
+            }
         }
         
         try {
@@ -618,6 +623,13 @@ class FullScaleTraining {
                 this.startFrequencyDetection();
                 
                 this.log('📊 周波数検出開始');
+            } else if (this.mediaStream && this.autoMicrophoneReady) {
+                // 既存ストリームがある場合は初期化スキップ
+                this.log('⚡ マイク初期化スキップ - 既存ストリーム利用');
+                if (!this.isRunning) {
+                    this.isRunning = true;
+                    this.startFrequencyDetection();
+                }
             }
             
             // マイクを一時停止（基音再生のため）
@@ -1632,8 +1644,8 @@ class FullScaleTraining {
     async directRestart(option) {
         this.log(`🚀 直接再開始実行: ${option} モード`);
         
-        // まず既存のマイクを完全停止
-        this.stopMicrophone();
+        // まず既存のマイクを一時停止（ストリームは保持）
+        this.pauseMicrophone();
         
         // 基音を選択（sameの場合は現在の基音を維持、newの場合は新しい基音を選択）
         if (option === 'new') {
