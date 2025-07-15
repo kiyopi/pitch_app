@@ -1178,22 +1178,21 @@
         
         // DOMContentLoadedを待ってからメインスクリプト読み込み
         function loadMainScript() {
-            // GitHub Pages更新確認用タイムスタンプ（バージョン連動色システム）
-            const VERSION_COLORS = [
-                '#2196F3', // 青 - v1.0.x
-                '#4CAF50', // 緑 - v1.1.x  
-                '#FF9800', // オレンジ - v1.2.x (現在)
-                '#9C27B0', // 紫 - v1.3.x (次期)
-                '#F44336', // 赤 - v1.4.x
-                '#00BCD4', // シアン - v1.5.x
-                '#795548', // 茶 - v1.6.x
-                '#607D8B'  // グレー - v1.7.x→v1.8.x以降ループ
+            // GitHub Pages更新確認用タイムスタンプ（8色ループシステム）
+            const TIMESTAMP_COLORS = [
+                '#2196F3', // 青
+                '#4CAF50', // 緑
+                '#FF9800', // オレンジ
+                '#9C27B0', // 紫
+                '#F44336', // 赤
+                '#00BCD4', // シアン
+                '#795548', // 茶
+                '#607D8B'  // グレー
             ];
             
             function getTimestampColor() {
-                const version = 'v1.2.0'; // full-scale-training.htmlのバージョン
-                const minorVersion = parseInt(version.split('.')[1]); // 1.2.0 → 2
-                return VERSION_COLORS[minorVersion % 8]; // 8色ループ
+                const colorIndex = 3; // 現在：紫（修正のたびに手動で変更）
+                return TIMESTAMP_COLORS[colorIndex % 8]; // 8色ループ
             }
             
             document.body.insertAdjacentHTML('beforeend', 
