@@ -2128,6 +2128,12 @@ async function initializeMicrophoneComponents(app, stream) {
         console.log('🎵 新規MediaStreamSource作成・接続完了');
     }
     
+    // PitchDetectorの初期化（重要！）
+    if (!app.pitchDetector) {
+        app.initPitchDetector();
+        console.log('🎯 PitchDetector初期化完了（自動許可処理）');
+    }
+    
     console.log('🎵 マイクコンポーネント初期化完了');
 }
 
