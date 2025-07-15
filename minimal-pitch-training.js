@@ -95,9 +95,11 @@ class PitchDetectionManager {
     async initialize(audioContext) {
         try {
             if (window.PitchDetector) {
-                this.detector = new window.PitchDetector(audioContext.sampleRate);
+                // PITCHY_SPECS.mdに従ってFFTサイズに合わせた初期化
+                this.detector = window.PitchDetector.forFloat32Array(2048);
+                this.audioContext = audioContext;
                 this.isInitialized = true;
-                console.log('✅ Pitchy初期化成功');
+                console.log('✅ Pitchy初期化成功 (FFTサイズ: 2048)');
             } else {
                 throw new Error('Pitchyライブラリが読み込まれていません');
             }
@@ -111,8 +113,12 @@ class PitchDetectionManager {
         if (!this.isInitialized || !this.detector) return null;
         
         try {
-            const result = this.detector.detect(audioData);
-            return result && result.probability > 0.9 ? result.frequency : null;
+            // PITCHY_SPECS.mdに従ってfindPitchメソッドを使用
+            const result = this.detector.findPitch(audioData, this.audioContext.sampleRate);
+            const [pitch, clarity] = result; // [周波数Hz, 確信度0-1]
+            
+            // 確信度しきい値: 0.1以上で有効
+            return clarity > 0.1 ? pitch : null;
         } catch (error) {
             console.warn('⚠️ 音程検出エラー:', error);
             return null;
