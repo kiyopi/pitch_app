@@ -259,8 +259,8 @@
             position: fixed;
             top: 10px;
             right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #2196F3;
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 0.8rem;
@@ -353,11 +353,21 @@
             timestamp.textContent = `📱 ${timeString}`;
             
             // 8色ループシステム: 青→緑→オレンジ→紫→赤→シアン→茶→グレー
-            const colors = ['#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#F44336', '#00BCD4', '#8D6E63', '#9E9E9E'];
+            const backgroundColors = [
+                'rgba(33, 150, 243, 0.9)',   // 青
+                'rgba(76, 175, 80, 0.9)',    // 緑
+                'rgba(255, 152, 0, 0.9)',    // オレンジ
+                'rgba(156, 39, 176, 0.9)',   // 紫
+                'rgba(244, 67, 54, 0.9)',    // 赤
+                'rgba(0, 188, 212, 0.9)',    // シアン
+                'rgba(141, 110, 99, 0.9)',   // 茶
+                'rgba(158, 158, 158, 0.9)'   // グレー
+            ];
             const colorIndex = 0; // 青色（最初の色）
-            timestamp.style.color = colors[colorIndex];
+            timestamp.style.background = backgroundColors[colorIndex];
+            timestamp.style.color = 'white';
             
-            console.log(`🎨 タイムスタンプ色設定: ${colors[colorIndex]} (colorIndex: ${colorIndex})`);
+            console.log(`🎨 タイムスタンプ背景色設定: ${backgroundColors[colorIndex]} (colorIndex: ${colorIndex})`);
         });
     </script>
     
