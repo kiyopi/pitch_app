@@ -97,6 +97,7 @@ class FullScaleTraining {
         
         // マイク状態管理
         this.microphoneState = 'off'; // 'off', 'on', 'recording', 'paused'
+        this.autoMicrophoneReady = false; // v2.0: 自動マイク初期化完了フラグ
         
         
         // 8音階データ
@@ -350,6 +351,24 @@ class FullScaleTraining {
         try {
             this.log('🚀 フルスケールトレーニング準備開始...');
             console.log('🚀 startTraining() メソッド実行開始');
+            
+            // v2.0: 自動初期化済みかチェック
+            if (this.autoMicrophoneReady && this.mediaStream) {
+                console.log('✅ 自動初期化済み - マイク許可ダイアログスキップ');
+                this.log('✅ マイク準備完了 - 即座にトレーニング開始');
+                
+                // 基音再生とトレーニング開始処理へジャンプ
+                this.isRunning = true;
+                this.microphoneState = 'on';
+                this.startFrequencyDetection();
+                
+                // 基音再生開始
+                await this.playReferenceAndStartAnimation();
+                return;
+            }
+            
+            // 通常フロー: マイク許可から開始
+            console.log('🎤 通常のマイク許可フロー実行');
             
             // UI更新
             this.log('📱 UI要素の表示を更新中...');
@@ -1986,19 +2005,179 @@ class FullScaleTraining {
     
 }
 
+// 自動マイク初期化関数（v2.0 新機能）
+async function initializeAutoMicrophone(app) {
+    try {
+        // ブラウザ互換性チェック
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.log('🔄 getUserMedia未対応ブラウザ - 通常フローに切り替え');
+            return false;
+        }
+        
+        if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
+            console.log('🔄 AudioContext未対応ブラウザ - 通常フローに切り替え');
+            return false;
+        }
+        
+        if (typeof window.PitchDetector === 'undefined') {
+            console.log('🔄 Pitchyライブラリ未読み込み - 通常フローに切り替え');
+            return false;
+        }
+        
+        console.log('🎤 自動マイク許可処理開始');
+        
+        // Step 1: MediaStream取得（タイムアウト付き）
+        const stream = await Promise.race([
+            navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            }),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Microphone access timeout')), 5000)
+            )
+        ]);
+        
+        console.log('✅ マイク許可取得成功');
+        
+        // Step 2: AudioContext初期化
+        if (!app.audioContext) {
+            try {
+                await app.initAudioContext();
+            } catch (audioError) {
+                console.log('🔄 AudioContext初期化失敗 - 通常フローに切り替え');
+                stream.getTracks().forEach(track => track.stop());
+                return false;
+            }
+        }
+        
+        // Step 3: Analyzer作成
+        if (!app.analyzer) {
+            try {
+                app.analyzer = app.audioContext.createAnalyser();
+                app.analyzer.fftSize = 2048;
+                app.analyzer.smoothingTimeConstant = 0.1;
+            } catch (analyzerError) {
+                console.log('🔄 Analyzer作成失敗 - 通常フローに切り替え');
+                stream.getTracks().forEach(track => track.stop());
+                return false;
+            }
+        }
+        
+        // Step 4: MediaStreamSource作成・接続
+        try {
+            app.microphone = app.audioContext.createMediaStreamSource(stream);
+            app.microphone.connect(app.analyzer);
+        } catch (sourceError) {
+            console.log('🔄 MediaStreamSource作成失敗 - 通常フローに切り替え');
+            stream.getTracks().forEach(track => track.stop());
+            return false;
+        }
+        
+        // Step 5: PitchDetector初期化
+        try {
+            app.initPitchDetector();
+            if (!app.pitchDetector) {
+                console.log('🔄 PitchDetector初期化失敗 - 通常フローに切り替え');
+                stream.getTracks().forEach(track => track.stop());
+                return false;
+            }
+        } catch (pitchError) {
+            console.log('🔄 PitchDetector初期化エラー - 通常フローに切り替え');
+            stream.getTracks().forEach(track => track.stop());
+            return false;
+        }
+        
+        // Step 6: ストリーム保存・フラグ設定
+        app.mediaStream = stream;
+        app.autoMicrophoneReady = true;
+        
+        console.log('🎉 自動マイク許可完了 - 準備完了');
+        return true;
+        
+    } catch (error) {
+        // 詳細なエラー分析とログ出力
+        const errorType = error.name || 'Unknown';
+        const errorMessage = error.message || 'Unknown error';
+        
+        switch (errorType) {
+            case 'NotAllowedError':
+                console.log('🚫 マイク許可拒否 - 通常フローに切り替え');
+                break;
+            case 'NotFoundError':
+                console.log('🔍 マイクデバイス未検出 - 通常フローに切り替え');
+                break;
+            case 'NotReadableError':
+                console.log('⚠️ マイクハードウェアエラー - 通常フローに切り替え');
+                break;
+            case 'OverconstrainedError':
+                console.log('⚙️ マイク制約エラー - 通常フローに切り替え');
+                break;
+            case 'SecurityError':
+                console.log('🔒 HTTPS必須エラー - 通常フローに切り替え');
+                break;
+            default:
+                if (errorMessage.includes('timeout')) {
+                    console.log('⏱️ マイク許可タイムアウト - 通常フローに切り替え');
+                } else {
+                    console.log(`🔄 予期しないエラー (${errorType}) - 通常フローに切り替え`);
+                }
+                break;
+        }
+        
+        console.log(`Error details: ${errorMessage}`);
+        return false;
+    }
+}
+
 // 初期化
-function initializeApp() {
+async function initializeApp() {
     const app = new FullScaleTraining();
     
     // リファラー情報をデバッグ出力
     console.log('🔍 リファラー情報:', document.referrer);
     console.log('🔍 URL情報:', window.location.href);
     
-    // モード選択から直接遷移した場合は、自動でトレーニング開始状態にする
+    // v2.0: ?mode=random パラメータ判定
+    const urlParams = new URLSearchParams(window.location.search);
+    const isFromModeSelection = urlParams.get('mode') === 'random';
+    
+    console.log('🔍 モード判定:', isFromModeSelection);
+    
+    if (isFromModeSelection) {
+        console.log('🎤 モード選択からの遷移 - 自動マイク許可開始');
+        
+        // スタートボタンを初期化中状態に
+        const mainStartBtn = document.getElementById('main-start-btn');
+        if (mainStartBtn) {
+            mainStartBtn.style.background = 'linear-gradient(145deg, #9E9E9E, #757575)';
+            mainStartBtn.textContent = '🔄 マイク準備中...';
+            mainStartBtn.disabled = true;
+        }
+        
+        // 自動マイク初期化実行
+        const success = await initializeAutoMicrophone(app);
+        
+        if (success) {
+            // 成功時: スタートボタンを準備完了状態に
+            if (mainStartBtn) {
+                mainStartBtn.style.background = 'linear-gradient(145deg, #4CAF50, #45a049)';
+                mainStartBtn.style.cursor = 'pointer';
+                mainStartBtn.disabled = false;
+                console.log('✅ スタートボタン準備完了状態に更新');
+            }
+        }
+        // 失敗時: スタートボタンは通常状態のまま（既存フロー）
+    }
+    
+    // 既存の初期化処理継続（auto=true対応維持）
     const isFromIndex = document.referrer.includes('index.html') || 
                        document.referrer.endsWith('/') || 
                        document.referrer === '' ||
-                       window.location.search.includes('auto=true');
+                       window.location.search.includes('auto=true') ||
+                       isFromModeSelection;
     
     console.log('🔍 自動開始判定:', isFromIndex);
     
