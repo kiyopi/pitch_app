@@ -1068,8 +1068,22 @@ class FullScaleTraining {
                         this.log(`🔍 Pitchy検出: pitch=${pitch?.toFixed(1)}Hz, clarity=${clarity?.toFixed(3)}`);
                     }
                     
+                    // 🚨 デバッグ用：オクターブ補正を一時的に無効化
                     // オクターブエラー検出：周波数が半分の場合は2倍して修正（動的）
                     let correctedPitch = pitch;
+                    
+                    // デバッグログ：生の検出値を表示
+                    if (this.frameCount % 60 === 0) {
+                        this.log(`🔍 Pitchy生検出値: ${pitch?.toFixed(1)}Hz (補正無効化中)`);
+                    }
+                    
+                    // 補正システムを無効化してPitchyの生の値を返す
+                    if (pitch && pitch >= 80 && pitch <= 1200 && clarity > 0.1) {
+                        return pitch; // 🔧 補正なしで生の値を返す
+                    }
+                    
+                    /* 
+                    // 💡 元のオクターブ補正システム（デバッグ完了後に復活）
                     if (pitch && pitch >= 80 && pitch <= 1200 && clarity > 0.1) {
                         // 現在の目標周波数範囲に基づく動的補正
                         const minTargetFreq = Math.min(...this.targetFrequencies); // 最低目標周波数
@@ -1092,6 +1106,7 @@ class FullScaleTraining {
                         
                         return correctedPitch;
                     }
+                    */
                 }
                 
                 return 0;
