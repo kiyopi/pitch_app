@@ -867,9 +867,27 @@
                 font-size: 0.8rem;
             }
         }
+        /* タイムスタンプ（GitHub Pages更新確認用） */
+        .timestamp {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-family: 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
+    <!-- タイムスタンプ（GitHub Pages更新確認用） -->
+    <div class="timestamp" id="timestamp">📱 --:--:--</div>
+    
     <div class="container">
         <div class="header">
             <div class="navigation-bar">
@@ -1167,6 +1185,41 @@
                 }
             }
         }
+        
+        // タイムスタンプ初期化（8色ループシステム）
+        function initTimestamp() {
+            const timestamp = document.getElementById('timestamp');
+            if (!timestamp) return;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ja-JP', { 
+                hour12: false,
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            // 8色ループシステム（CLAUDE.md準拠）
+            const backgroundColors = [
+                'rgba(33, 150, 243, 0.9)',   // 0: 青
+                'rgba(76, 175, 80, 0.9)',    // 1: 緑
+                'rgba(255, 152, 0, 0.9)',    // 2: オレンジ
+                'rgba(156, 39, 176, 0.9)',   // 3: 紫
+                'rgba(244, 67, 54, 0.9)',    // 4: 赤
+                'rgba(0, 188, 212, 0.9)',    // 5: シアン
+                'rgba(141, 110, 99, 0.9)',   // 6: 茶
+                'rgba(158, 158, 158, 0.9)'   // 7: グレー
+            ];
+            
+            const colorIndex = 3; // 紫色（オクターブ補正デバッグ修正）
+            timestamp.style.background = backgroundColors[colorIndex];
+            timestamp.textContent = `📱 ${timeString}`;
+            
+            console.log(`🎨 タイムスタンプ背景色設定: ${backgroundColors[colorIndex]} (colorIndex: ${colorIndex})`);
+        }
+        
+        // ページ読み込み時にタイムスタンプ初期化
+        initTimestamp();
         
         // キャッシュマネージャー初期化
         const cacheManager = new MobileCacheManager();
