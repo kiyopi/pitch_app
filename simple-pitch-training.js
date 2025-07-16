@@ -696,11 +696,23 @@ const initializeWithPreparation = async () => {
         
         // 事前準備: マイク初期化
         console.log('🎤 マイク事前準備開始');
-        await app.microphone.requestAccess();
+        try {
+            await app.microphone.requestAccess();
+            console.log('✅ マイク初期化完了');
+        } catch (error) {
+            console.error('❌ マイク初期化失敗:', error);
+            throw error; // 上位のcatchに再throw
+        }
         
         // 事前準備: 音程検出初期化
         console.log('🎵 音程検出事前準備開始');
-        await app.pitchDetector.initialize(app.microphone.audioContext);
+        try {
+            await app.pitchDetector.initialize(app.microphone.audioContext);
+            console.log('✅ 音程検出初期化完了');
+        } catch (error) {
+            console.error('❌ 音程検出初期化失敗:', error);
+            throw error; // 上位のcatchに再throw
+        }
         
         // 準備完了
         app.isReady = true;
