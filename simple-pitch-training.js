@@ -596,7 +596,9 @@ class SimplePitchTraining {
             isCompleted: false
         };
         
-        this.microphone.stop();
+        // マイクは停止せず、音程検出のみリセット
+        // this.microphone.stop(); // ← 再スタート時にマイク再初期化が必要になるため削除
+        console.log('🔄 リトライ準備完了 - マイクは継続使用');
     }
 }
 
