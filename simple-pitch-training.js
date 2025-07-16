@@ -270,7 +270,14 @@ class SimplePitchTraining {
                 
                 // 現在の音階と比較
                 const currentTarget = this.baseToneManager.targetNotes[this.state.currentNote];
+                
+                // デバッグ: 周波数比較情報をコンソール出力
+                const octaveFreqs = [frequency / 2, frequency, frequency * 2];
+                console.log(`🎵 検出周波数: ${frequency.toFixed(1)}Hz, 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
+                console.log(`🎵 オクターブ補正: [${octaveFreqs.map(f => f.toFixed(1)).join('Hz, ')}Hz]`);
+                
                 if (this.isNoteCorrect(frequency, currentTarget.frequency)) {
+                    console.log('✅ 正解判定!');
                     this.onNoteCorrect();
                 }
             }
