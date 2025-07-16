@@ -281,8 +281,20 @@ class SimplePitchTraining {
     }
 
     isNoteCorrect(detectedFreq, targetFreq) {
-        const cents = 1200 * Math.log2(detectedFreq / targetFreq);
-        return Math.abs(cents) < 50; // ±50セント以内で正解
+        // オクターブ補正: 1/2, 1, 2倍の周波数をチェック
+        const frequencies = [
+            detectedFreq / 2,  // 1オクターブ下
+            detectedFreq,      // 同じオクターブ
+            detectedFreq * 2   // 1オクターブ上
+        ];
+        
+        for (const freq of frequencies) {
+            const cents = 1200 * Math.log2(freq / targetFreq);
+            if (Math.abs(cents) < 50) { // ±50セント以内で正解
+                return true;
+            }
+        }
+        return false;
     }
 
     onNoteCorrect() {
