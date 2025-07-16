@@ -271,17 +271,9 @@ class SimplePitchTraining {
                 // 現在の音階と比較
                 const currentTarget = this.baseToneManager.targetNotes[this.state.currentNote];
                 
-                // PITCHY_SPECS.md準拠: 動的オクターブ補正ログ
-                const targetFrequencies = this.baseToneManager.targetNotes.map(note => note.frequency);
-                const maxTargetFreq = Math.max(...targetFrequencies);
-                const correctionThreshold = maxTargetFreq * 0.55;
-                const shouldCorrect = frequency < correctionThreshold;
-                const correctedFreq = shouldCorrect ? frequency * 2 : frequency;
-                
-                console.log(`🔍 Pitchy検出: ${frequency.toFixed(1)}Hz, 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
-                if (shouldCorrect) {
-                    console.log(`🔧 動的オクターブ補正: ${frequency.toFixed(1)}Hz → ${correctedFreq.toFixed(1)}Hz`);
-                }
+                // 🚨 デバッグ用：オクターブ補正を一時的に無効化
+                // Pitchy の生の検出値をそのまま使用
+                console.log(`🔍 Pitchy生検出値: ${frequency.toFixed(1)}Hz (補正無効化中), 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
                 
                 if (this.isNoteCorrect(frequency, currentTarget.frequency)) {
                     console.log('✅ 正解判定!');
@@ -295,30 +287,38 @@ class SimplePitchTraining {
     }
 
     isNoteCorrect(detectedFreq, targetFreq) {
-        // PITCHY_SPECS.md準拠: 動的オクターブ補正システム
+        // 🚨 デバッグ用：オクターブ補正システムを一時的に無効化
+        // Pitchy の生の検出値をそのまま使用して正解判定
+        
+        // ±50セント以内で正解判定（補正なし）
+        const cents = 1200 * Math.log2(detectedFreq / targetFreq);
+        const isCorrect = Math.abs(cents) < 50;
+        
+        console.log(`🎯 判定: ${detectedFreq.toFixed(1)}Hz vs ${targetFreq.toFixed(1)}Hz, 誤差: ${cents.toFixed(1)}¢, 結果: ${isCorrect ? '✅正解' : '❌不正解'}`);
+        
+        return isCorrect;
+        
+        /* 
+        // 💡 元のオクターブ補正システム（デバッグ完了後に復活）
         const targetFrequencies = this.baseToneManager.targetNotes.map(note => note.frequency);
-        const minTargetFreq = Math.min(...targetFrequencies); // 最低目標周波数
-        const maxTargetFreq = Math.max(...targetFrequencies); // 最高目標周波数
+        const minTargetFreq = Math.min(...targetFrequencies);
+        const maxTargetFreq = Math.max(...targetFrequencies);
         
-        // 補正しきい値：最高目標周波数の半分＋余裕(10%)
         const correctionThreshold = maxTargetFreq * 0.55;
-        
-        // 補正後の範囲：最低目標の80%〜最高目標の120%
         const correctedMin = minTargetFreq * 0.8;
         const correctedMax = maxTargetFreq * 1.2;
         
         let checkFreq = detectedFreq;
         
-        // 動的オクターブ補正判定
         if (detectedFreq < correctionThreshold && 
             detectedFreq * 2 >= correctedMin && 
             detectedFreq * 2 <= correctedMax) {
-            checkFreq = detectedFreq * 2; // オクターブ補正適用
+            checkFreq = detectedFreq * 2;
         }
         
-        // ±50セント以内で正解判定
         const cents = 1200 * Math.log2(checkFreq / targetFreq);
         return Math.abs(cents) < 50;
+        */
     }
 
     onNoteCorrect() {
