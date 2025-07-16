@@ -28,18 +28,15 @@ class MicrophoneManager {
         try {
             console.log('🎤 マイク許可要求開始');
             
-            // AudioContext初期化
+            // AudioContext初期化（suspended状態のまま）
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             console.log('🎵 AudioContext初期化完了:', this.audioContext.state);
             
-            // AudioContextの状態を確認し、必要に応じて再開
-            if (this.audioContext.state === 'suspended') {
-                console.log('🔄 AudioContextがsuspended状態、再開を試行...');
-                await this.audioContext.resume();
-                console.log('✅ AudioContext再開完了:', this.audioContext.state);
-            }
+            // ⚠️ AudioContext.resume()はユーザーインタラクション時まで延期
+            // Chrome 66以降、ユーザーインタラクション前のresume()は制限されるため
+            console.log('📌 AudioContext.resume()はスタートボタン押下時に実行します');
             
-            // マイクアクセス要求
+            // マイクアクセス要求（AudioContextの状態に関係なく実行可能）
             this.stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: true,
@@ -116,17 +113,10 @@ class MicrophoneManager {
             return;
         }
         
-        // AudioContextがsuspended状態の場合は再開
+        // AudioContextがsuspended状態の場合は警告のみ（ユーザーインタラクション時に再開）
         if (this.audioContext.state === 'suspended') {
-            console.log('🔄 AudioContext suspended状態 - 再開処理開始');
-            try {
-                await this.audioContext.resume();
-                console.log('✅ AudioContext再開完了');
-            } catch (error) {
-                console.error('❌ AudioContext再開失敗:', error);
-                this.noiseReduction.enabled = false;
-                return;
-            }
+            console.log('📌 AudioContext suspended状態 - ユーザーインタラクション時に再開されます');
+            // フィルター作成は可能なのでそのまま続行
         }
         
         try {
@@ -426,6 +416,13 @@ class SimplePitchTraining {
             if (!this.isReady) {
                 showMicrophoneNotReadyError();
                 return;
+            }
+            
+            // ユーザーインタラクション時のAudioContext.resume()
+            if (this.microphone.audioContext && this.microphone.audioContext.state === 'suspended') {
+                console.log('🔄 ユーザーインタラクション時のAudioContext.resume()実行');
+                await this.microphone.audioContext.resume();
+                console.log('✅ AudioContext再開完了:', this.microphone.audioContext.state);
             }
             
             // 設計原則: 基音再生専用処理
