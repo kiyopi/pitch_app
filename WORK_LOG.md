@@ -51,6 +51,8 @@
 - [12:00] CLAUDE.mdにプロジェクト概要追加（アプリの目的・技術的特徴）
 - [12:15] simple-pitch-training.js修正作業開始（オクターブ補正問題）
 - [12:30] オクターブ補正システム無効化完了（detectionLoop + isNoteCorrect）
+- [12:45] simple-pitch-training.htmlにログフィルター設定追加
+- [12:50] ログフィルター設定完了（重要ログのみ表示）
 
 ### ⚠️ 発生問題
 - [09:30] **重大ミス**: 修正対象ファイル間違い
@@ -66,7 +68,8 @@
 - [x] 実装前承認（厳守）項目を13項目に拡張
 - [x] 段階的改善システム構築（best-practices/）
 - [x] ベストプラクティス正式版作成
-- [ ] 正しいファイル（simple-pitch-training.js）の修正
+- [x] 正しいファイル（simple-pitch-training.js）の修正完了
+- [x] ログフィルター設定完了（デバッグ用）
 - [ ] GitHub Pages での動作確認
 
 ---

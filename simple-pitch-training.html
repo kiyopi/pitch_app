@@ -305,6 +305,37 @@
             timestamp.style.color = 'white';
             
             console.log(`🎨 タイムスタンプ背景色設定: ${backgroundColors[colorIndex]} (colorIndex: ${colorIndex})`);
+            
+            // デバッグ用：重要ログのみ表示するフィルター設定
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalWarn = console.warn;
+
+            console.log = function(...args) {
+                const message = args[0];
+                if (typeof message === 'string' && (
+                    message.includes('🔍 Pitchy生検出値') ||
+                    message.includes('🎯 判定') ||
+                    message.includes('✅ 正解判定') ||
+                    message.includes('❌') ||
+                    message.includes('🎤 マイク') ||
+                    message.includes('🎹 基音') ||
+                    message.includes('エラー') ||
+                    message.includes('🎨 タイムスタンプ')
+                )) {
+                    originalLog.apply(console, args);
+                }
+            };
+
+            console.error = function(...args) {
+                originalError.apply(console, args);
+            };
+
+            console.warn = function(...args) {
+                originalWarn.apply(console, args);
+            };
+
+            console.log("🔧 ログフィルター設定完了 - 重要なログのみ表示します");
         });
     </script>
     
