@@ -9,7 +9,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="cache-version" content="v2.0.0-simple-clean">
+    <meta name="cache-version" content="v2.1.0-octave-fix-force-update">
     
     <!-- PWA対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -300,7 +300,7 @@
                 'rgba(141, 110, 99, 0.9)',   // 茶
                 'rgba(158, 158, 158, 0.9)'   // グレー
             ];
-            const colorIndex = 4; // 赤色（オクターブ補正システム復活）
+            const colorIndex = 5; // シアン色（GitHub Pagesキャッシュクリア強制更新）
             timestamp.style.background = backgroundColors[colorIndex];
             timestamp.style.color = 'white';
             
@@ -320,6 +320,8 @@
                     message.includes('❌') ||
                     message.includes('🎤 マイク') ||
                     message.includes('🎹 基音') ||
+                    message.includes('🔊 基音再生') ||
+                    message.includes('🎲 基音選択') ||
                     message.includes('エラー') ||
                     message.includes('🎨 タイムスタンプ')
                 )) {
