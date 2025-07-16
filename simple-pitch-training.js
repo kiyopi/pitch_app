@@ -271,9 +271,8 @@ class SimplePitchTraining {
                 // 現在の音階と比較
                 const currentTarget = this.baseToneManager.targetNotes[this.state.currentNote];
                 
-                // 🚨 デバッグ用：オクターブ補正を一時的に無効化
-                // Pitchy の生の検出値をそのまま使用
-                console.log(`🔍 Pitchy生検出値: ${frequency.toFixed(1)}Hz (補正無効化中), 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
+                // 💡 オクターブ補正システム復活後のデバッグログ
+                console.log(`🔍 Pitchy生検出値: ${frequency.toFixed(1)}Hz, 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
                 
                 if (this.isNoteCorrect(frequency, currentTarget.frequency)) {
                     console.log('✅ 正解判定!');
@@ -287,19 +286,7 @@ class SimplePitchTraining {
     }
 
     isNoteCorrect(detectedFreq, targetFreq) {
-        // 🚨 デバッグ用：オクターブ補正システムを一時的に無効化
-        // Pitchy の生の検出値をそのまま使用して正解判定
-        
-        // ±50セント以内で正解判定（補正なし）
-        const cents = 1200 * Math.log2(detectedFreq / targetFreq);
-        const isCorrect = Math.abs(cents) < 50;
-        
-        console.log(`🎯 判定: ${detectedFreq.toFixed(1)}Hz vs ${targetFreq.toFixed(1)}Hz, 誤差: ${cents.toFixed(1)}¢, 結果: ${isCorrect ? '✅正解' : '❌不正解'}`);
-        
-        return isCorrect;
-        
-        /* 
-        // 💡 元のオクターブ補正システム（デバッグ完了後に復活）
+        // 💡 オクターブ補正システム復活（低音域検出問題解決）
         const targetFrequencies = this.baseToneManager.targetNotes.map(note => note.frequency);
         const minTargetFreq = Math.min(...targetFrequencies);
         const maxTargetFreq = Math.max(...targetFrequencies);
@@ -309,16 +296,21 @@ class SimplePitchTraining {
         const correctedMax = maxTargetFreq * 1.2;
         
         let checkFreq = detectedFreq;
+        let correctionApplied = false;
         
         if (detectedFreq < correctionThreshold && 
             detectedFreq * 2 >= correctedMin && 
             detectedFreq * 2 <= correctedMax) {
             checkFreq = detectedFreq * 2;
+            correctionApplied = true;
         }
         
         const cents = 1200 * Math.log2(checkFreq / targetFreq);
-        return Math.abs(cents) < 50;
-        */
+        const isCorrect = Math.abs(cents) < 50;
+        
+        console.log(`🎯 判定: ${detectedFreq.toFixed(1)}Hz${correctionApplied ? ` → ${checkFreq.toFixed(1)}Hz(補正後)` : ''} vs ${targetFreq.toFixed(1)}Hz, 誤差: ${cents.toFixed(1)}¢, 結果: ${isCorrect ? '✅正解' : '❌不正解'}`);
+        
+        return isCorrect;
     }
 
     onNoteCorrect() {
