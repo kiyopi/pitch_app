@@ -1,0 +1,39 @@
+{
+  "name": "pitch-training-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "export": "next build && next export",
+    "start": "next start",
+    "lint": "next lint",
+    "github-pages": "npm run build && touch out/.nojekyll"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
+    "lucide-react": "^0.525.0",
+    "next": "15.4.1",
+    "pitchy": "^4.1.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-share": "^5.2.2",
+    "tailwind-merge": "^3.3.1",
+    "tone": "^15.1.22"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
