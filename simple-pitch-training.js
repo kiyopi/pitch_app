@@ -122,34 +122,34 @@ class MicrophoneManager {
         try {
             console.log('🔧 フィルター作成開始...');
             
-            // ハイパスフィルター: 23-25Hz低周波ノイズ対策
+            // ハイパスフィルター: 23-25Hz低周波ノイズ対策（強力な設定）
             this.noiseReduction.highPassFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.highPassFilter.type = 'highpass';
-            this.noiseReduction.highPassFilter.frequency.setValueAtTime(80, this.audioContext.currentTime);
-            this.noiseReduction.highPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
-            console.log('✅ ハイパスフィルター作成成功');
+            this.noiseReduction.highPassFilter.frequency.value = 100; // 80Hz→100Hzに強化
+            this.noiseReduction.highPassFilter.Q.value = 1.0; // 0.7→1.0に強化
+            console.log('✅ ハイパスフィルター作成成功 (100Hz, Q=1.0)');
             
             // ローパスフィルター: 高周波ノイズカット
             this.noiseReduction.lowPassFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.lowPassFilter.type = 'lowpass';
-            this.noiseReduction.lowPassFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
-            this.noiseReduction.lowPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
-            console.log('✅ ローパスフィルター作成成功');
+            this.noiseReduction.lowPassFilter.frequency.value = 2000;
+            this.noiseReduction.lowPassFilter.Q.value = 0.7;
+            console.log('✅ ローパスフィルター作成成功 (2000Hz)');
             
             // ノッチフィルター: 60Hz電源ノイズカット
             this.noiseReduction.notchFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.notchFilter.type = 'notch';
-            this.noiseReduction.notchFilter.frequency.setValueAtTime(60, this.audioContext.currentTime);
-            this.noiseReduction.notchFilter.Q.setValueAtTime(30, this.audioContext.currentTime);
-            console.log('✅ ノッチフィルター作成成功');
+            this.noiseReduction.notchFilter.frequency.value = 60;
+            this.noiseReduction.notchFilter.Q.value = 30;
+            console.log('✅ ノッチフィルター作成成功 (60Hz)');
             
             // ゲインノード: 音量最適化
             this.noiseReduction.gainNode = this.audioContext.createGain();
-            this.noiseReduction.gainNode.gain.setValueAtTime(1.2, this.audioContext.currentTime);
-            console.log('✅ ゲインノード作成成功');
+            this.noiseReduction.gainNode.gain.value = 1.2;
+            console.log('✅ ゲインノード作成成功 (x1.2)');
             
             console.log('✅ ノイズリダクションフィルター初期化完了');
-            console.log('  - ハイパス: 80Hz以下カット（23-25Hz低周波対策）');
+            console.log('  - ハイパス: 100Hz以下カット（23-25Hz低周波対策強化）');
             console.log('  - ローパス: 2kHz以上カット');
             console.log('  - ノッチ: 60Hz電源ノイズカット');
             console.log('  - ゲイン: 1.2倍');
@@ -210,6 +210,13 @@ class MicrophoneManager {
             
             this.noiseReduction.gainNode.connect(outputNode);
             console.log('✅ ゲイン → 出力 接続成功');
+            
+            // フィルター動作確認
+            console.log('🔍 フィルター設定確認:');
+            console.log('  - ハイパス周波数:', this.noiseReduction.highPassFilter.frequency.value, 'Hz');
+            console.log('  - ローパス周波数:', this.noiseReduction.lowPassFilter.frequency.value, 'Hz');
+            console.log('  - ノッチ周波数:', this.noiseReduction.notchFilter.frequency.value, 'Hz');
+            console.log('  - ゲイン値:', this.noiseReduction.gainNode.gain.value);
             
         } catch (error) {
             console.error('❌ フィルターチェーン接続エラー:', error);
@@ -468,8 +475,10 @@ class SimplePitchTraining {
                 // 現在の音階と比較
                 const currentTarget = this.baseToneManager.targetNotes[this.state.currentNote];
                 
-                // 💡 オクターブ補正システム復活後のデバッグログ
-                console.log(`🔍 Pitchy生検出値: ${frequency.toFixed(1)}Hz, 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
+                // 💡 オクターブ補正システム復活後のデバッグログ（頻度制限付き）
+                if (Math.random() < 0.01) { // 1%の確率でログ出力（無限ログ防止）
+                    console.log(`🔍 Pitchy生検出値: ${frequency.toFixed(1)}Hz, 目標: ${currentTarget.frequency.toFixed(1)}Hz (${currentTarget.name})`);
+                }
                 
                 if (this.isNoteCorrect(frequency, currentTarget.frequency)) {
                     console.log('✅ 正解判定!');
