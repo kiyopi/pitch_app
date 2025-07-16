@@ -85,6 +85,7 @@ alias verify-stable="git log --oneline -1 && echo '期待値: 1e44e2e バージ�
 ⚠️ **絶対禁止**: ユーザー承認なしの実装開始
 ⚠️ **必須参照**: 修正時は必ず設計原則書を参照
 ⚠️ **エラー処理**: `ERROR_DIALOG_SPECIFICATION.md`の仕様に従う
+⚠️ **仕様書確認義務**: ファイル修正前に必ず該当仕様書を読み込み、確認した仕様書名を明記
 
 ## 📱 GitHub Pages確認フロー
 
