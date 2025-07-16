@@ -30,6 +30,14 @@ class MicrophoneManager {
             
             // AudioContext初期化
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            console.log('🎵 AudioContext初期化完了:', this.audioContext.state);
+            
+            // AudioContextの状態を確認し、必要に応じて再開
+            if (this.audioContext.state === 'suspended') {
+                console.log('🔄 AudioContextがsuspended状態、再開を試行...');
+                await this.audioContext.resume();
+                console.log('✅ AudioContext再開完了:', this.audioContext.state);
+            }
             
             // マイクアクセス要求
             this.stream = await navigator.mediaDevices.getUserMedia({
@@ -39,21 +47,37 @@ class MicrophoneManager {
                     autoGainControl: true
                 }
             });
+            console.log('🎤 マイクストリーム取得成功');
             
             // アナライザー設定
             this.analyzer = this.audioContext.createAnalyser();
             this.analyzer.fftSize = 2048;
             this.analyzer.smoothingTimeConstant = 0.3;
+            console.log('📊 アナライザー設定完了 (fftSize: 2048)');
             
             // ノイズリダクションフィルター初期化
-            this.initNoiseReductionFilters();
+            console.log('🔧 ノイズリダクションフィルター初期化開始');
+            
+            // AudioContextが完全に準備完了するまで少し待機
+            if (this.audioContext.state !== 'running') {
+                console.log('🕰️ AudioContextがまだrunning状態ではありません、少し待機...');
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            await this.initNoiseReductionFilters();
             
             // フィルターチェーン接続（ノイズリダクション対応）
             const source = this.audioContext.createMediaStreamSource(this.stream);
+            console.log('🔗 メディアストリームソース作成完了');
             this.connectNoiseReductionChain(source, this.analyzer);
             
             this.isActive = true;
             console.log('✅ マイク許可成功（ノイズリダクション付き）');
+            console.log('🔧 最終状態確認:');
+            console.log('  - isActive:', this.isActive);
+            console.log('  - audioContext.state:', this.audioContext.state);
+            console.log('  - noiseReduction.enabled:', this.noiseReduction.enabled);
+            console.log('  - フィルター存在:', !!this.noiseReduction.highPassFilter);
             
         } catch (error) {
             console.error('❌ マイク許可失敗:', error);
@@ -74,62 +98,140 @@ class MicrophoneManager {
         console.log('🎤 マイク停止');
     }
 
-    initNoiseReductionFilters() {
+    async initNoiseReductionFilters() {
+        console.log('🔧 initNoiseReductionFilters() 呼び出し開始');
+        console.log('  - audioContext:', !!this.audioContext);
+        console.log('  - audioContext.state:', this.audioContext?.state);
+        console.log('  - noiseReduction.enabled:', this.noiseReduction.enabled);
+        
         if (!this.audioContext || !this.noiseReduction.enabled) {
             console.log('🔇 ノイズリダクション無効');
             return;
         }
         
+        // AudioContextが正常な状態か確認
+        if (this.audioContext.state === 'closed') {
+            console.log('❌ AudioContextがクローズされています');
+            this.noiseReduction.enabled = false;
+            return;
+        }
+        
+        // AudioContextがsuspended状態の場合は再開
+        if (this.audioContext.state === 'suspended') {
+            console.log('🔄 AudioContext suspended状態 - 再開処理開始');
+            try {
+                await this.audioContext.resume();
+                console.log('✅ AudioContext再開完了');
+            } catch (error) {
+                console.error('❌ AudioContext再開失敗:', error);
+                this.noiseReduction.enabled = false;
+                return;
+            }
+        }
+        
         try {
+            console.log('🔧 フィルター作成開始...');
+            
             // ハイパスフィルター: 23-25Hz低周波ノイズ対策
             this.noiseReduction.highPassFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.highPassFilter.type = 'highpass';
             this.noiseReduction.highPassFilter.frequency.setValueAtTime(80, this.audioContext.currentTime);
             this.noiseReduction.highPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
+            console.log('✅ ハイパスフィルター作成成功');
             
             // ローパスフィルター: 高周波ノイズカット
             this.noiseReduction.lowPassFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.lowPassFilter.type = 'lowpass';
             this.noiseReduction.lowPassFilter.frequency.setValueAtTime(2000, this.audioContext.currentTime);
             this.noiseReduction.lowPassFilter.Q.setValueAtTime(0.7, this.audioContext.currentTime);
+            console.log('✅ ローパスフィルター作成成功');
             
             // ノッチフィルター: 60Hz電源ノイズカット
             this.noiseReduction.notchFilter = this.audioContext.createBiquadFilter();
             this.noiseReduction.notchFilter.type = 'notch';
             this.noiseReduction.notchFilter.frequency.setValueAtTime(60, this.audioContext.currentTime);
             this.noiseReduction.notchFilter.Q.setValueAtTime(30, this.audioContext.currentTime);
+            console.log('✅ ノッチフィルター作成成功');
             
             // ゲインノード: 音量最適化
             this.noiseReduction.gainNode = this.audioContext.createGain();
             this.noiseReduction.gainNode.gain.setValueAtTime(1.2, this.audioContext.currentTime);
+            console.log('✅ ゲインノード作成成功');
             
             console.log('✅ ノイズリダクションフィルター初期化完了');
             console.log('  - ハイパス: 80Hz以下カット（23-25Hz低周波対策）');
             console.log('  - ローパス: 2kHz以上カット');
             console.log('  - ノッチ: 60Hz電源ノイズカット');
             console.log('  - ゲイン: 1.2倍');
+            console.log('🔧 フィルター実在確認:');
+            console.log('  - highPassFilter:', !!this.noiseReduction.highPassFilter);
+            console.log('  - lowPassFilter:', !!this.noiseReduction.lowPassFilter);
+            console.log('  - notchFilter:', !!this.noiseReduction.notchFilter);
+            console.log('  - gainNode:', !!this.noiseReduction.gainNode);
             
         } catch (error) {
             console.error('❌ ノイズリダクション初期化失敗:', error);
+            console.error('❌ エラー詳細:', error.message);
+            console.error('❌ エラースタック:', error.stack);
+            console.error('❌ AudioContext状態:', this.audioContext?.state);
+            
+            // フィルターをクリアして無効化
+            this.noiseReduction.highPassFilter = null;
+            this.noiseReduction.lowPassFilter = null;
+            this.noiseReduction.notchFilter = null;
+            this.noiseReduction.gainNode = null;
             this.noiseReduction.enabled = false;
+            
+            console.log('⚠️ ノイズリダクションを無効化しました (直接接続で継続)');
         }
     }
 
     connectNoiseReductionChain(inputNode, outputNode) {
-        if (!this.noiseReduction.enabled || !this.noiseReduction.highPassFilter) {
+        console.log('🔗 connectNoiseReductionChain() 呼び出し開始');
+        console.log('  - noiseReduction.enabled:', this.noiseReduction.enabled);
+        console.log('  - highPassFilter存在:', !!this.noiseReduction.highPassFilter);
+        console.log('  - lowPassFilter存在:', !!this.noiseReduction.lowPassFilter);
+        console.log('  - notchFilter存在:', !!this.noiseReduction.notchFilter);
+        console.log('  - gainNode存在:', !!this.noiseReduction.gainNode);
+        
+        if (!this.noiseReduction.enabled || !this.noiseReduction.highPassFilter || 
+            !this.noiseReduction.lowPassFilter || !this.noiseReduction.notchFilter || !this.noiseReduction.gainNode) {
             inputNode.connect(outputNode);
             console.log('🔗 ノイズリダクション無効 - 直接接続');
+            console.log('ℹ️ 原因: enabled=' + this.noiseReduction.enabled + ', フィルター存在=' + 
+                [!!this.noiseReduction.highPassFilter, !!this.noiseReduction.lowPassFilter, 
+                 !!this.noiseReduction.notchFilter, !!this.noiseReduction.gainNode].join(','));
             return;
         }
         
         // フィルターチェーン構築: 入力 → ハイパス → ローパス → ノッチ → ゲイン → 出力
-        inputNode.connect(this.noiseReduction.highPassFilter);
-        this.noiseReduction.highPassFilter.connect(this.noiseReduction.lowPassFilter);
-        this.noiseReduction.lowPassFilter.connect(this.noiseReduction.notchFilter);
-        this.noiseReduction.notchFilter.connect(this.noiseReduction.gainNode);
-        this.noiseReduction.gainNode.connect(outputNode);
+        try {
+            inputNode.connect(this.noiseReduction.highPassFilter);
+            console.log('✅ 入力 → ハイパス 接続成功');
+            
+            this.noiseReduction.highPassFilter.connect(this.noiseReduction.lowPassFilter);
+            console.log('✅ ハイパス → ローパス 接続成功');
+            
+            this.noiseReduction.lowPassFilter.connect(this.noiseReduction.notchFilter);
+            console.log('✅ ローパス → ノッチ 接続成功');
+            
+            this.noiseReduction.notchFilter.connect(this.noiseReduction.gainNode);
+            console.log('✅ ノッチ → ゲイン 接続成功');
+            
+            this.noiseReduction.gainNode.connect(outputNode);
+            console.log('✅ ゲイン → 出力 接続成功');
+            
+        } catch (error) {
+            console.error('❌ フィルターチェーン接続エラー:', error);
+            console.error('❌ フォールバック: 直接接続で継続');
+            inputNode.connect(outputNode);
+            return;
+        }
         
         console.log('🔗 ノイズリダクションチェーン接続完了');
+        console.log('🔧 フィルターチェーン接続状況:');
+        console.log('  - 入力ノード → ハイパス → ローパス → ノッチ → ゲイン → 出力ノード');
+        console.log('  - 全フィルター接続完了');
     }
 
     getFrequencyData() {
@@ -606,6 +708,14 @@ const initializeWithPreparation = async () => {
         // 準備完了
         app.isReady = true;
         console.log('✅ 事前準備完了 - アプリケーション使用可能');
+        
+        // ノイズリダクション最終状態確認
+        console.log('🔍 ノイズリダクション最終状態確認:');
+        console.log('  - enabled:', app.microphone.noiseReduction.enabled);
+        console.log('  - highPassFilter:', !!app.microphone.noiseReduction.highPassFilter);
+        console.log('  - lowPassFilter:', !!app.microphone.noiseReduction.lowPassFilter);
+        console.log('  - notchFilter:', !!app.microphone.noiseReduction.notchFilter);
+        console.log('  - gainNode:', !!app.microphone.noiseReduction.gainNode);
         
         // グローバル変数に設定（スタートボタンからアクセス可能にする）
         window.pitchTrainingApp = app;
