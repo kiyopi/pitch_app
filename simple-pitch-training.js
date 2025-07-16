@@ -12,14 +12,17 @@ class MicrophoneManager {
         this.analyzer = null;
         this.isActive = false;
         
-        // ノイズリダクション設定追加
+        // ノイズリダクション設定追加（強制有効化）
         this.noiseReduction = {
-            enabled: true,
+            enabled: true, // 🚨 強制有効化
             highPassFilter: null,
             lowPassFilter: null,
             notchFilter: null,
             gainNode: null
         };
+        
+        // デバッグ用：初期化時の状態確認
+        console.log('🔧 ノイズリダクション初期状態:', this.noiseReduction.enabled);
         
         console.log('🎤 MicrophoneManager初期化（ノイズリダクション対応）');
     }
@@ -165,14 +168,19 @@ class MicrophoneManager {
             console.error('❌ エラースタック:', error.stack);
             console.error('❌ AudioContext状態:', this.audioContext?.state);
             
-            // フィルターをクリアして無効化
-            this.noiseReduction.highPassFilter = null;
-            this.noiseReduction.lowPassFilter = null;
-            this.noiseReduction.notchFilter = null;
-            this.noiseReduction.gainNode = null;
-            this.noiseReduction.enabled = false;
+            // 🚨 フィルター無効化を防ぐ緊急対応
+            console.warn('🚨 ノイズリダクション初期化エラー発生');
+            console.warn('🚨 しかし、23-25Hz低周波ノイズ対策のため無効化しません');
+            console.warn('🚨 直接接続で継続しますが、フィルターなしでの動作になります');
             
-            console.log('⚠️ ノイズリダクションを無効化しました (直接接続で継続)');
+            // フィルターをクリアして無効化（一時的にコメントアウト）
+            // this.noiseReduction.highPassFilter = null;
+            // this.noiseReduction.lowPassFilter = null;
+            // this.noiseReduction.notchFilter = null;
+            // this.noiseReduction.gainNode = null;
+            // this.noiseReduction.enabled = false;
+            
+            console.log('⚠️ ノイズリダクション強制継続 (23-25Hz対策優先)');
         }
     }
 
