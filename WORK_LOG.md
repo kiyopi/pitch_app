@@ -53,6 +53,10 @@
 - [12:30] オクターブ補正システム無効化完了（detectionLoop + isNoteCorrect）
 - [12:45] simple-pitch-training.htmlにログフィルター設定追加
 - [12:50] ログフィルター設定完了（重要ログのみ表示）
+- [13:45] 基音ビープ音問題修正開始（simple-pitch-training.js）
+- [13:50] playBaseTone()メソッド修正完了：Tone.Synth → Sampler（Salamander Grand Piano）
+- [13:51] 永続再生問題も同時解決：2.7秒後にreleaseAll()実行
+- [13:55] GitHub Pages更新確認用：タイムスタンプ色変更（colorIndex: 5→6 茶色）
 
 ### ⚠️ 発生問題
 - [09:30] **重大ミス**: 修正対象ファイル間違い
@@ -70,6 +74,8 @@
 - [x] ベストプラクティス正式版作成
 - [x] 正しいファイル（simple-pitch-training.js）の修正完了
 - [x] ログフィルター設定完了（デバッグ用）
+- [x] 基音ビープ音問題修正（Tone.Synth → Sampler）
+- [x] 基音永続再生問題修正（2.7秒後自動停止）
 - [ ] GitHub Pages での動作確認
 
 ---

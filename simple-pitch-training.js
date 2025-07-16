@@ -165,8 +165,35 @@ class BaseToneManager {
             if (window.Tone) {
                 await window.Tone.start();
                 
-                const synth = new window.Tone.Synth().toDestination();
-                synth.triggerAttackRelease(this.currentBaseTone.name, '2.5s');
+                // 既存実装準拠: Salamander Grand Piano使用
+                const sampler = new window.Tone.Sampler({
+                    urls: {
+                        "C4": "C4.mp3",
+                        "D#4": "Ds4.mp3", 
+                        "F#4": "Fs4.mp3",
+                        "A4": "A4.mp3",
+                    },
+                    release: 0.5,
+                    attack: 0.01,
+                    volume: 6,
+                    baseUrl: "https://tonejs.github.io/audio/salamander/"
+                }).toDestination();
+
+                // サンプル読み込み待機
+                await window.Tone.loaded();
+
+                // 既存実装準拠: triggerAttack + 自動リリース
+                sampler.triggerAttack(this.currentBaseTone.name, undefined, 0.8);
+
+                // 2秒後にリリース開始（既存タイミング）
+                setTimeout(() => {
+                    sampler.triggerRelease(this.currentBaseTone.name);
+                }, 2000);
+
+                // 2.7秒後に完全停止（永続再生防止）
+                setTimeout(() => {
+                    sampler.releaseAll();
+                }, 2700);
                 
                 console.log(`🔊 基音再生: ${this.currentBaseTone.note}`);
             }
