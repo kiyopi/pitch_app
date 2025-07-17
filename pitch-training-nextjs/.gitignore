@@ -39,3 +39,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 🚨 プッシュミス再発防止（追加強化）
+# IDE関連
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS関連  
+Thumbs.db
+
+# ビルド成果物（重要）
+/dist/
+/.swc/
+
+# 🔒 GitHub Pages関連（厳重注意）
+# /out/ は既に上記で除外済み
+# /.next/ は既に上記で除外済み
